@@ -91,8 +91,8 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 
 | Nodo | Loopback / Router-ID |
 | --- | --- |
-| ISP-1 | Pendiente R2 |
-| ISP-2 | Pendiente R2 |
+| ISP-1 | `10.255.255.1/32` |
+| ISP-2 | `10.255.255.2/32` |
 | EDGE | `10.255.255.3/32` |
 | CORE-1 | Pendiente R3 |
 | CORE-2 | Pendiente R3 |
@@ -100,6 +100,8 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 | DIST-2 | `10.255.255.7/32` |
 
 Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2 `.2`, EDGE `.3`, CORE-1 `.4`, CORE-2 `.5`, DIST-1 `.6`, DIST-2 `.7`. Los DIST usan su loopback como router-id de OSPF.
+
+> **Aporte R2 — loopbacks de ISP:** ISP-1 e ISP-2 usan su loopback como router-id de BGP. Además, esa dirección es el destino que simula "Internet": en F3, la salida a Internet se considera verificada cuando un host de USERS o SERVERS alcanza `10.255.255.1` (vía ISP-1) o `10.255.255.2` (vía ISP-2).
 
 La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
 
