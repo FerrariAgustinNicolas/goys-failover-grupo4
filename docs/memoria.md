@@ -1,13 +1,13 @@
 # Memoria del Laboratorio — Failover Routing
 
 **Grupo:** 4  
-**Materia:** Gestión Operativa y Seguridad en Redes  
+**Materia:** Gestión Operativa y Seguridad en Redes (GOYS)
 **Fecha de entrega:** viernes 23/10/2026
 
 ## Integrantes y roles
 
 | Integrante | Rol |
-|---|---|
+| --- | --- |
 | FerrariAgustinNicolas | R1 — Líder / Edge-WAN |
 | Valentinosiadore | R2 — Proveedores |
 | AgusKlos | R3 — Core |
@@ -18,4 +18,259 @@
 
 ## 1. Diseño (F0)
 
-Pendiente de desarrollo.
+### 1.1 Corrección del diagrama
+
+La consigna identifica cinco problemas en el diseño original. Cada integrante documentará las correcciones correspondientes a su área.
+
+| # | Defecto detectado | Corrección aplicada | Justificación |
+| :-: | --- | --- | --- |
+| 1 | Firewall sin par de alta disponibilidad, generando un punto único de falla (SPOF). | En un entorno productivo se utilizaría un par de firewalls en alta disponibilidad/failover. | Un único firewall puede interrumpir la conectividad entre la red interna e Internet ante una falla del dispositivo. Un par redundante permite mantener el servicio si uno de los equipos queda fuera de operación. |
+| 2 | iBGP Route Reflector mal ubicado en el diseño original. | Se utiliza eBGP directamente entre EDGE (AS 65000) e ISP-1 (AS 65001) / ISP-2 (AS 65002), sin Route Reflector. | Los proveedores pertenecen a sistemas autónomos diferentes, por lo que corresponde utilizar eBGP. En esta topología no existe necesidad de incorporar un Route Reflector iBGP. |
+| 3 | Pendiente de completar por R3/R4. | Pendiente. | Pendiente. |
+
+### 1.2 Plan de direccionamiento (IPAM)
+
+Para evitar solapamientos y simplificar la administración de la red, se propone separar el direccionamiento según su función.
+
+#### Criterio de direccionamiento
+
+| Uso | Bloque reservado | Criterio |
+| --- | --- | --- |
+| Enlaces punto a punto | `10.255.0.0/24` | División en subredes `/30` consecutivas |
+| Loopbacks / Router-ID | `10.255.255.0/24` | Una dirección `/32` por router |
+| LAN USERS | `192.168.10.0/24` | Red de usuarios con gateway virtual VRRP |
+| LAN SERVERS | `192.168.20.0/24` | Red de servidores con gateway virtual VRRP |
+
+Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispone de dos direcciones utilizables y pertenece exclusivamente a un enlace, evitando solapamientos.
+
+#### Enlaces y LAN
+
+| Enlace / Red | Subred | Dispositivo A (IP/iface) | Dispositivo B (IP/iface) |
+| --- | --- | --- | --- |
+| ISP-1 ↔ EDGE | `10.255.0.0/30` | ISP-1: `10.255.0.1` / interfaz pendiente | EDGE: `10.255.0.2` / interfaz pendiente |
+| ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2: `10.255.0.5` / interfaz pendiente | EDGE: `10.255.0.6` / interfaz pendiente |
+| EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / interfaz pendiente | CORE-1: `10.255.0.10` / interfaz pendiente |
+| EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / interfaz pendiente | CORE-2: `10.255.0.14` / interfaz pendiente |
+| CORE-1 ↔ CORE-2 | Pendiente R3 | Pendiente R3 | Pendiente R3 |
+| CORE-1 ↔ DIST-1 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
+| CORE-1 ↔ DIST-2 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
+| CORE-2 ↔ DIST-1 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
+| CORE-2 ↔ DIST-2 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
+| USERS | `192.168.10.0/24` | Pendiente R4 | Gateway VRRP: `192.168.10.1` |
+| SERVERS | `192.168.20.0/24` | Pendiente R4 | Gateway VRRP: `192.168.20.1` |
+
+> Los nombres de las interfaces se completarán a partir del proyecto GNS3 `topologia_failover_routing`. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
+
+#### VRRP
+
+La consigna establece dos grupos VRRP con balanceo de carga: DIST-1 será master del grupo 10 y DIST-2 será master del grupo 20.
+
+| Grupo | VRID | Master | Priority | IP virtual |
+| --- | :-: | :-: | :-: | :-: |
+| USERS | 10 | DIST-1 | Pendiente R4 | `192.168.10.1` |
+| SERVERS | 20 | DIST-2 | Pendiente R4 | `192.168.20.1` |
+
+#### Loopbacks / Router-IDs
+
+Se propone reservar el bloque `10.255.255.0/24` para las direcciones de loopback y Router-ID, utilizando una dirección `/32` por router.
+
+La asignación definitiva se consolidará con R2, R3 y R4 dentro del IPAM general.
+
+### 1.3 Política de seguridad
+
+#### Aporte R1 — EDGE/WAN
+
+- Las dos sesiones eBGP del router EDGE utilizarán autenticación TCP-MD5.
+- EDGE contará con filtrado de entrada mediante firewall.
+- El acceso al plano de gestión de EDGE quedará restringido a los servicios y orígenes necesarios.
+- Los servicios de administración que no sean necesarios permanecerán deshabilitados.
+
+#### Política integrada del grupo
+
+- **Usuarios y privilegios:** pendiente de consolidación.
+- **Servicios a deshabilitar:** pendiente de consolidación.
+- **Autenticación OSPF:** pendiente R3.
+- **Autenticación BGP:** TCP-MD5; pendiente de consolidación entre R1 y R2.
+- **Autenticación VRRP:** pendiente R4.
+
+### 1.4 Política de operación
+
+- **Formato del change log:** pendiente R5.
+- **Política de backup:** pendiente R5.
+
+---
+
+## 2. Topología
+
+La topología de diseño se basa en la arquitectura de cinco capas definida por la consigna:
+
+```text
+[INTERNET]      ISP-1 (AS 65001)   ISP-2 (AS 65002)
+                    \               /
+[EDGE]               EDGE (AS 65000)
+                         /      \
+[CORE]              CORE-1 ---- CORE-2
+                      |\          /|
+                      | \        / |
+                      |  \      /  |
+                      |   \    /   |
+                      |    \  /    |
+                      |     \/     |
+                      |     /\     |
+                      |    /  \    |
+                      |   /    \   |
+                      |  /      \  |
+                      | /        \ |
+                      |/          \|
+[DISTRIBUTION]      DIST-1       DIST-2
+                      |\          /|
+                      | \        / |
+                      |  \      /  |
+                      |   \    /   |
+                      |    \  /    |
+                      |     \/     |
+                      |     /\     |
+                      |    /  \    |
+                      |   /    \   |
+                      |  /      \  |
+                      | /        \ |
+                      |/          \|
+[ACCESS]          SW-USERS    SW-SERVERS
+                      |            |
+                   PC-USER        SRV
+```
+
+La imagen definitiva de la topología se incorporará en `docs/diagramas/` una vez disponible el proyecto GNS3 provisto para el laboratorio.
+
+---
+
+## 3. Configuración
+
+> Esta sección se completará después de la aprobación de F0. Según la regla de la consigna, no se realizará configuración CLI antes de aprobar el diseño.
+
+### 3.1 ISP-1
+
+Pendiente.
+
+### 3.2 ISP-2
+
+Pendiente.
+
+### 3.3 EDGE
+
+Pendiente.
+
+### 3.4 CORE-1
+
+Pendiente.
+
+### 3.5 CORE-2
+
+Pendiente.
+
+### 3.6 DIST-1
+
+Pendiente.
+
+### 3.7 DIST-2
+
+Pendiente.
+
+### 3.8 Hosts (PC-USER / SRV)
+
+Pendiente.
+
+---
+
+## 4. Verificación
+
+### 4.1 Conectividad básica
+
+Pendiente de las fases de implementación.
+
+### 4.2 Los 5 drills de failover
+
+Pendiente de F4.
+
+---
+
+## 5. Seguridad aplicada
+
+Pendiente de las fases de implementación.
+
+---
+
+## 6. Gestión operativa
+
+### 6.1 Change log
+
+Pendiente R5.
+
+### 6.2 Backups
+
+Pendiente R5.
+
+### 6.3 Monitoreo
+
+Pendiente R5.
+
+---
+
+## 7. Capturas
+
+Pendiente.
+
+---
+
+## 8. Conclusiones y lecciones aprendidas
+
+Pendiente de la finalización del laboratorio.
+
+---
+
+## 9. Referencias
+
+Pendiente de completar con los recursos efectivamente utilizados.
+
+---
+
+## 10. Checklist de entrega
+
+### Diseño (F0)
+
+- [ ] IPAM completo y sin solapamiento
+- [ ] Corrección del diagrama justificada (≥ 3 defectos)
+- [ ] Política de seguridad definida (usuarios, servicios, claves)
+- [ ] Política de operación definida (change log + backup)
+
+### Redes
+
+- [ ] 7 CHR + 2 switches + 2 hosts levantados y cableados
+- [ ] VRRP operativo (2 grupos, load-sharing)
+- [ ] OSPF área 0 con adyacencias (incluido core-core)
+- [ ] BGP eBGP ×2 establecido (multi-homing)
+- [ ] Los 5 drills ejecutados y documentados
+
+### Seguridad
+
+- [ ] Hardening aplicado
+- [ ] OSPF MD5 funcionando
+- [ ] BGP TCP-MD5 funcionando
+- [ ] VRRP auth funcionando
+- [ ] Firewall edge aplicado
+- [ ] Prueba con clave incorrecta documentada
+
+### Operación
+
+- [ ] Change log completo
+- [ ] Backups con restore probado
+- [ ] Monitoreo habilitado y documentado
+- [ ] Runbook por drill + post-mortem global
+
+### Entrega
+
+- [ ] Memoria completa
+- [ ] Repo git con estructura correcta y commits por rol
+- [ ] `backlog.md` con todas las tareas en done
+- [ ] Capturas organizadas
+- [ ] Cada integrante puede defender su parte y una parte ajena
