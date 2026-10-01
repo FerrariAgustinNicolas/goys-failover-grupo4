@@ -67,12 +67,21 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 
 #### VRRP
 
-La consigna establece dos grupos VRRP con balanceo de carga: DIST-1 será master del grupo 10 y DIST-2 será master del grupo 20.
+La consigna establece dos grupos VRRP con balanceo de carga: DIST-1 será master del grupo 10 y DIST-2 será master del grupo 20. Cada DIST es master de un grupo y backup del otro, de modo que ambos routers cursan tráfico en operación normal (load-sharing).
 
-| Grupo | VRID | Master | Priority | IP virtual |
-| --- | :-: | :-: | :-: | :-: |
-| USERS | 10 | DIST-1 | Pendiente R4 | `192.168.10.1` |
-| SERVERS | 20 | DIST-2 | Pendiente R4 | `192.168.20.1` |
+| Grupo | VRID | IP virtual | Master | Priority master | Backup | Priority backup |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: |
+| USERS | 10 | `192.168.10.1` | DIST-1 (`192.168.10.2`) | 150 | DIST-2 (`192.168.10.3`) | 100 |
+| SERVERS | 20 | `192.168.20.1` | DIST-2 (`192.168.20.3`) | 150 | DIST-1 (`192.168.20.2`) | 100 |
+
+Parámetros comunes a ambos grupos:
+
+| Parámetro | Valor | Justificación |
+| --- | --- | --- |
+| Preempt | Habilitado | El master original recupera el rol al volver de una falla, restableciendo el reparto de carga. |
+| Intervalo de anuncios | 1 s | Valor por defecto; la falla del master se detecta en unos 3 s. |
+| Versión | VRRPv2 | Es la versión que admite autenticación. |
+| Autenticación | Ver sección 1.3 | Evita que un dispositivo no autorizado se declare master. |
 
 #### Loopbacks / Router-IDs
 
@@ -87,8 +96,10 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 | EDGE | `10.255.255.3/32` |
 | CORE-1 | Pendiente R3 |
 | CORE-2 | Pendiente R3 |
-| DIST-1 | Pendiente R4 |
-| DIST-2 | Pendiente R4 |
+| DIST-1 | `10.255.255.6/32` |
+| DIST-2 | `10.255.255.7/32` |
+
+Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2 `.2`, EDGE `.3`, CORE-1 `.4`, CORE-2 `.5`, DIST-1 `.6`, DIST-2 `.7`. Los DIST usan su loopback como router-id de OSPF.
 
 La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
 
