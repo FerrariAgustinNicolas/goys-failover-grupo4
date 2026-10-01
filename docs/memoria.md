@@ -78,19 +78,81 @@ La asignación definitiva se consolidará con R2, R3 y R4 dentro del IPAM genera
 
 ### 1.3 Política de seguridad
 
+#### Claves de autenticación
+
+Las claves utilizadas serán exclusivas del entorno de laboratorio y no corresponderán a contraseñas personales ni a credenciales reutilizadas en otros servicios.
+
+| Mecanismo | Enlace / grupo | Clave de laboratorio | Responsable |
+| --- | --- | --- | --- |
+| BGP TCP-MD5 | EDGE ↔ ISP-1 | `G4-BGP-ISP1-26` | R1 / R2 |
+| BGP TCP-MD5 | EDGE ↔ ISP-2 | `G4-BGP-ISP2-26` | R1 / R2 |
+| OSPF MD5 | Área 0 | Pendiente de definición | R3 |
+| VRRP | USERS — VRID 10 | Pendiente de definición | R4 |
+| VRRP | SERVERS — VRID 20 | Pendiente de definición | R4 |
+
+Las claves BGP se mantienen separadas para cada proveedor, de modo que una misma credencial no sea compartida por ambas sesiones eBGP.
+
+Las claves de OSPF y VRRP serán incorporadas por los responsables correspondientes antes de cerrar F0.
+
 #### Aporte R1 — EDGE/WAN
 
-- Las dos sesiones eBGP del router EDGE utilizarán autenticación TCP-MD5.
-- EDGE contará con filtrado de entrada mediante firewall.
-- El acceso al plano de gestión de EDGE quedará restringido a los servicios y orígenes necesarios.
-- Los servicios de administración que no sean necesarios permanecerán deshabilitados.
+**Usuarios y privilegios**
+
+En EDGE se utilizarán cuentas diferenciadas según su función:
+
+- `admin`: cuenta administrativa destinada a tareas de configuración.
+- `monitor`: cuenta con privilegios de solo lectura destinada a monitoreo y verificación.
+
+No se utilizarán cuentas compartidas con credenciales personales de los integrantes.
+
+**Servicios de administración**
+
+Se mantendrán habilitados únicamente los servicios necesarios para la administración del laboratorio.
+
+En EDGE se deshabilitarán los servicios que no sean requeridos, incluyendo:
+
+- Telnet
+- FTP
+- HTTP
+- API
+
+Los servicios de administración que permanezcan habilitados, como SSH o Winbox, deberán restringirse al plano de gestión y no quedar expuestos innecesariamente hacia los enlaces de proveedores.
+
+**Autenticación BGP**
+
+Las dos sesiones eBGP:
+
+- EDGE ↔ ISP-1
+- EDGE ↔ ISP-2
+
+utilizarán autenticación TCP-MD5.
+
+Se utilizará una clave independiente para cada proveedor:
+
+- EDGE ↔ ISP-1: `G4-BGP-ISP1-26`
+- EDGE ↔ ISP-2: `G4-BGP-ISP2-26`
+
+Las claves son exclusivas del entorno de laboratorio y no corresponden a credenciales personales ni reutilizadas en otros servicios. R1 y R2 deberán utilizar los mismos valores en ambos extremos de cada sesión BGP.
+
+**Firewall EDGE**
+
+El firewall de EDGE seguirá una política restrictiva:
+
+1. permitir tráfico necesario para el funcionamiento de la red;
+2. permitir las sesiones BGP con ISP-1 e ISP-2;
+3. permitir únicamente el tráfico de administración autorizado;
+4. permitir tráfico perteneciente a conexiones establecidas o relacionadas;
+5. descartar tráfico de entrada no solicitado o no autorizado;
+6. registrar eventos relevantes cuando sea necesario para verificación y troubleshooting.
+
+Las reglas concretas se implementarán en F3, luego de la aprobación del diseño F0.
 
 #### Política integrada del grupo
 
 - **Usuarios y privilegios:** pendiente de consolidación.
 - **Servicios a deshabilitar:** pendiente de consolidación.
 - **Autenticación OSPF:** pendiente R3.
-- **Autenticación BGP:** TCP-MD5; pendiente de consolidación entre R1 y R2.
+- **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP, definidas en la tabla de claves de autenticación.
 - **Autenticación VRRP:** pendiente R4.
 
 ### 1.4 Política de operación
