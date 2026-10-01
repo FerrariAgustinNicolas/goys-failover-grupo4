@@ -114,12 +114,14 @@ Las claves utilizadas serán exclusivas del entorno de laboratorio y no correspo
 | BGP TCP-MD5 | EDGE ↔ ISP-1 | `G4-BGP-ISP1-26` | R1 / R2 |
 | BGP TCP-MD5 | EDGE ↔ ISP-2 | `G4-BGP-ISP2-26` | R1 / R2 |
 | OSPF MD5 | Área 0 | Pendiente de definición | R3 |
-| VRRP | USERS — VRID 10 | Pendiente de definición | R4 |
-| VRRP | SERVERS — VRID 20 | Pendiente de definición | R4 |
+| VRRP | USERS — VRID 10 | `G4VRP-10` | R4 |
+| VRRP | SERVERS — VRID 20 | `G4VRP-20` | R4 |
 
 Las claves BGP se mantienen separadas para cada proveedor, de modo que una misma credencial no sea compartida por ambas sesiones eBGP.
 
-Las claves de OSPF y VRRP serán incorporadas por los responsables correspondientes antes de cerrar F0.
+La clave de OSPF será incorporada por R3 antes de cerrar F0.
+
+Las claves VRRP son independientes para cada grupo y tienen 8 caracteres, el máximo del campo de autenticación de VRRPv2.
 
 #### Aporte R1 — EDGE/WAN
 
@@ -174,13 +176,37 @@ El firewall de EDGE seguirá una política restrictiva:
 
 Las reglas concretas se implementarán en F3, luego de la aprobación del diseño F0.
 
+#### Aporte R4 — Distribución
+
+**Usuarios y privilegios**
+
+En DIST-1 y DIST-2 se aplica el mismo esquema que en EDGE: `admin` para configuración y `monitor` con permisos de solo lectura. No se usan credenciales personales.
+
+**Servicios de administración**
+
+Se deshabilitan Telnet, FTP, HTTP y API. Se mantiene únicamente SSH, y en las interfaces hacia las LAN USERS/SERVERS no se atienden servicios de administración.
+
+**Autenticación VRRP**
+
+Los dos grupos usan VRRPv2 con autenticación `simple` y una clave independiente por grupo:
+
+- USERS (VRID 10): `G4VRP-10`
+- SERVERS (VRID 20): `G4VRP-20`
+
+La autenticación `simple` viaja en texto claro dentro del segmento, por lo que protege contra equipos mal configurados y no contra un atacante con acceso al enlace. Se documenta como limitación en la sección 5. DIST-1 y DIST-2 deben configurar el mismo valor en cada grupo.
+
+**Plano de control en DIST**
+
+- Las interfaces hacia las LAN se declaran pasivas en OSPF, de modo que no se formen adyacencias con hosts.
+- Las interfaces hacia CORE usan la autenticación OSPF MD5 definida por R3.
+
 #### Política integrada del grupo
 
 - **Usuarios y privilegios:** pendiente de consolidación.
 - **Servicios a deshabilitar:** pendiente de consolidación.
 - **Autenticación OSPF:** pendiente R3.
 - **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP, definidas en la tabla de claves de autenticación.
-- **Autenticación VRRP:** pendiente R4.
+- **Autenticación VRRP:** VRRPv2 con autenticación `simple` y clave independiente por grupo (VRID 10 y VRID 20), definidas en la tabla de claves de autenticación.
 
 ### 1.4 Política de operación
 
