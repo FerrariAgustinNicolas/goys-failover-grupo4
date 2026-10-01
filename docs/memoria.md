@@ -52,12 +52,16 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 | EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / interfaz pendiente | CORE-1: `10.255.0.10` / interfaz pendiente |
 | EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / interfaz pendiente | CORE-2: `10.255.0.14` / interfaz pendiente |
 | CORE-1 ↔ CORE-2 | Pendiente R3 | Pendiente R3 | Pendiente R3 |
-| CORE-1 ↔ DIST-1 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| CORE-1 ↔ DIST-2 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| CORE-2 ↔ DIST-1 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| CORE-2 ↔ DIST-2 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| USERS | `192.168.10.0/24` | Pendiente R4 | Gateway VRRP: `192.168.10.1` |
-| SERVERS | `192.168.20.0/24` | Pendiente R4 | Gateway VRRP: `192.168.20.1` |
+| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / interfaz pendiente | DIST-1: `10.255.0.22` / interfaz pendiente |
+| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / interfaz pendiente | DIST-2: `10.255.0.26` / interfaz pendiente |
+| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / interfaz pendiente | DIST-1: `10.255.0.30` / interfaz pendiente |
+| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2: `10.255.0.33` / interfaz pendiente | DIST-2: `10.255.0.34` / interfaz pendiente |
+| USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / DIST-2: `192.168.10.3` (interfaz pendiente) | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
+| SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / DIST-2: `192.168.20.3` (interfaz pendiente) | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
+
+> **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. Queda reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2 (a confirmar por R3). Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`. Las direcciones del lado CORE son una propuesta de R4, sujeta a la confirmación de R3.
+>
+> **Direccionamiento de las LAN:** en cada LAN, `.1` es la IP virtual VRRP (gateway de los hosts), `.2` es DIST-1, `.3` es DIST-2 y `.100` es el host.
 
 > Los nombres de las interfaces se completarán a partir del proyecto GNS3 `topologia_failover_routing`. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
 
