@@ -418,11 +418,36 @@ Pendiente de las fases de implementación.
 
 ### 6.1 Change log
 
-Pendiente R5.
+Formato y convención de commits: ver 1.4.
+
+| Fecha | Responsable | Cambio | Motivo | Cómo se revierte |
+| --- | --- | --- | --- | --- |
+| 2026-10-01 | R1 | `5979210` chore(repo): crea estructura inicial del laboratorio | Estructura del repositorio pedida por la consigna | `git revert 5979210` |
+| 2026-10-01 | R1 | `2b56d18` docs(ipam): define direccionamiento de EDGE y enlaces WAN | F0: IPAM de EDGE y corrección de los defectos 1 y 2 del diagrama | `git revert 2b56d18` |
+| 2026-10-01 | R1 | `e9d9e22` docs(seguridad): define politica de seguridad del EDGE | F0: usuarios, servicios, firewall y claves BGP TCP-MD5 de EDGE | `git revert e9d9e22` |
+| 2026-10-01 | R1 | `3fc9883` docs(ipam): asigna router-id de EDGE | F0: router-id de EDGE independiente de las interfaces físicas | `git revert 3fc9883` |
+| 2026-10-01 | R4 | `01688e5` docs(ipam): define enlaces CORE-DIST y direccionamiento de LAN USERS/SERVERS | F0: direccionamiento de distribución y LAN sin solapamiento | `git revert 01688e5` |
+| 2026-10-01 | R4 | `c7831a1` docs(ipam): define VRRP (VRID 10/20, prioridades) y router-id de DIST-1/DIST-2 | F0: gateway redundante con load-sharing entre DIST-1 y DIST-2 | `git revert c7831a1` |
+| 2026-10-01 | R4 | `2334260` docs(seguridad): define claves VRRP y politica de hardening de DIST | F0: autenticación VRRP y hardening de distribución | `git revert 2334260` |
+| 2026-10-01 | R4 | `784ea3e` docs(memoria): documenta correccion HSRP en core a VRRP en distribucion | F0: corrección del defecto 3 del diagrama | `git revert 784ea3e` |
+| 2026-10-01 | R3 | `8b25741` docs(ipam): define enlace core-core y router-id de CORE | F0: enlace core–core para OSPF y router-id de CORE | `git revert 8b25741` |
+| 2026-10-01 | R3 | `4bf6ab5` docs(seguridad): define clave OSPF MD5 y politica de hardening de CORE | F0: autenticación OSPF del área 0 y hardening de CORE | `git revert 4bf6ab5` |
+| 2026-10-01 | R3 | `ddddd0c` docs(memoria): documenta correccion de enlace core-core faltante | F0: corrección del defecto 4 del diagrama | `git revert ddddd0c` |
+| 2026-10-01 | R5 | `7fcfaed` docs(operacion): define formato de change log y politica de backup | F0: política de operación (1.4) | `git revert 7fcfaed` |
+| 2026-10-01 | R5 | `decde1c` docs(backlog): arma backlog de F0 a F5 con tareas por rol | F0: backlog con dueño por tarea | `git revert decde1c` |
+
+> Los aportes de R4 y R3 se integraron a `main` por los PR #1 (merge `58db8cd`) y #2 (merge `5427689`). Para revertir un aporte completo: `git revert -m 1 <hash del merge>`.
+>
+> Pendientes de registro: los commits de R2 (rama `docs/f0-r2-proveedores`) cuando se integren a `main`, y el commit que agrega esta tabla.
 
 ### 6.2 Backups
 
-Pendiente R5.
+Política: ver 1.4.
+
+**Pendiente de F1.** La evidencia se carga en esta sección a medida que se toman los backups:
+
+- **Registro de backups:** una fila por router y por hito (BASE, F1, F2, F3 y drills), con fecha, archivos `.rsc` y `.backup` en `backups/` y responsable.
+- **Restore probado:** router, archivo restaurado, comandos usados y comparación del `/export` antes y después, con la captura en `capturas/`.
 
 ### 6.3 Monitoreo
 
