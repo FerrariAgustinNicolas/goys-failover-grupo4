@@ -241,8 +241,76 @@ Un router con clave o identificador distinto no forma adyacencia, por lo que no 
 
 ### 1.4 Política de operación
 
-- **Formato del change log:** pendiente R5.
-- **Política de backup:** pendiente R5.
+#### Formato del change log
+
+Cada cambio lógico se registra en la sección 6.1 con el siguiente formato:
+
+| Fecha | Responsable | Cambio | Motivo | Cómo se revierte |
+| --- | --- | --- | --- | --- |
+
+- **Fecha:** día del commit, en formato `YYYY-MM-DD`.
+- **Responsable:** rol que hizo el cambio (`R1` … `R5`).
+- **Cambio:** hash corto del commit seguido de su mensaje.
+- **Motivo:** por qué se hizo el cambio (tarea del backlog, defecto del diagrama o falla que corrige).
+- **Cómo se revierte:** en documentación, `git revert <hash>`; en configuración, el comando inverso en el router o la restauración del backup anterior al cambio, indicando el archivo de `backups/`.
+
+**Convención de commits (cátedra):** `tipo(alcance): descripción`, en español y sin punto final.
+
+| Tipo | Uso |
+| --- | --- |
+| `feat` | Configuración nueva en un nodo (VRRP, OSPF, BGP, firewall, hosts) |
+| `fix` | Corrección de una configuración o de un dato erróneo |
+| `docs` | Memoria, backlog, IPAM y runbooks |
+| `ops` | Operación: backups, restore, drills y monitoreo |
+| `chore` | Estructura y mantenimiento del repositorio |
+
+El alcance indica el área o el nodo afectado, por ejemplo `ipam`, `seguridad`, `vrrp`, `ospf`, `bgp`, `firewall`, `dist`, `backup`, `drill` o `backlog`.
+
+- **Un commit por cambio lógico:** cada commit se puede revertir por separado sin arrastrar otros cambios. No se mezclan en un mismo commit cambios de distintos nodos o de distintos tipos.
+- **Ramas:** cada rol trabaja en su rama (por ejemplo `docs/f0-r4-distribucion`) y la integra a `main` por pull request.
+- **El change log refleja los commits del repo:** cada commit integrado a `main` tiene su fila en 6.1, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits de merge no llevan fila propia; el PR se cita en la nota de la tabla.
+
+#### Política de backup
+
+**Cuándo**
+
+| Momento | Sufijo del archivo |
+| --- | --- |
+| Snapshot BASE: topología levantada, antes de configurar | `base` |
+| Al cerrar F1 (IPs, loopbacks y hardening) | `f1` |
+| Al cerrar F2 (VRRP y OSPF) | `f2` |
+| Al cerrar F3 (BGP y firewall) | `f3` |
+| Antes y después de cada drill | `pre-drillN` / `post-drillN` |
+
+**Cómo**
+
+En cada router se generan dos archivos, con nombre `router_YYYY-MM-DD` más el sufijo del hito, para que dos backups del mismo día no se pisen:
+
+```text
+/export show-sensitive file=DIST-1_2026-10-09_f1
+/system backup save name=DIST-1_2026-10-09_f1
+```
+
+- `/export` genera el `.rsc`: la configuración en texto, legible y comparable con `git diff`.
+- `/system backup save` genera el `.backup`: la imagen binaria completa del router, para restaurar el equipo entero.
+- Los dos archivos se descargan por SCP/SFTP y se guardan en `backups/`.
+- El dueño de cada router genera los backups de sus equipos. R5 toma el snapshot BASE de los siete routers, coordina los hitos y verifica que estén los siete antes de dar el hito por cerrado.
+
+**Versionado en git**
+
+- Cada hito se commitea con `ops(backup): ...` y se registra en el change log (6.1) y en 6.2.
+- No se borran ni se sobrescriben backups anteriores. Con los `.rsc` versionados, `git diff` muestra qué cambió entre un hito y otro.
+
+**Restore**
+
+- Se prueba al menos una vez, en F1, sobre un router: se carga su backup con `/system backup load name=<archivo>.backup` (el equipo reinicia) y se compara el `/export` resultante con el `.rsc` del mismo hito.
+- Para volver a un hito a partir del `.rsc`: `/system reset-configuration no-defaults=yes run-after-reset=<archivo>.rsc`.
+- La evidencia (comandos, salida y captura) queda en 6.2.
+
+**Datos sensibles**
+
+- En RouterOS 7, `/export` omite por defecto las claves de autenticación. Se usa `show-sensitive` para que el `.rsc` sirva para restaurar: sin las claves, OSPF, BGP y VRRP no volverían a autenticar. Las claves que quedan en el archivo son las de laboratorio, ya publicadas en 1.3. Las contraseñas de usuarios no se incluyen en el `/export`.
+- En el repo no se suben contraseñas personales, claves privadas SSH ni ningún archivo con credenciales personales. Antes de commitear un backup, su dueño revisa el diff.
 
 ---
 
