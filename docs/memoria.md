@@ -105,6 +105,20 @@ Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2
 
 La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
 
+#### Sesiones eBGP
+
+> **Aporte R2 — Proveedores:** revisión de las dos sesiones eBGP entre EDGE y los proveedores.
+
+| Sesión | Extremo EDGE | Extremo ISP | Subred | Autenticación | Anuncio del ISP hacia EDGE |
+| --- | --- | --- | --- | --- | --- |
+| EDGE ↔ ISP-1 | `10.255.0.2` · AS 65000 · RID `10.255.255.3` | `10.255.0.1` · AS 65001 · RID `10.255.255.1` | `10.255.0.0/30` | TCP-MD5 `G4-BGP-ISP1-26` | `default-originate` (`0.0.0.0/0`) |
+| EDGE ↔ ISP-2 | `10.255.0.6` · AS 65000 · RID `10.255.255.3` | `10.255.0.5` · AS 65002 · RID `10.255.255.2` | `10.255.0.4/30` | TCP-MD5 `G4-BGP-ISP2-26` | `default-originate` (`0.0.0.0/0`) |
+
+- Las sesiones se establecen entre las IP de los enlaces `/30` (eBGP directo, sin multihop), no entre loopbacks: si el enlace cae, la sesión cae con él.
+- Cada sesión usa su propia clave TCP-MD5, con el mismo valor en ambos extremos.
+- Cada ISP anuncia una ruta por defecto hacia EDGE (`default-originate`). Con las dos sesiones activas, EDGE recibe dos defaults; si un proveedor cae, su ruta se retira y queda la del otro. Esa es la base del failover de salida a Internet.
+- Verificación de consistencia (F0): las IP de peering pertenecen a sus `/30`, los AS coinciden con los de la corrección del diagrama (defecto 2) y la topología, y los router-id no se repiten.
+
 ### 1.3 Política de seguridad
 
 #### Claves de autenticación
