@@ -19,12 +19,13 @@
 - [ ] [R2] router-id de ISP-1/ISP-2 y sesiones eBGP (en rama `docs/f0-r2-proveedores`, falta integrar a `main`)
 
 ### Corrección del diagrama (≥ 3 defectos)
-- [x] [R1] defecto 1: firewall sin par de alta disponibilidad (SPOF)
+- [ ] [R1] defecto 1: firewall sin par de alta disponibilidad (SPOF); recomendación para producción, no aplicada en el laboratorio
 - [x] [R1] defecto 2: iBGP Route Reflector mal ubicado → eBGP directo EDGE–ISP
 - [x] [R4] defecto 3: HSRP en el core → VRRP en distribución
 - [x] [R3] defecto 4: falta el enlace core–core
 
 ### Política de seguridad
+- [ ] [R1] consolidar la política de seguridad integrada del grupo en 1.3 (usuarios, servicios, alcance de gestión y autenticación); tarea F0, no postergada a F5
 - [x] [R1] política de seguridad de EDGE: usuarios, servicios, firewall y claves BGP TCP-MD5
 - [x] [R4] política de seguridad de DIST: usuarios, servicios y claves VRRP
 - [x] [R3] política de seguridad de CORE: usuarios, servicios y clave OSPF MD5
@@ -57,9 +58,9 @@
 - [ ] [R4] IPs de enlace y loopback de DIST
 
 ### Snapshot BASE
-- [ ] [R5] snapshot BASE de los 7 routers antes de configurar (`/export` + `/system backup save`)
-- [ ] [R5] subir el snapshot a `backups/` (`router_YYYY-MM-DD_base`) y registrarlo en 6.1 y 6.2
-- [ ] [R5] probar el restore en un router con su backup de F1 y dejar la evidencia en 6.2
+- [ ] [R5] obtener y revisar un `/export` sanitizado de cada uno de los 7 routers antes de configurar; publicar solo esos `.rsc` y metadatos no sensibles
+- [ ] [R5] guardar los backups binarios completos y cualquier export sensible cifrados fuera del repositorio público, en almacenamiento privado con acceso controlado; indicar solo un localizador privado no secreto y registrar metadatos, checksum y resultado en 6.1/6.2
+- [ ] [R5] probar en F1 el restore del backup privado en un router de la misma versión de RouterOS; documentar el protocolo privado para inyectar las claves de laboratorio y provisionar usuarios de gestión, con evidencia redactada en 6.2
 
 ### Hardening (los 7 routers)
 - [ ] [R1] hardening de EDGE

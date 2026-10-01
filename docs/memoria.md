@@ -24,7 +24,7 @@ La consigna identifica cinco problemas en el diseño original. Cada integrante d
 
 | # | Defecto detectado | Corrección aplicada | Justificación |
 | :-: | --- | --- | --- |
-| 1 | Firewall sin par de alta disponibilidad, generando un punto único de falla (SPOF). | En un entorno productivo se utilizaría un par de firewalls en alta disponibilidad/failover. | Un único firewall puede interrumpir la conectividad entre la red interna e Internet ante una falla del dispositivo. Un par redundante permite mantener el servicio si uno de los equipos queda fuera de operación. |
+| 1 | Firewall sin par de alta disponibilidad, generando un punto único de falla (SPOF). | Recomendación para producción: utilizar un par de firewalls en alta disponibilidad/failover. No se aplica en este laboratorio, que conserva un solo EDGE. | Un único firewall puede interrumpir la conectividad entre la red interna e Internet ante una falla del dispositivo. Un par redundante permite mantener el servicio si uno de los equipos queda fuera de operación. |
 | 2 | iBGP Route Reflector mal ubicado en el diseño original. | Se utiliza eBGP directamente entre EDGE (AS 65000) e ISP-1 (AS 65001) / ISP-2 (AS 65002), sin Route Reflector. | Los proveedores pertenecen a sistemas autónomos diferentes, por lo que corresponde utilizar eBGP. En esta topología no existe necesidad de incorporar un Route Reflector iBGP. |
 | 3 | HSRP en el core (diseño *collapsed*): el gateway redundante de las LAN vive en el core, que además hace de tránsito. | El primer salto redundante se mueve a distribución con VRRP: DIST-1 es master del grupo 10 (USERS) y DIST-2 del grupo 20 (SERVERS). El core queda como tránsito puro, solo con OSPF. | Cada capa cumple una función: el core solo reenvía y no concentra servicios de LAN. La falla de un gateway afecta a una sola LAN y no al core. VRRP es un estándar abierto (RFC 5798), mientras que HSRP es propietario de Cisco. Con dos grupos se reparte la carga entre DIST-1 y DIST-2. |
 | 4 | Sin enlace core–core: CORE-1 y CORE-2 no están conectados directamente, por lo que solo se comunican a través de EDGE o de una DIST. | Se agrega el enlace CORE-1 ↔ CORE-2 (`10.255.0.16/30`, CORE-1 `.17` / CORE-2 `.18`) en el área 0 de OSPF, con autenticación MD5. | Si un CORE pierde su enlace hacia EDGE, sin el enlace core–core su tráfico tendría que bajar a una DIST y volver a subir por el otro CORE, convirtiendo a la distribución en tránsito. Con el enlace directo, OSPF reconverge por el core y la distribución mantiene su función. Además, la adyacencia core–core forma parte de los requisitos de OSPF del laboratorio. |
@@ -268,7 +268,7 @@ El alcance indica el área o el nodo afectado, por ejemplo `ipam`, `seguridad`, 
 
 - **Un commit por cambio lógico:** cada commit se puede revertir por separado sin arrastrar otros cambios. No se mezclan en un mismo commit cambios de distintos nodos o de distintos tipos.
 - **Ramas:** cada rol trabaja en su rama (por ejemplo `docs/f0-r4-distribucion`) y la integra a `main` por pull request.
-- **El change log refleja los commits del repo:** cada commit integrado a `main` tiene su fila en 6.1, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits de merge no llevan fila propia; el PR se cita en la nota de la tabla.
+- **El change log refleja los commits del repo:** cada commit integrado a `main` tiene su fila en 6.1, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits de merge no llevan fila propia; el PR se cita en la nota de la tabla. Si un commit de integración modifica el propio change log y su SHA todavía no está disponible, se registra provisionalmente en su propia fila mediante el mensaje único y el enlace/identificador del PR; la siguiente actualización reemplaza esa referencia por el SHA real. Nunca se inventa un hash.
 
 #### Política de backup
 
@@ -282,35 +282,26 @@ El alcance indica el área o el nodo afectado, por ejemplo `ipam`, `seguridad`, 
 | Al cerrar F3 (BGP y firewall) | `f3` |
 | Antes y después de cada drill | `pre-drillN` / `post-drillN` |
 
-**Cómo**
+**Generación, revisión y publicación**
 
-En cada router se generan dos archivos, con nombre `router_YYYY-MM-DD` más el sufijo del hito, para que dos backups del mismo día no se pisen:
+En cada hito, el responsable prepara un export de texto `.rsc` y un backup binario completo `.backup`, con nombre `router_YYYY-MM-DD_<hito>`. Antes de compartir el export, lo inspecciona y sanitiza: el repositorio público puede contener únicamente `.rsc` sanitizados y metadatos no sensibles. Nunca se publican archivos `.backup`, exports `show-sensitive` ni exports completos que expongan secretos. La política no implica que se haya realizado ninguna captura: a F0 hay cero backups reales y cero ejecución de CLI de RouterOS.
 
-```text
-/export show-sensitive file=DIST-1_2026-10-09_f1
-/system backup save name=DIST-1_2026-10-09_f1
-```
+El backup binario es un artefacto sensible y se guarda cifrado fuera del repositorio público, en almacenamiento privado con acceso controlado. La versión de RouterOS importa: desde RouterOS 6.43, el binario no se cifra si no se proporciona explícitamente una contraseña; por eso la protección debe configurarse de forma explícita y no depender de un valor predeterminado. La contraseña se gestiona por un canal privado y nunca se registra en el repositorio ni junto al localizador del artefacto. Un backup completo puede incluir credenciales de usuarios y claves privadas SSH. Los exports completos con `show-sensitive` también se consideran sensibles y se custodian cifrados, fuera del repositorio y con acceso controlado.
 
-- `/export` genera el `.rsc`: la configuración en texto, legible y comparable con `git diff`.
-- `/system backup save` genera el `.backup`: la imagen binaria completa del router, para restaurar el equipo entero.
-- Los dos archivos se descargan por SCP/SFTP y se guardan en `backups/`.
-- El dueño de cada router genera los backups de sus equipos. R5 toma el snapshot BASE de los siete routers, coordina los hitos y verifica que estén los siete antes de dar el hito por cerrado.
+Los artefactos públicos y privados de hitos anteriores se conservan sin sobrescribirlos. Los `.rsc` sanitizados se versionan en el repositorio para que `git diff` permita revisar los cambios de configuración; cada hito se registra con un commit `ops(backup): ...` y se anota en 6.1 y 6.2. El traslado se realiza por SCP/SFTP mediante un canal seguro, sin guardar contraseñas ni otros secretos en el repositorio. Para cada artefacto privado se registra solamente un localizador privado no secreto, checksum, versión de RouterOS, router/propietario, fecha e hito, y resultado de revisión o restore. Las capturas y salidas de verificación se redactan antes de incorporarlas a la documentación.
 
-**Versionado en git**
+R5 toma y coordina el snapshot BASE de los siete routers. En los hitos posteriores, el responsable de cada router prepara sus propios backups y exports; R5 coordina los hitos y verifica los metadatos de los siete equipos antes de darlos por cerrados.
 
-- Cada hito se commitea con `ops(backup): ...` y se registra en el change log (6.1) y en 6.2.
-- No se borran ni se sobrescriben backups anteriores. Con los `.rsc` versionados, `git diff` muestra qué cambió entre un hito y otro.
+**Restore y límites de recuperación**
 
-**Restore**
+En F1 se probará la recuperación en el mismo dispositivo y con la misma versión de RouterOS que los del backup privado. La evidencia incluirá el resultado y comparación con el export sanitizado correspondiente, sin revelar secretos. La restauración completa depende del artefacto privado: para usar el `.rsc` público como base de recuperación habrá que inyectar las claves exclusivas de laboratorio por el protocolo privado y volver a provisionar los usuarios de gestión. El export sanitizado no puede restaurar por sí solo secretos omitidos.
 
-- Se prueba al menos una vez, en F1, sobre un router: se carga su backup con `/system backup load name=<archivo>.backup` (el equipo reinicia) y se compara el `/export` resultante con el `.rsc` del mismo hito.
-- Para volver a un hito a partir del `.rsc`: `/system reset-configuration no-defaults=yes run-after-reset=<archivo>.rsc`.
-- La evidencia (comandos, salida y captura) queda en 6.2.
+No se usarán credenciales personales ni se reutilizarán credenciales de otros servicios. Las claves ficticias ya documentadas en 1.3 solo son admisibles en un laboratorio aislado; no deben convertirse en claves personales ni reutilizarse fuera de él.
 
-**Datos sensibles**
+**Fuentes**
 
-- En RouterOS 7, `/export` omite por defecto las claves de autenticación. Se usa `show-sensitive` para que el `.rsc` sirva para restaurar: sin las claves, OSPF, BGP y VRRP no volverían a autenticar. Las claves que quedan en el archivo son las de laboratorio, ya publicadas en 1.3. Las contraseñas de usuarios no se incluyen en el `/export`.
-- En el repo no se suben contraseñas personales, claves privadas SSH ni ningún archivo con credenciales personales. Antes de commitear un backup, su dueño revisa el diff.
+- MikroTik, [Backup](https://help.mikrotik.com/docs/spaces/ROS/pages/40992852/Backup), consultado el 2026-10-01. Desde RouterOS 6.43, si no se indica contraseña explícita, el backup binario no queda cifrado.
+- MikroTik, [Configuration Management](https://help.mikrotik.com/docs/spaces/ROS/pages/328155/Configuration+Management), consultado el 2026-10-01. Los exports no incluyen contraseñas de usuarios del sistema, certificados instalados, claves SSH ni bases de datos de Dude/User Manager; se recomienda importar en la misma versión de RouterOS.
 
 ---
 
@@ -435,10 +426,12 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-01 | R3 | `ddddd0c` docs(memoria): documenta correccion de enlace core-core faltante | F0: corrección del defecto 4 del diagrama | `git revert ddddd0c` |
 | 2026-10-01 | R5 | `7fcfaed` docs(operacion): define formato de change log y politica de backup | F0: política de operación (1.4) | `git revert 7fcfaed` |
 | 2026-10-01 | R5 | `decde1c` docs(backlog): arma backlog de F0 a F5 con tareas por rol | F0: backlog con dueño por tarea | `git revert decde1c` |
+| 2026-10-01 | R5 | `a634504` docs(changelog): registra los commits de F0 y deja pendiente la evidencia de backup | R5: registra los commits F0 y la evidencia de backup pendiente; PR #4 | `git revert a634504` |
+| 2026-10-01 | R1 — FerrariAgustinNicolas (integración) | Referencia prevista al integrar: `docs(operacion): protege backups publicos y ajusta trazabilidad F0` (PR #4; todavía no integrado) | Política pública de backup segura y estado veraz de HA y seguridad en F0 | Una vez integrado, localizar el SHA real con `git log --all --format='%H %s'` y revertirlo con `git revert <SHA verificado>` |
 
 > Los aportes de R4 y R3 se integraron a `main` por los PR #1 (merge `58db8cd`) y #2 (merge `5427689`). Para revertir un aporte completo: `git revert -m 1 <hash del merge>`.
 >
-> Pendientes de registro: los commits de R2 (rama `docs/f0-r2-proveedores`) cuando se integren a `main`, y el commit que agrega esta tabla.
+> Los commits de R2 ya existentes en la rama `docs/f0-r2-proveedores` quedan pendientes de integración a `main` y de registro aquí.
 
 ### 6.2 Backups
 
@@ -446,8 +439,8 @@ Política: ver 1.4.
 
 **Pendiente de F1.** La evidencia se carga en esta sección a medida que se toman los backups:
 
-- **Registro de backups:** una fila por router y por hito (BASE, F1, F2, F3 y drills), con fecha, archivos `.rsc` y `.backup` en `backups/` y responsable.
-- **Restore probado:** router, archivo restaurado, comandos usados y comparación del `/export` antes y después, con la captura en `capturas/`.
+- **Registro de backups:** una fila por router e hito (BASE, F1, F2, F3 y drills), con fecha, versión de RouterOS, propietario, checksum, resultado y referencia a un localizador privado no secreto. Solo los `.rsc` inspeccionados y sanitizados y los metadatos no sensibles pueden estar en el repositorio público; los `.backup` y exports sensibles permanecen cifrados fuera del repositorio y bajo acceso controlado.
+- **Restore probado (F1):** router y versión coincidente, referencia privada al artefacto, resultado y comparación con el export sanitizado; documentar el protocolo privado para reinyectar las claves de laboratorio y provisionar usuarios de gestión. Las capturas y salidas se redactan; no se registran contraseñas ni rutas secretas.
 
 ### 6.3 Monitoreo
 
