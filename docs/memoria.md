@@ -192,6 +192,25 @@ El firewall de EDGE seguirá una política restrictiva:
 
 Las reglas concretas se implementarán en F3, luego de la aprobación del diseño F0.
 
+#### Aporte R2 — Proveedores
+
+**Usuarios y privilegios**
+
+En ISP-1 e ISP-2 se aplica el mismo esquema que en EDGE y DIST: `admin` para configuración y `monitor` con permisos de solo lectura. No se usan credenciales personales.
+
+**Servicios de administración**
+
+Se deshabilitan Telnet, FTP, HTTP y API. Se mantiene únicamente SSH.
+
+**Autenticación BGP**
+
+Cada ISP autentica su sesión eBGP con EDGE mediante TCP-MD5, con el mismo valor que EDGE en su extremo:
+
+- ISP-1 ↔ EDGE: `G4-BGP-ISP1-26`
+- ISP-2 ↔ EDGE: `G4-BGP-ISP2-26`
+
+Una sesión con clave distinta o sin clave no se establece. Esto evita que un equipo no autorizado forme una sesión BGP con EDGE o inyecte rutas en ella.
+
 #### Aporte R4 — Distribución
 
 **Usuarios y privilegios**
@@ -218,8 +237,8 @@ La autenticación `simple` viaja en texto claro dentro del segmento, por lo que 
 
 #### Política integrada del grupo
 
-- **Usuarios y privilegios:** pendiente de consolidación.
-- **Servicios a deshabilitar:** pendiente de consolidación.
+- **Usuarios y privilegios:** pendiente de consolidación. ISP-1/ISP-2 (R2): `admin` y `monitor` (solo lectura), sin credenciales personales.
+- **Servicios a deshabilitar:** pendiente de consolidación. ISP-1/ISP-2 (R2): Telnet, FTP, HTTP y API deshabilitados; solo SSH.
 - **Autenticación OSPF:** pendiente R3.
 - **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP, definidas en la tabla de claves de autenticación.
 - **Autenticación VRRP:** VRRPv2 con autenticación `simple` y clave independiente por grupo (VRID 10 y VRID 20), definidas en la tabla de claves de autenticación.
