@@ -26,7 +26,7 @@ La consigna identifica cinco problemas en el diseño original. Cada integrante d
 | :-: | --- | --- | --- |
 | 1 | Firewall sin par de alta disponibilidad, generando un punto único de falla (SPOF). | En un entorno productivo se utilizaría un par de firewalls en alta disponibilidad/failover. | Un único firewall puede interrumpir la conectividad entre la red interna e Internet ante una falla del dispositivo. Un par redundante permite mantener el servicio si uno de los equipos queda fuera de operación. |
 | 2 | iBGP Route Reflector mal ubicado en el diseño original. | Se utiliza eBGP directamente entre EDGE (AS 65000) e ISP-1 (AS 65001) / ISP-2 (AS 65002), sin Route Reflector. | Los proveedores pertenecen a sistemas autónomos diferentes, por lo que corresponde utilizar eBGP. En esta topología no existe necesidad de incorporar un Route Reflector iBGP. |
-| 3 | Pendiente de completar por R3/R4. | Pendiente. | Pendiente. |
+| 3 | HSRP en el core (diseño *collapsed*): el gateway redundante de las LAN vive en el core, que además hace de tránsito. | El primer salto redundante se mueve a distribución con VRRP: DIST-1 es master del grupo 10 (USERS) y DIST-2 del grupo 20 (SERVERS). El core queda como tránsito puro, solo con OSPF. | Cada capa cumple una función: el core solo reenvía y no concentra servicios de LAN. La falla de un gateway afecta a una sola LAN y no al core. VRRP es un estándar abierto (RFC 5798), mientras que HSRP es propietario de Cisco. Con dos grupos se reparte la carga entre DIST-1 y DIST-2. |
 
 ### 1.2 Plan de direccionamiento (IPAM)
 
@@ -52,23 +52,36 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 | EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / interfaz pendiente | CORE-1: `10.255.0.10` / interfaz pendiente |
 | EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / interfaz pendiente | CORE-2: `10.255.0.14` / interfaz pendiente |
 | CORE-1 ↔ CORE-2 | Pendiente R3 | Pendiente R3 | Pendiente R3 |
-| CORE-1 ↔ DIST-1 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| CORE-1 ↔ DIST-2 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| CORE-2 ↔ DIST-1 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| CORE-2 ↔ DIST-2 | Pendiente R3/R4 | Pendiente R3 | Pendiente R4 |
-| USERS | `192.168.10.0/24` | Pendiente R4 | Gateway VRRP: `192.168.10.1` |
-| SERVERS | `192.168.20.0/24` | Pendiente R4 | Gateway VRRP: `192.168.20.1` |
+| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / interfaz pendiente | DIST-1: `10.255.0.22` / interfaz pendiente |
+| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / interfaz pendiente | DIST-2: `10.255.0.26` / interfaz pendiente |
+| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / interfaz pendiente | DIST-1: `10.255.0.30` / interfaz pendiente |
+| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2: `10.255.0.33` / interfaz pendiente | DIST-2: `10.255.0.34` / interfaz pendiente |
+| USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / DIST-2: `192.168.10.3` (interfaz pendiente) | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
+| SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / DIST-2: `192.168.20.3` (interfaz pendiente) | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
+
+> **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. Queda reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2 (a confirmar por R3). Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`. Las direcciones del lado CORE son una propuesta de R4, sujeta a la confirmación de R3.
+>
+> **Direccionamiento de las LAN:** en cada LAN, `.1` es la IP virtual VRRP (gateway de los hosts), `.2` es DIST-1, `.3` es DIST-2 y `.100` es el host.
 
 > Los nombres de las interfaces se completarán a partir del proyecto GNS3 `topologia_failover_routing`. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
 
 #### VRRP
 
-La consigna establece dos grupos VRRP con balanceo de carga: DIST-1 será master del grupo 10 y DIST-2 será master del grupo 20.
+La consigna establece dos grupos VRRP con balanceo de carga: DIST-1 será master del grupo 10 y DIST-2 será master del grupo 20. Cada DIST es master de un grupo y backup del otro, de modo que ambos routers cursan tráfico en operación normal (load-sharing).
 
-| Grupo | VRID | Master | Priority | IP virtual |
-| --- | :-: | :-: | :-: | :-: |
-| USERS | 10 | DIST-1 | Pendiente R4 | `192.168.10.1` |
-| SERVERS | 20 | DIST-2 | Pendiente R4 | `192.168.20.1` |
+| Grupo | VRID | IP virtual | Master | Priority master | Backup | Priority backup |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: |
+| USERS | 10 | `192.168.10.1` | DIST-1 (`192.168.10.2`) | 150 | DIST-2 (`192.168.10.3`) | 100 |
+| SERVERS | 20 | `192.168.20.1` | DIST-2 (`192.168.20.3`) | 150 | DIST-1 (`192.168.20.2`) | 100 |
+
+Parámetros comunes a ambos grupos:
+
+| Parámetro | Valor | Justificación |
+| --- | --- | --- |
+| Preempt | Habilitado | El master original recupera el rol al volver de una falla, restableciendo el reparto de carga. |
+| Intervalo de anuncios | 1 s | Valor por defecto; la falla del master se detecta en unos 3 s. |
+| Versión | VRRPv2 | Es la versión que admite autenticación. |
+| Autenticación | Ver sección 1.3 | Evita que un dispositivo no autorizado se declare master. |
 
 #### Loopbacks / Router-IDs
 
@@ -83,8 +96,10 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 | EDGE | `10.255.255.3/32` |
 | CORE-1 | Pendiente R3 |
 | CORE-2 | Pendiente R3 |
-| DIST-1 | Pendiente R4 |
-| DIST-2 | Pendiente R4 |
+| DIST-1 | `10.255.255.6/32` |
+| DIST-2 | `10.255.255.7/32` |
+
+Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2 `.2`, EDGE `.3`, CORE-1 `.4`, CORE-2 `.5`, DIST-1 `.6`, DIST-2 `.7`. Los DIST usan su loopback como router-id de OSPF.
 
 La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
 
@@ -99,12 +114,14 @@ Las claves utilizadas serán exclusivas del entorno de laboratorio y no correspo
 | BGP TCP-MD5 | EDGE ↔ ISP-1 | `G4-BGP-ISP1-26` | R1 / R2 |
 | BGP TCP-MD5 | EDGE ↔ ISP-2 | `G4-BGP-ISP2-26` | R1 / R2 |
 | OSPF MD5 | Área 0 | Pendiente de definición | R3 |
-| VRRP | USERS — VRID 10 | Pendiente de definición | R4 |
-| VRRP | SERVERS — VRID 20 | Pendiente de definición | R4 |
+| VRRP | USERS — VRID 10 | `G4VRP-10` | R4 |
+| VRRP | SERVERS — VRID 20 | `G4VRP-20` | R4 |
 
 Las claves BGP se mantienen separadas para cada proveedor, de modo que una misma credencial no sea compartida por ambas sesiones eBGP.
 
-Las claves de OSPF y VRRP serán incorporadas por los responsables correspondientes antes de cerrar F0.
+La clave de OSPF será incorporada por R3 antes de cerrar F0.
+
+Las claves VRRP son independientes para cada grupo y tienen 8 caracteres, el máximo del campo de autenticación de VRRPv2.
 
 #### Aporte R1 — EDGE/WAN
 
@@ -159,13 +176,37 @@ El firewall de EDGE seguirá una política restrictiva:
 
 Las reglas concretas se implementarán en F3, luego de la aprobación del diseño F0.
 
+#### Aporte R4 — Distribución
+
+**Usuarios y privilegios**
+
+En DIST-1 y DIST-2 se aplica el mismo esquema que en EDGE: `admin` para configuración y `monitor` con permisos de solo lectura. No se usan credenciales personales.
+
+**Servicios de administración**
+
+Se deshabilitan Telnet, FTP, HTTP y API. Se mantiene únicamente SSH, y en las interfaces hacia las LAN USERS/SERVERS no se atienden servicios de administración.
+
+**Autenticación VRRP**
+
+Los dos grupos usan VRRPv2 con autenticación `simple` y una clave independiente por grupo:
+
+- USERS (VRID 10): `G4VRP-10`
+- SERVERS (VRID 20): `G4VRP-20`
+
+La autenticación `simple` viaja en texto claro dentro del segmento, por lo que protege contra equipos mal configurados y no contra un atacante con acceso al enlace. Se documenta como limitación en la sección 5. DIST-1 y DIST-2 deben configurar el mismo valor en cada grupo.
+
+**Plano de control en DIST**
+
+- Las interfaces hacia las LAN se declaran pasivas en OSPF, de modo que no se formen adyacencias con hosts.
+- Las interfaces hacia CORE usan la autenticación OSPF MD5 definida por R3.
+
 #### Política integrada del grupo
 
 - **Usuarios y privilegios:** pendiente de consolidación.
 - **Servicios a deshabilitar:** pendiente de consolidación.
 - **Autenticación OSPF:** pendiente R3.
 - **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP, definidas en la tabla de claves de autenticación.
-- **Autenticación VRRP:** pendiente R4.
+- **Autenticación VRRP:** VRRPv2 con autenticación `simple` y clave independiente por grupo (VRID 10 y VRID 20), definidas en la tabla de claves de autenticación.
 
 ### 1.4 Política de operación
 
