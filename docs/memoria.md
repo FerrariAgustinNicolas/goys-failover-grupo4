@@ -117,13 +117,13 @@ Las claves utilizadas serán exclusivas del entorno de laboratorio y no correspo
 | --- | --- | --- | --- |
 | BGP TCP-MD5 | EDGE ↔ ISP-1 | `G4-BGP-ISP1-26` | R1 / R2 |
 | BGP TCP-MD5 | EDGE ↔ ISP-2 | `G4-BGP-ISP2-26` | R1 / R2 |
-| OSPF MD5 | Área 0 | Pendiente de definición | R3 |
+| OSPF MD5 | Área 0 | `G4-OSPF-26` | R3 |
 | VRRP | USERS — VRID 10 | `G4VRP-10` | R4 |
 | VRRP | SERVERS — VRID 20 | `G4VRP-20` | R4 |
 
 Las claves BGP se mantienen separadas para cada proveedor, de modo que una misma credencial no sea compartida por ambas sesiones eBGP.
 
-La clave de OSPF será incorporada por R3 antes de cerrar F0.
+La clave OSPF es única para toda el área 0: todas las interfaces que forman adyacencias (EDGE, CORE y DIST) deben usar el mismo valor y el mismo identificador de clave.
 
 Las claves VRRP son independientes para cada grupo y tienen 8 caracteres, el máximo del campo de autenticación de VRRPv2.
 
@@ -204,11 +204,37 @@ La autenticación `simple` viaja en texto claro dentro del segmento, por lo que 
 - Las interfaces hacia las LAN se declaran pasivas en OSPF, de modo que no se formen adyacencias con hosts.
 - Las interfaces hacia CORE usan la autenticación OSPF MD5 definida por R3.
 
+#### Aporte R3 — Core
+
+**Usuarios y privilegios**
+
+En CORE-1 y CORE-2 se aplica el mismo esquema que en EDGE y DIST: `admin` para configuración y `monitor` con permisos de solo lectura. No se usan credenciales personales.
+
+**Servicios de administración**
+
+Se deshabilitan Telnet, FTP, HTTP y API. Se mantiene únicamente SSH. Los CORE son tránsito puro: no tienen LAN propias ni prestan servicios a hosts (sin VRRP, DHCP, DNS ni NAT); solo ejecutan OSPF.
+
+**Autenticación OSPF**
+
+Toda la red interna usa OSPF en el área 0 (backbone) con autenticación MD5 y la clave `G4-OSPF-26`, con identificador de clave `1`. La autenticación se aplica en todas las interfaces que forman adyacencias:
+
+- CORE ↔ EDGE: CORE-1 ↔ EDGE y CORE-2 ↔ EDGE.
+- CORE ↔ CORE: CORE-1 ↔ CORE-2.
+- CORE ↔ DIST: los cuatro enlaces hacia DIST-1 y DIST-2.
+
+Un router con clave o identificador distinto no forma adyacencia, por lo que no puede inyectar rutas en el área. R1 (EDGE) y R4 (DIST) deben configurar el mismo valor en su extremo de cada enlace. La clave tiene 10 caracteres, dentro del máximo de 16 que admite la autenticación MD5 de OSPF.
+
+**Plano de control en CORE**
+
+- Las loopbacks (`10.255.255.4/32` y `10.255.255.5/32`) se anuncian en el área 0 como interfaces pasivas y se usan como router-id.
+- Todos los enlaces del CORE son punto a punto hacia routers, por lo que no hay interfaces hacia hosts que requieran declararse pasivas.
+- Los CORE no redistribuyen rutas: solo reenvían el tráfico entre EDGE y DIST.
+
 #### Política integrada del grupo
 
 - **Usuarios y privilegios:** pendiente de consolidación.
 - **Servicios a deshabilitar:** pendiente de consolidación.
-- **Autenticación OSPF:** pendiente R3.
+- **Autenticación OSPF:** MD5 en el área 0 con una clave única para todas las adyacencias (EDGE, CORE y DIST), definida en la tabla de claves de autenticación.
 - **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP, definidas en la tabla de claves de autenticación.
 - **Autenticación VRRP:** VRRPv2 con autenticación `simple` y clave independiente por grupo (VRID 10 y VRID 20), definidas en la tabla de claves de autenticación.
 
