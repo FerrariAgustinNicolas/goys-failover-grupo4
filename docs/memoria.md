@@ -51,7 +51,7 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 | ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2: `10.255.0.5` / interfaz pendiente | EDGE: `10.255.0.6` / interfaz pendiente |
 | EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / interfaz pendiente | CORE-1: `10.255.0.10` / interfaz pendiente |
 | EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / interfaz pendiente | CORE-2: `10.255.0.14` / interfaz pendiente |
-| CORE-1 ↔ CORE-2 | Pendiente R3 | Pendiente R3 | Pendiente R3 |
+| CORE-1 ↔ CORE-2 | `10.255.0.16/30` | CORE-1: `10.255.0.17` / interfaz pendiente | CORE-2: `10.255.0.18` / interfaz pendiente |
 | CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / interfaz pendiente | DIST-1: `10.255.0.22` / interfaz pendiente |
 | CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / interfaz pendiente | DIST-2: `10.255.0.26` / interfaz pendiente |
 | CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / interfaz pendiente | DIST-1: `10.255.0.30` / interfaz pendiente |
@@ -62,6 +62,8 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 > **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. Queda reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2 (a confirmar por R3). Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`. Las direcciones del lado CORE son una propuesta de R4, sujeta a la confirmación de R3.
 >
 > **Direccionamiento de las LAN:** en cada LAN, `.1` es la IP virtual VRRP (gateway de los hosts), `.2` es DIST-1, `.3` es DIST-2 y `.100` es el host.
+
+> **Aporte R3 — enlace CORE ↔ CORE:** se utiliza el bloque reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2, con CORE-1 en `.17` y CORE-2 en `.18`, siguiendo la convención de que el dispositivo con menor numeración toma la primera IP utilizable. Se confirman las direcciones del lado CORE propuestas por R4 en los enlaces CORE ↔ DIST.
 
 > Los nombres de las interfaces se completarán a partir del proyecto GNS3 `topologia_failover_routing`. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
 
@@ -94,12 +96,14 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 | ISP-1 | Pendiente R2 |
 | ISP-2 | Pendiente R2 |
 | EDGE | `10.255.255.3/32` |
-| CORE-1 | Pendiente R3 |
-| CORE-2 | Pendiente R3 |
+| CORE-1 | `10.255.255.4/32` |
+| CORE-2 | `10.255.255.5/32` |
 | DIST-1 | `10.255.255.6/32` |
 | DIST-2 | `10.255.255.7/32` |
 
 Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2 `.2`, EDGE `.3`, CORE-1 `.4`, CORE-2 `.5`, DIST-1 `.6`, DIST-2 `.7`. Los DIST usan su loopback como router-id de OSPF.
+
+CORE-1 (`10.255.255.4/32`) y CORE-2 (`10.255.255.5/32`) también usan su loopback como router-id de OSPF, de modo que el identificador no dependa del estado de ninguna interfaz física (aporte R3).
 
 La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
 
