@@ -72,9 +72,21 @@ La consigna establece dos grupos VRRP con balanceo de carga: DIST-1 será master
 
 #### Loopbacks / Router-IDs
 
-Se propone reservar el bloque `10.255.255.0/24` para las direcciones de loopback y Router-ID, utilizando una dirección `/32` por router.
+Se reserva el bloque `10.255.255.0/24` para las direcciones de loopback y Router-ID, utilizando una dirección `/32` por router.
 
-La asignación definitiva se consolidará con R2, R3 y R4 dentro del IPAM general.
+Como criterio general se propone una numeración consecutiva por dispositivo.
+
+| Nodo | Loopback / Router-ID |
+| --- | --- |
+| ISP-1 | Pendiente R2 |
+| ISP-2 | Pendiente R2 |
+| EDGE | `10.255.255.3/32` |
+| CORE-1 | Pendiente R3 |
+| CORE-2 | Pendiente R3 |
+| DIST-1 | Pendiente R4 |
+| DIST-2 | Pendiente R4 |
+
+La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
 
 ### 1.3 Política de seguridad
 
