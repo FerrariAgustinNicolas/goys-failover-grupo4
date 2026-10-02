@@ -1,0 +1,9 @@
+# Herramientas locales
+/odd/
+.codegraph/
+
+# macOS
+.DS_Store
+
+# Archivos locales de herramientas
+/.atl/
