@@ -20,7 +20,7 @@
 - [x] [R1] auditar las 33 asignaciones IPAM: 18 redes únicas, 153 pares comparados, sin solapamiento
 
 ### Corrección del diagrama (≥ 3 defectos)
-- [ ] [R1] defecto 1: firewall sin par de alta disponibilidad (SPOF); mejora opcional de producción, residual fuera del mínimo F0. El laboratorio conserva un EDGE; no se requiere agregar otro equipo para cerrar F0.
+- [x] [R1] documentar defecto 1: firewall único como SPOF y justificar el uso de un par HA en producción
 - [x] [R1] defecto 2: iBGP Route Reflector mal ubicado → eBGP directo EDGE–ISP
 - [x] [R4] defecto 3: HSRP en el core → VRRP en distribución
 - [x] [R3] defecto 4: falta el enlace core–core (habilita tránsito directo; preferencia OSPF depende de costos a validar en F2)

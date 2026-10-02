@@ -298,7 +298,7 @@ El alcance indica el área o el nodo afectado, por ejemplo `ipam`, `seguridad`, 
 
 - **Un commit por cambio lógico:** cada commit se puede revertir por separado sin arrastrar otros cambios. No se mezclan en un mismo commit cambios de distintos nodos o de distintos tipos.
 - **Ramas:** cada rol trabaja en su rama (por ejemplo `docs/f0-r4-distribucion`) y la integra a `main` por pull request.
-- **El change log refleja los commits del repo:** cada commit integrado a `main` tiene su fila en 6.1, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits de merge no llevan fila propia; el PR se cita en la nota de la tabla. Si un commit de integración modifica el propio change log y su SHA todavía no está disponible, se registra provisionalmente en su propia fila mediante el mensaje único y el enlace/identificador del PR; la siguiente actualización reemplaza esa referencia por el SHA real. Nunca se inventa un hash.
+- **El change log refleja los commits del repo:** se registran los commits sustantivos de diseño, configuración, operación y documentación del laboratorio, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits cuyo único propósito es mantener o actualizar el propio change log no requieren una fila autorreferencial, para evitar que cada actualización exija otro commit que la registre. Los merges de PR no llevan fila propia: se resumen en la nota de integraciones de la tabla. Nunca se inventa un hash ni se crean filas prospectivas.
 
 #### Política de backup
 
@@ -467,8 +467,6 @@ Formato y convención de commits: ver 1.4.
 > Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152` y PR #5 (`.gitignore`) `531056f`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
 >
 > `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Los commits individuales conservan su autoría y no se reescriben.
->
-> El commit de este cierre documental de R5 (rama `docs/f0-r5-cierre`) se registra con su SHA real en la siguiente actualización, después de su merge.
 
 ### 6.2 Backups
 
