@@ -1,25 +1,17 @@
-# F0 review and integration
+# F0 integration — recovery tasks
 
-## Intent and constraints
-Safely integrate PR #4 (R5) before PR #3 (R2), preserving valid R1–R5 contributions and unsquashed author history. F0 deadline: 2026-10-02. Design/documentation only: no router CLI, F1 execution, force push, main history rewrite or personal credentials.
+## Intent
+Review and integrate #4 R5 before #3 R2; deadline2026-10-02. Preserve every valid role contribution and unsquashed author history. No router CLI/F1 execution/history rewrite/force push/personal credentials. PUBLIC repo; preserve unrelated untracked .gitignore/.codegraph/.
 
-## Initial state
-Main 5427689 (local fast-forwarded); R5 a634504 CLEAN; R2 feaecc6 CONFLICTING, base 784ea3e. Repo PUBLIC. Preserve untracked .gitignore and .codegraph/; neither enters commits.
-
-## Tasks and routing
-- [ ] T1 Correct and integrate PR #4. In progress: safe backup policy and truthful backlog/log corrected; independent verification and native review pending. Delegated writer because two nontrivial files; parent Git publication.
-- [ ] T2 Merge new main into PR #3, reconcile semantically, consolidate security, diagram, backlog and log. Pending. Delegated writer; parent merge/history.
-- [ ] T3 Audit resulting main and report gate/blockers. Pending. Independent read-only verifier; parent report.
+## Stable tasks
+- [x] T1 R5 correction/integration: e58fee3, independent APPROVE, native review-92445233d0ee30cb approved/acknowledged, normal merge #4 e35fdeb. Safe private backups/public sanitized exports; truthful HA and F1 backlog.
+- [ ] T2 R2 integration: in progress. Merge e35fdeb into R2 committed be128f7 after semantic conflict resolution. All R1–R5 retained. Consolidation writer verified33IPs/7RIDs/5keys/9diagramlinks and corrected R1 attribution. Full independent verification/native review and normal PR3 merge pending.
+- [ ] T3 Final main audit/report: pending. Verify actual main after integration and report gate plus exact remaining F0 blockers.
 
 ## Acceptance and checks
-Preserve authors and every valid role contribution. Public backups only inspected sanitized exports/metadata; sensitive exports and encrypted binaries remain private. HA is a production recommendation, residual single-EDGE SPOF, not applied. Correct minimum three defects without inventing appliances. Actual GNS3 interface mapping and restore evidence belong to F1. Verify complete diffs, IP math, unique IDs, key/service consistency, honest backlog, log coverage, conflict markers, required directories and absence of premature configs.
+Minimum3 justified applied design defects; HA residual singleEDGE not applied. Nine /30s, LANs, VRRP and seven unique RIDs consistent; no overlap. Complete users/services/auth policy all7 routers. Operation backup timing/ownership/naming/restoreF1/private protection. Full change-log coverage and honest role-owned F0–F5 backlog. Required directories and no premature configs. GNS3 interface mapping and real restore are F1 dependencies.
 
-TDD: not applicable to documentation-only changes; no runner found. One writer. RDD on. Native ASSESS was unassessable (untracked declaration), so independent verification required. Normal merges per existing PR; original PR #4 257 changed lines, #3 43. Narrow corrections plus this tracking document expected below about 400 per slice, advisory only.
+## Route and evidence
+Delegated exploration (4+files), one bounded writer (2+files), independent verifier, parent Git publication. TDD n/a documentation/no runner. RDD on; first ASSESS unassessable due untracked scope, independent verifier supplied full checks. Parent spot-checks complete diffs/whitespace/GitHub exact head. Strategy normal existing role PRs, no squash; approx400-line advisory slice forecast.
 
-## Evidence and rationale
-Parent fetched all refs and read full PR diffs/metadata. Independent verifier inspected Git and Python: combined main+R2 gives nine valid /30s, 33 unique assignments, 18 networks, 153 pairs, zero overlaps; main alone has five assigned RIDs (ISP pending). MikroTik primary Backup/VRRP documentation confirms explicit password required to encrypt binaries, sensitive private backup storage, and cleartext simple VRRP only protects accidental misconfiguration.
-
-R5 writer passed diff whitespace/conflict checks; corrected unsafe publication, restored BASE ownership/SCP-SFTP/versioning/retention/same-device-version restore, kept F1–F5 unchecked, added existing a634504 log row and prospective unique R1 correction reference. No backups or router commands executed. Independent final PR4 verdict pending; no PR merged yet.
-
-## Next step
-Finish independent verification and native review of corrected R5 slice, commit/push without rewriting history, merge #4, then update #3. Never equate checklist text with acceptance evidence.
+Initial main5427689; PR4a634504 clean; PR3feaecc6 conflicting/base784ea3e. Independent Python combined candidate:33 unique assignments/18 networks/153pairs/zero overlaps. R5 safety corrections grounded in MikroTik Backup/Configuration Management/VRRP primary docs. R2 merge writer confirmed9 transit/7RIDs/5keys, no conflict markers, all roles retained; parent read main-to-candidate diff before be128f7. No routers configured or backups generated.

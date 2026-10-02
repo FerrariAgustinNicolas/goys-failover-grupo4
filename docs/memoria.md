@@ -2,7 +2,9 @@
 
 **Grupo:** 4  
 **Materia:** Gestión Operativa y Seguridad en Redes (GOYS)
-**Fecha de entrega:** viernes 23/10/2026
+**Vencimiento de F0:** viernes 02/10/2026
+
+**Fecha de entrega final:** viernes 23/10/2026
 
 ## Integrantes y roles
 
@@ -20,14 +22,15 @@
 
 ### 1.1 Corrección del diagrama
 
-La consigna identifica cinco problemas en el diseño original. Cada integrante documentará las correcciones correspondientes a su área.
+La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. La integración completa de F0 en `main` sigue pendiente de auditoría del parent.
 
 | # | Defecto detectado | Corrección aplicada | Justificación |
 | :-: | --- | --- | --- |
 | 1 | Firewall sin par de alta disponibilidad, generando un punto único de falla (SPOF). | Recomendación para producción: utilizar un par de firewalls en alta disponibilidad/failover. No se aplica en este laboratorio, que conserva un solo EDGE. | Un único firewall puede interrumpir la conectividad entre la red interna e Internet ante una falla del dispositivo. Un par redundante permite mantener el servicio si uno de los equipos queda fuera de operación. |
 | 2 | iBGP Route Reflector mal ubicado en el diseño original. | Se utiliza eBGP directamente entre EDGE (AS 65000) e ISP-1 (AS 65001) / ISP-2 (AS 65002), sin Route Reflector. | Los proveedores pertenecen a sistemas autónomos diferentes, por lo que corresponde utilizar eBGP. En esta topología no existe necesidad de incorporar un Route Reflector iBGP. |
-| 3 | HSRP en el core (diseño *collapsed*): el gateway redundante de las LAN vive en el core, que además hace de tránsito. | El primer salto redundante se mueve a distribución con VRRP: DIST-1 es master del grupo 10 (USERS) y DIST-2 del grupo 20 (SERVERS). El core queda como tránsito puro, solo con OSPF. | Cada capa cumple una función: el core solo reenvía y no concentra servicios de LAN. La falla de un gateway afecta a una sola LAN y no al core. VRRP es un estándar abierto (RFC 5798), mientras que HSRP es propietario de Cisco. Con dos grupos se reparte la carga entre DIST-1 y DIST-2. |
-| 4 | Sin enlace core–core: CORE-1 y CORE-2 no están conectados directamente, por lo que solo se comunican a través de EDGE o de una DIST. | Se agrega el enlace CORE-1 ↔ CORE-2 (`10.255.0.16/30`, CORE-1 `.17` / CORE-2 `.18`) en el área 0 de OSPF, con autenticación MD5. | Si un CORE pierde su enlace hacia EDGE, sin el enlace core–core su tráfico tendría que bajar a una DIST y volver a subir por el otro CORE, convirtiendo a la distribución en tránsito. Con el enlace directo, OSPF reconverge por el core y la distribución mantiene su función. Además, la adyacencia core–core forma parte de los requisitos de OSPF del laboratorio. |
+| 3 | HSRP en el core (diseño *collapsed*): el gateway redundante de las LAN vive en el core, que además hace de tránsito. | El primer salto redundante se mueve a distribución con VRRP: DIST-1 es master del grupo 10 (USERS) y DIST-2 del grupo 20 (SERVERS). El core queda como tránsito puro, solo con OSPF. | Cada capa cumple una función: el core solo reenvía y no concentra servicios de LAN. La falla de un gateway afecta a una sola LAN y no al core. VRRPv2 se define en RFC 3768 y VRRPv3 en RFC 5798; las opciones de autenticación son específicas de la implementación, no una garantía del estándar. HSRP es propietario de Cisco. Con dos grupos se reparte la carga entre DIST-1 y DIST-2. |
+| 4 | Sin enlace core–core: CORE-1 y CORE-2 no están conectados directamente, por lo que solo se comunican a través de EDGE o de una DIST. | Se agrega el enlace CORE-1 ↔ CORE-2 (`10.255.0.16/30`, CORE-1 `.17` / CORE-2 `.18`) en el área 0 de OSPF, con autenticación MD5. | El enlace permite tránsito directo entre cores y evita depender de DIST para ese camino; no garantiza que OSPF lo prefiera sin validar costos. La preferencia se revisará en F2, sin fijar costos en F0. |
+| 5 | Subredes superpuestas en el direccionamiento del diseño. | Se asignan nueve redes `/30` disjuntas, dos LAN y siete loopbacks `/32`. | Auditoría aritmética de las 33 asignaciones: 18 redes únicas y 153 pares comparados, sin superposición. Corrección integrada por R1–R4; no implica despliegue en GNS3. |
 
 ### 1.2 Plan de direccionamiento (IPAM)
 
@@ -60,7 +63,7 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 | USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / DIST-2: `192.168.10.3` (interfaz pendiente) | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
 | SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / DIST-2: `192.168.20.3` (interfaz pendiente) | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
 
-> **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. Queda reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2 (a confirmar por R3). Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`. Las direcciones del lado CORE son una propuesta de R4, sujeta a la confirmación de R3.
+> **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. El enlace CORE-1 ↔ CORE-2 usa `10.255.0.16/30`, confirmado por R3. Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`.
 >
 > **Direccionamiento de las LAN:** en cada LAN, `.1` es la IP virtual VRRP (gateway de los hosts), `.2` es DIST-1, `.3` es DIST-2 y `.100` es el host.
 
@@ -82,9 +85,11 @@ Parámetros comunes a ambos grupos:
 | Parámetro | Valor | Justificación |
 | --- | --- | --- |
 | Preempt | Habilitado | El master original recupera el rol al volver de una falla, restableciendo el reparto de carga. |
-| Intervalo de anuncios | 1 s | Valor por defecto; la falla del master se detecta en unos 3 s. |
-| Versión | VRRPv2 | Es la versión que admite autenticación. |
-| Autenticación | Ver sección 1.3 | Evita que un dispositivo no autorizado se declare master. |
+| Intervalo de anuncios | 1 s | Con prioridad 100, intervalo teórico de caída 3,609375 s; no es una medición. |
+| Versión | VRRPv2 | RFC 3768 define VRRPv2; RFC 5798 define VRRPv3. |
+| Autenticación | `simple`; ver sección 1.3 | Opción de implementación RouterOS, no garantía de autenticidad frente a atacantes. |
+
+RFC 3768 eliminó la autenticación de VRRP como mecanismo de seguridad; `simple` solo aporta detección de mismatch accidental, no defensa contra atacantes. MikroTik documenta las opciones de autenticación de su implementación ([VRRP](https://help.mikrotik.com/docs/spaces/ROS/pages/81362945/VRRP), consultado el 2026-10-01). Validar compatibilidad en la misma imagen de RouterOS durante F1. Para prioridad 100 y anuncios de 1 s, 3,609375 s es el intervalo teórico de caída (`3 × 1 + (256 − 100) / 256`), no una medición.
 
 #### Loopbacks / Router-IDs
 
@@ -94,8 +99,8 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 
 | Nodo | Loopback / Router-ID |
 | --- | --- |
-| ISP-1 | Pendiente R2 |
-| ISP-2 | Pendiente R2 |
+| ISP-1 | `10.255.255.1/32` |
+| ISP-2 | `10.255.255.2/32` |
 | EDGE | `10.255.255.3/32` |
 | CORE-1 | `10.255.255.4/32` |
 | CORE-2 | `10.255.255.5/32` |
@@ -104,9 +109,25 @@ Como criterio general se propone una numeración consecutiva por dispositivo.
 
 Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2 `.2`, EDGE `.3`, CORE-1 `.4`, CORE-2 `.5`, DIST-1 `.6`, DIST-2 `.7`. Los DIST usan su loopback como router-id de OSPF.
 
+> **Aporte R2 — loopbacks de ISP:** ISP-1 e ISP-2 usan su loopback como router-id de BGP. Además, esa dirección es el destino que simula "Internet": en F3, la salida a Internet se considera verificada cuando un host de USERS o SERVERS alcanza `10.255.255.1` (vía ISP-1) o `10.255.255.2` (vía ISP-2).
+
 CORE-1 (`10.255.255.4/32`) y CORE-2 (`10.255.255.5/32`) también usan su loopback como router-id de OSPF, de modo que el identificador no dependa del estado de ninguna interfaz física (aporte R3).
 
-La asignación de EDGE forma parte del diseño de R1. Las restantes direcciones serán completadas por los responsables correspondientes manteniendo el bloque reservado y verificando que no existan duplicaciones.
+Las siete loopbacks están asignadas en el bloque reservado y son únicas; las interfaces físicas siguen pendientes del relevamiento F1.
+
+#### Sesiones eBGP
+
+> **Aporte R2 — Proveedores:** revisión de las dos sesiones eBGP entre EDGE y los proveedores.
+
+| Sesión | Extremo EDGE | Extremo ISP | Subred | Autenticación | Anuncio del ISP hacia EDGE |
+| --- | --- | --- | --- | --- | --- |
+| EDGE ↔ ISP-1 | `10.255.0.2` · AS 65000 · RID `10.255.255.3` | `10.255.0.1` · AS 65001 · RID `10.255.255.1` | `10.255.0.0/30` | TCP-MD5 `G4-BGP-ISP1-26` | `default-originate` (`0.0.0.0/0`) |
+| EDGE ↔ ISP-2 | `10.255.0.6` · AS 65000 · RID `10.255.255.3` | `10.255.0.5` · AS 65002 · RID `10.255.255.2` | `10.255.0.4/30` | TCP-MD5 `G4-BGP-ISP2-26` | `default-originate` (`0.0.0.0/0`) |
+
+- Las sesiones se establecen entre las IP de los enlaces `/30` (eBGP directo, sin multihop), no entre loopbacks: si el enlace cae, la sesión cae con él.
+- Cada sesión usa su propia clave TCP-MD5, con el mismo valor en ambos extremos.
+- Cada ISP anuncia su default y su loopback de Internet (`10.255.255.1/32` o `10.255.255.2/32`) hacia EDGE. El diseño F3 propaga el default activo de EDGE a la red interna por OSPF y las rutas LAN por BGP para el retorno. EDGE distribuye los destinos loopback de los ISP al interior mediante redistribución OSPF controlada y filtrada: mientras un proveedor esté conectado, su loopback se alcanza por ese proveedor. No se afirma que el otro ISP alcance el loopback de un proveedor desconectado. Un default BGP por sí solo no prueba salud de Internet aguas arriba; los drills F4 siguen pendientes.
+- Verificación de consistencia (F0): las IP de peering pertenecen a sus `/30`, los AS coinciden con los de la corrección del diagrama (defecto 2) y la topología, y los router-id no se repiten.
 
 ### 1.3 Política de seguridad
 
@@ -126,7 +147,15 @@ Las claves BGP se mantienen separadas para cada proveedor, de modo que una misma
 
 La clave OSPF es única para toda el área 0: todas las interfaces que forman adyacencias (EDGE, CORE y DIST) deben usar el mismo valor y el mismo identificador de clave.
 
-Las claves VRRP son independientes para cada grupo y tienen 8 caracteres, el máximo del campo de autenticación de VRRPv2.
+Las claves VRRP son independientes por grupo y tienen 8 caracteres para el mecanismo `simple` de la implementación RouterOS; RFC 3768 no define autenticación VRRP como garantía de seguridad.
+
+#### Política integrada de administración (los siete routers)
+
+En los siete routers, `admin` se reserva para configuración y `monitor` para monitoreo/verificación de solo lectura. En RouterOS, `monitor` requiere únicamente las políticas mínimas `read` y `ssh`: no debe tener `write`, `policy`, `password`, `sensitive`, `reboot`, `ftp`, `test` ni `sniff`. Las credenciales de gestión serán exclusivas del laboratorio, privadas y no publicadas; quedan prohibidas credenciales personales o reutilizadas.
+
+SSH es el único servicio de administración elegido para todos los routers. Se deshabilitan Telnet, FTP, HTTP/HTTPS (incluido WebFig), API/API-SSL y Winbox, además de administración MAC no autenticada y RoMON si no son necesarios. La consola de GNS3 se usa para bootstrap. SSH solo acepta fuentes/interfaces de gestión autorizadas; no se habilita escucha de gestión en WAN, USERS ni SERVERS. Las fuentes/interfaces concretas se relevarán y validarán en F1, sin inventar una subred.
+
+La política de firewall de EDGE separa cadenas: en `input`, permitir `established/related`, BGP TCP/179 solo con ISP-1/ISP-2, OSPF (protocolo IP 89) solo con vecinos CORE y SSH solo desde gestión autorizada; rechazar el resto de entrada no solicitado. En `forward`, permitir USERS/SERVERS hacia los loopbacks simulados de ISP y el tráfico de retorno correspondiente; no aplicar un rechazo genérico que bloquee nuevas conexiones salientes. Reglas concretas quedan para F3.
 
 #### Aporte R1 — EDGE/WAN
 
@@ -139,18 +168,9 @@ En EDGE se utilizarán cuentas diferenciadas según su función:
 
 No se utilizarán cuentas compartidas con credenciales personales de los integrantes.
 
-**Servicios de administración**
+**Servicios de administración — decisión histórica de R1**
 
-Se mantendrán habilitados únicamente los servicios necesarios para la administración del laboratorio.
-
-En EDGE se deshabilitarán los servicios que no sean requeridos, incluyendo:
-
-- Telnet
-- FTP
-- HTTP
-- API
-
-Los servicios de administración que permanezcan habilitados, como SSH o Winbox, deberán restringirse al plano de gestión y no quedar expuestos innecesariamente hacia los enlaces de proveedores.
+R1 conservaba SSH o Winbox como opciones restringidas al plano de gestión. La decisión consolidada F0 es SSH-only en todos los routers; Winbox queda deshabilitado. El alcance de gestión nunca incluye los enlaces de proveedores.
 
 **Autenticación BGP**
 
@@ -170,16 +190,26 @@ Las claves son exclusivas del entorno de laboratorio y no corresponden a credenc
 
 **Firewall EDGE**
 
-El firewall de EDGE seguirá una política restrictiva:
+El diseño del firewall de EDGE separa `input` de `forward`. En `input`, permite `established/related`, BGP TCP/179 solo con ISP-1/ISP-2, OSPF IP/89 solo con vecinos CORE y SSH solo desde gestión autorizada; rechaza el resto de entrada no solicitado. En `forward`, permite USERS/SERVERS hacia los loopbacks ISP simulados y el retorno correspondiente, sin bloquear genéricamente nuevas conexiones salientes. Puede registrar eventos relevantes para verificación y troubleshooting. Las reglas concretas se implementarán en F3, luego de la aprobación del diseño F0.
 
-1. permitir tráfico necesario para el funcionamiento de la red;
-2. permitir las sesiones BGP con ISP-1 e ISP-2;
-3. permitir únicamente el tráfico de administración autorizado;
-4. permitir tráfico perteneciente a conexiones establecidas o relacionadas;
-5. descartar tráfico de entrada no solicitado o no autorizado;
-6. registrar eventos relevantes cuando sea necesario para verificación y troubleshooting.
+#### Aporte R2 — Proveedores
 
-Las reglas concretas se implementarán en F3, luego de la aprobación del diseño F0.
+**Usuarios y privilegios**
+
+En ISP-1 e ISP-2 se aplica el mismo esquema que en EDGE y DIST: `admin` para configuración y `monitor` con permisos de solo lectura. No se usan credenciales personales.
+
+**Servicios de administración**
+
+Se deshabilitan Telnet, FTP, HTTP y API. Se mantiene únicamente SSH.
+
+**Autenticación BGP**
+
+Cada ISP autentica su sesión eBGP con EDGE mediante TCP-MD5, con el mismo valor que EDGE en su extremo:
+
+- ISP-1 ↔ EDGE: `G4-BGP-ISP1-26`
+- ISP-2 ↔ EDGE: `G4-BGP-ISP2-26`
+
+Una sesión con clave distinta o sin clave no se establece. Esto evita que un equipo no autorizado forme una sesión BGP con EDGE o inyecte rutas en ella.
 
 #### Aporte R4 — Distribución
 
@@ -198,7 +228,7 @@ Los dos grupos usan VRRPv2 con autenticación `simple` y una clave independiente
 - USERS (VRID 10): `G4VRP-10`
 - SERVERS (VRID 20): `G4VRP-20`
 
-La autenticación `simple` viaja en texto claro dentro del segmento, por lo que protege contra equipos mal configurados y no contra un atacante con acceso al enlace. Se documenta como limitación en la sección 5. DIST-1 y DIST-2 deben configurar el mismo valor en cada grupo.
+La autenticación `simple` viaja en texto claro dentro del segmento: aporta detección de mismatch accidental, no protección contra un atacante con acceso al enlace. Se conserva esta limitación para la sección 5. DIST-1 y DIST-2 deben configurar el mismo valor en cada grupo.
 
 **Plano de control en DIST**
 
@@ -233,11 +263,11 @@ Un router con clave o identificador distinto no forma adyacencia, por lo que no 
 
 #### Política integrada del grupo
 
-- **Usuarios y privilegios:** pendiente de consolidación.
-- **Servicios a deshabilitar:** pendiente de consolidación.
-- **Autenticación OSPF:** MD5 en el área 0 con una clave única para todas las adyacencias (EDGE, CORE y DIST), definida en la tabla de claves de autenticación.
-- **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP, definidas en la tabla de claves de autenticación.
-- **Autenticación VRRP:** VRRPv2 con autenticación `simple` y clave independiente por grupo (VRID 10 y VRID 20), definidas en la tabla de claves de autenticación.
+- **Usuarios y privilegios:** los siete routers usan `admin` para configuración y `monitor` para lectura/SSH mínimos, sin permisos de escritura ni credenciales personales; credenciales de laboratorio privadas y no publicadas.
+- **Servicios:** SSH-only; deshabilitar Telnet, FTP, HTTP/HTTPS, API/API-SSL y Winbox, además de administración MAC no autenticada y RoMON si no se necesitan. Consola GNS3 para bootstrap. El allowlist de gestión se define tras relevamiento F1; nada de gestión desde WAN o LAN de usuarios/servidores.
+- **Autenticación OSPF:** MD5, clave única e ID 1 en el área 0, en todas las adyacencias (EDGE, CORE y DIST).
+- **Autenticación BGP:** TCP-MD5 con claves independientes para cada sesión eBGP.
+- **Autenticación VRRP:** VRRPv2 y `simple` con clave independiente por grupo (VRID 10 y 20), opción de implementación RouterOS a validar en F1 sobre la misma versión; mismatch accidental, no defensa contra atacantes.
 
 ### 1.4 Política de operación
 
@@ -345,7 +375,7 @@ La topología de diseño se basa en la arquitectura de cinco capas definida por 
                    PC-USER        SRV
 ```
 
-La imagen definitiva de la topología se incorporará en `docs/diagramas/` una vez disponible el proyecto GNS3 provisto para el laboratorio.
+El esquema de diseño F0 está en [`docs/diagramas/f0-diseno.md`](diagramas/f0-diseno.md). Es un esquema Mermaid authored, no captura ni topología desplegada de GNS3; el ASCII anterior se conserva como referencia.
 
 ---
 
@@ -427,11 +457,15 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-01 | R5 | `7fcfaed` docs(operacion): define formato de change log y politica de backup | F0: política de operación (1.4) | `git revert 7fcfaed` |
 | 2026-10-01 | R5 | `decde1c` docs(backlog): arma backlog de F0 a F5 con tareas por rol | F0: backlog con dueño por tarea | `git revert decde1c` |
 | 2026-10-01 | R5 | `a634504` docs(changelog): registra los commits de F0 y deja pendiente la evidencia de backup | R5: registra los commits F0 y la evidencia de backup pendiente; PR #4 | `git revert a634504` |
-| 2026-10-01 | R1 — FerrariAgustinNicolas (integración) | Referencia prevista al integrar: `docs(operacion): protege backups publicos y ajusta trazabilidad F0` (PR #4; todavía no integrado) | Política pública de backup segura y estado veraz de HA y seguridad en F0 | Una vez integrado, localizar el SHA real con `git log --all --format='%H %s'` y revertirlo con `git revert <SHA verificado>` |
+| 2026-10-01 | R1 — FerrariAgustinNicolas (integración) | `e58fee3` docs(operacion): protege backups publicos y ajusta trazabilidad F0 | F0: protege artefactos privados y aclara HA pendiente; PR #4 | `git revert e58fee3` |
+| 2026-10-01 | R2 | `753d82f` docs(ipam): asigna router-id de ISP-1 e ISP-2 | F0: completa loopbacks y router-id de proveedores | `git revert 753d82f` |
+| 2026-10-01 | R2 | `2045a23` docs(bgp): documenta sesiones eBGP EDGE-ISP con default-originate | F0: documenta peers, claves y anuncios de proveedores | `git revert 2045a23` |
+| 2026-10-01 | R2 | `feaecc6` docs(seguridad): define politica de hardening y autenticacion BGP de ISP | F0: define hardening y autenticación de ISP | `git revert feaecc6` |
+| 2026-10-01 | R1 — FerrariAgustinNicolas (integración PR #3) | `docs(f0): consolida diseno y seguridad preservando aportes por rol` (prospectivo; SHA pendiente) | Consolidación F0, corrección IPAM y diagrama; PR #3 | Al integrar, reemplazar con SHA observado y usar `git revert <SHA verificado>` |
 
-> Los aportes de R4 y R3 se integraron a `main` por los PR #1 (merge `58db8cd`) y #2 (merge `5427689`). Para revertir un aporte completo: `git revert -m 1 <hash del merge>`.
+> Los aportes de R4 y R3 se integraron a `main` por los PR #1 (merge `58db8cd`) y #2 (merge `5427689`). PR #4 se integró con merge `e35fdeb`; esta rama incorpora los cambios de `main` mediante merge `be128f7`, aún pendiente de integración a `main`. Si hubiera que revertir merges completos: `git revert -m 1 e35fdeb` (PR #4) o `git revert -m 1 be128f7` (merge a esta rama). Los commits individuales conservan autoría y no se reescriben.
 >
-> Los commits de R2 ya existentes en la rama `docs/f0-r2-proveedores` quedan pendientes de integración a `main` y de registro aquí.
+> La fila prospectiva de PR #3 se reemplazará por el SHA real cuando exista. Integración de esta rama a `main` y aprobación completa de F0 siguen pendientes de auditoría del parent.
 
 ### 6.2 Backups
 
@@ -470,10 +504,12 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 ### Diseño (F0)
 
-- [ ] IPAM completo y sin solapamiento
-- [ ] Corrección del diagrama justificada (≥ 3 defectos)
-- [ ] Política de seguridad definida (usuarios, servicios, claves)
-- [ ] Política de operación definida (change log + backup)
+Diseño documentado; integración a `main` y aceptación completa pendientes de auditoría del parent. No implica despliegue ni aprobación global.
+
+- [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)
+- [x] Cuatro correcciones de diseño aplicadas; SPOF EDGE queda como recomendación
+- [x] Política integrada de gestión, autenticación y servicios
+- [x] Política de operación y change log documentados
 
 ### Redes
 
