@@ -22,7 +22,7 @@
 
 ### 1.1 Corrección del diagrama
 
-La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. La integración completa de F0 en `main` sigue pendiente de auditoría del parent.
+La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. El diseño F0 está integrado en `main` (PR #1 a #4); la aprobación formal de la cátedra todavía no fue otorgada.
 
 | # | Defecto detectado | Corrección aplicada | Justificación |
 | :-: | --- | --- | --- |
@@ -298,7 +298,7 @@ El alcance indica el área o el nodo afectado, por ejemplo `ipam`, `seguridad`, 
 
 - **Un commit por cambio lógico:** cada commit se puede revertir por separado sin arrastrar otros cambios. No se mezclan en un mismo commit cambios de distintos nodos o de distintos tipos.
 - **Ramas:** cada rol trabaja en su rama (por ejemplo `docs/f0-r4-distribucion`) y la integra a `main` por pull request.
-- **El change log refleja los commits del repo:** cada commit integrado a `main` tiene su fila en 6.1, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits de merge no llevan fila propia; el PR se cita en la nota de la tabla. Si un commit de integración modifica el propio change log y su SHA todavía no está disponible, se registra provisionalmente en su propia fila mediante el mensaje único y el enlace/identificador del PR; la siguiente actualización reemplaza esa referencia por el SHA real. Nunca se inventa un hash.
+- **El change log refleja los commits del repo:** se registran los commits sustantivos de diseño, configuración, operación y documentación del laboratorio, con su hash corto en la columna Cambio. R5 actualiza la tabla después de cada merge. Los commits cuyo único propósito es mantener o actualizar el propio change log no requieren una fila autorreferencial, para evitar que cada actualización exija otro commit que la registre. Los merges de PR no llevan fila propia: se resumen en la nota de integraciones de la tabla. Nunca se inventa un hash ni se crean filas prospectivas.
 
 #### Política de backup
 
@@ -461,15 +461,18 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-01 | R2 | `753d82f` docs(ipam): asigna router-id de ISP-1 e ISP-2 | F0: completa loopbacks y router-id de proveedores | `git revert 753d82f` |
 | 2026-10-01 | R2 | `2045a23` docs(bgp): documenta sesiones eBGP EDGE-ISP con default-originate | F0: documenta peers, claves y anuncios de proveedores | `git revert 2045a23` |
 | 2026-10-01 | R2 | `feaecc6` docs(seguridad): define politica de hardening y autenticacion BGP de ISP | F0: define hardening y autenticación de ISP | `git revert feaecc6` |
-| 2026-10-01 | R1 — FerrariAgustinNicolas (integración PR #3) | `docs(f0): consolida diseno y seguridad preservando aportes por rol` (prospectivo; SHA pendiente) | Consolidación F0, corrección IPAM y diagrama; PR #3 | Al integrar, reemplazar con SHA observado y usar `git revert <SHA verificado>` |
+| 2026-10-01 | R1 — FerrariAgustinNicolas (integración PR #3) | `dd1b8ab` docs(f0): consolida diseno y seguridad preservando aportes por rol | Consolidación F0, corrección IPAM y diagrama; integrado por PR #3 (merge `e316152`) | `git revert dd1b8ab` (PR #3 completo: `git revert -m 1 e316152`) |
+| 2026-10-01 | R1 — FerrariAgustinNicolas | `8f5d4f1` chore(repo): excluye archivos locales del entorno | Evita versionar archivos locales de herramientas; integrado por PR #5 (merge `531056f`) | `git revert 8f5d4f1` |
 
-> Los aportes de R4 y R3 se integraron a `main` por los PR #1 (merge `58db8cd`) y #2 (merge `5427689`). PR #4 se integró con merge `e35fdeb`; esta rama incorpora los cambios de `main` mediante merge `be128f7`, aún pendiente de integración a `main`. Si hubiera que revertir merges completos: `git revert -m 1 e35fdeb` (PR #4) o `git revert -m 1 be128f7` (merge a esta rama). Los commits individuales conservan autoría y no se reescriben.
+> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152` y PR #5 (`.gitignore`) `531056f`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
 >
-> La fila prospectiva de PR #3 se reemplazará por el SHA real cuando exista. Integración de esta rama a `main` y aprobación completa de F0 siguen pendientes de auditoría del parent.
+> `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Los commits individuales conservan su autoría y no se reescriben.
 
 ### 6.2 Backups
 
 Política: ver 1.4.
+
+A F0 no hay backups reales: F0 solo exige la política definida. El snapshot BASE y el restore probado corresponden a F1.
 
 **Pendiente de F1.** La evidencia se carga en esta sección a medida que se toman los backups:
 
@@ -504,7 +507,10 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 ### Diseño (F0)
 
-Diseño documentado; integración a `main` y aceptación completa pendientes de auditoría del parent. No implica despliegue ni aprobación global.
+- **Diseño interno:** completado y documentado.
+- **Integración Git:** completada (PR #1 `58db8cd`, PR #2 `5427689`, PR #4 `e35fdeb`, PR #3 `e316152`).
+- **Aprobación formal de la cátedra:** todavía no otorgada.
+- **F1:** todavía no iniciada. Nada de lo documentado implica despliegue.
 
 - [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)
 - [x] Cuatro correcciones de diseño aplicadas; SPOF EDGE queda como recomendación
