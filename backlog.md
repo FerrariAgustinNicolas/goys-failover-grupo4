@@ -6,7 +6,7 @@
 
 - `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 - Cada tarea lleva **dueño** (rol): `[R1]` … `[R5]`.
-- **"Hecho" requiere satisfacer el criterio de aceptación de esa fase y registrar evidencia revisable.** En F0, `[x]` acredita solo el diseño documentado en `docs/memoria.md`, no su integración a `main`. En F1–F5, `[x]` requiere ejecución y evidencia posteriores a F0.
+- **"Hecho" requiere satisfacer el criterio de aceptación de esa fase y registrar evidencia revisable.** En F0, `[x]` acredita el diseño documentado en `docs/memoria.md` e integrado a `main` (PR #1 a #4); no equivale a la aprobación formal de la cátedra. En F1–F5, `[x]` requiere ejecución y evidencia posteriores a F0.
 
 ---
 
@@ -16,7 +16,7 @@
 - [x] [R1] direccionamiento de EDGE, enlaces WAN y router-id de EDGE
 - [x] [R4] enlaces CORE–DIST, LAN USERS/SERVERS, plan VRRP (VRID 10/20) y router-id de DIST-1/DIST-2
 - [x] [R3] enlace CORE-1 ↔ CORE-2 y router-id de CORE-1/CORE-2
-- [x] [R2] router-id de ISP-1/ISP-2 y sesiones eBGP (diseño completo en PR #3; integración a `main` pendiente)
+- [x] [R2] router-id de ISP-1/ISP-2 y sesiones eBGP (integrado a `main` por PR #3, merge `e316152`)
 - [x] [R1] auditar las 33 asignaciones IPAM: 18 redes únicas, 153 pares comparados, sin solapamiento
 
 ### Corrección del diagrama (≥ 3 defectos)
@@ -29,11 +29,11 @@
 La corrección del solapamiento y su integración IPAM reúnen aportes de R1–R4.
 
 ### Política de seguridad
-- [x] [R1] consolidar la política de seguridad integrada del grupo en 1.3 (diseño completo en PR #3; integración a `main` pendiente)
+- [x] [R1] consolidar la política de seguridad integrada del grupo en 1.3 (integrado a `main` por PR #3, merge `e316152`)
 - [x] [R1] política de seguridad de EDGE: usuarios, servicios, firewall y claves BGP TCP-MD5
 - [x] [R4] política de seguridad de DIST: usuarios, servicios y claves VRRP
 - [x] [R3] política de seguridad de CORE: usuarios, servicios y clave OSPF MD5
-- [x] [R2] política de seguridad de ISP-1/ISP-2 (diseño completo en PR #3; integración a `main` pendiente)
+- [x] [R2] política de seguridad de ISP-1/ISP-2 (integrado a `main` por PR #3, merge `e316152`)
 
 ### Política de operación (change log + backup)
 - [x] [R5] formato del change log y convención de commits (memoria 1.4)
@@ -43,7 +43,7 @@ La corrección del solapamiento y su integración IPAM reúnen aportes de R1–R
 ### Repositorio git
 - [x] [R1] estructura inicial del repo e integrantes y roles en el README
 - [x] [R5] `backlog.md` armado desde la plantilla, con dueño por tarea
-- [ ] [R1] integrar a `main` por PR las ramas pendientes de F0; PR #4 (R5) ya está integrado, PR #3 (R2 y consolidación) sigue pendiente
+- [x] [R1] integrar a `main` por PR las ramas de F0: PR #1 (R4, `58db8cd`), PR #2 (R3, `5427689`), PR #4 (R5, `e35fdeb`) y PR #3 (R2 y consolidación, `e316152`). R5 solo actualiza el estado
 
 ---
 
