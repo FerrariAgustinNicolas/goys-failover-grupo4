@@ -13,24 +13,22 @@
 ## Epic F0 — Diseño y gestión de cambio · *vence vie 2/10*
 
 ### IPAM / direccionamiento
-- [x] [R1] direccionamiento de EDGE, enlaces WAN y router-id de EDGE
-- [x] [R4] enlaces CORE–DIST, LAN USERS/SERVERS, plan VRRP (VRID 10/20) y router-id de DIST-1/DIST-2
-- [x] [R3] enlace CORE-1 ↔ CORE-2 y router-id de CORE-1/CORE-2
-- [x] [R2] router-id de ISP-1/ISP-2 y sesiones eBGP (integrado a `main` por PR #3, merge `e316152`)
-- [x] [R1] auditar las 33 asignaciones IPAM: 18 redes únicas, 153 pares comparados, sin solapamiento
+- [x] [R1] definir direccionamiento de EDGE, enlaces WAN y router-id de EDGE
+- [x] [R2] definir router-id de ISP-1/ISP-2 y validar el diseño de las sesiones eBGP (integrado a `main` por PR #3, merge `e316152`)
+- [x] [R3] definir enlace CORE-1 ↔ CORE-2 y router-id de CORE-1/CORE-2
+- [x] [R4] definir enlaces CORE–DIST, LAN USERS/SERVERS, plan VRRP (VRID 10/20) y router-id de DIST-1/DIST-2
+
+Nota: R1 auditó las 33 asignaciones del IPAM (18 redes únicas, 153 pares comparados, sin solapamiento).
 
 ### Corrección del diagrama (≥ 3 defectos)
-- [x] [R1] documentar defecto 1: firewall único como SPOF y justificar el uso de un par HA en producción
-- [x] [R1] defecto 2: iBGP Route Reflector mal ubicado → eBGP directo EDGE–ISP
+- [x] [R1] documentar los defectos de EDGE/WAN e IPAM: defecto 1 (firewall único como SPOF; justificar el uso de un par HA en producción), defecto 2 (iBGP Route Reflector mal ubicado → eBGP directo EDGE–ISP) y defecto 5 (subredes solapadas → nueve `/30` disjuntas, dos LAN y siete loopbacks `/32`)
 - [x] [R4] defecto 3: HSRP en el core → VRRP en distribución
 - [x] [R3] defecto 4: falta el enlace core–core (habilita tránsito directo; preferencia OSPF depende de costos a validar en F2)
-- [x] [R1] defecto 5: subredes solapadas → nueve `/30` disjuntas, dos LAN y siete loopbacks `/32`
 
 La corrección del solapamiento y su integración IPAM reúnen aportes de R1–R4.
 
 ### Política de seguridad
-- [x] [R1] consolidar la política de seguridad integrada del grupo en 1.3 (integrado a `main` por PR #3, merge `e316152`)
-- [x] [R1] política de seguridad de EDGE: usuarios, servicios, firewall y claves BGP TCP-MD5
+- [x] [R1] política de seguridad de EDGE (usuarios, servicios, firewall y claves BGP TCP-MD5) y consolidación de la política integrada del grupo en 1.3 (consolidación integrada a `main` por PR #3, merge `e316152`)
 - [x] [R4] política de seguridad de DIST: usuarios, servicios y claves VRRP
 - [x] [R3] política de seguridad de CORE: usuarios, servicios y clave OSPF MD5
 - [x] [R2] política de seguridad de ISP-1/ISP-2 (integrado a `main` por PR #3, merge `e316152`)
@@ -105,8 +103,7 @@ La corrección del solapamiento y su integración IPAM reúnen aportes de R1–R
 
 ### eBGP multi-homing (2 sesiones, TCP-MD5)
 - [ ] [R1] sesiones eBGP de EDGE (AS 65000) hacia ISP-1 e ISP-2 con TCP-MD5
-- [ ] [R2] sesión eBGP de ISP-1 (AS 65001) hacia EDGE con TCP-MD5
-- [ ] [R2] sesión eBGP de ISP-2 (AS 65002) hacia EDGE con TCP-MD5
+- [ ] [R2] sesiones eBGP de ISP-1 (AS 65001) e ISP-2 (AS 65002) hacia EDGE con TCP-MD5
 - [ ] [R2] anunciar por eBGP desde cada ISP su propia loopback `/32` (`10.255.255.1/32` o `10.255.255.2/32`) junto con el default hacia EDGE
 - [ ] [R1] verificar las dos sesiones en `established` con `/routing bgp session print`
 
