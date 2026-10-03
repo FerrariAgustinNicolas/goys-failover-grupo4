@@ -14,11 +14,11 @@ capaz de mantener conectividad frente a fallas de enlaces y dispositivos.
 
 | Integrante | Rol |
 |---|---|
-| FerrariAgustinNicolas | R1 — Líder / Edge-WAN |
-| Valentinosiadore | R2 — Proveedores |
-| AgusKlos | R3 — Core |
-| naimguar | R4 — Distribución |
-| LoLoo03 | R5 — Hosts / QA / Operación |
+| Ferrari Agustin Nicolas | R1 — Líder / Edge-WAN |
+| Siadore Valentino | R2 — Proveedores |
+| Kloster Agustin Ignacio | R3 — Core |
+| Guarino Naim | R4 — Distribución |
+| Bellomo Lorenzo | R5 — Hosts / QA / Operación |
 
 ## Fases
 

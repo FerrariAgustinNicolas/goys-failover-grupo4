@@ -10,11 +10,11 @@
 
 | Integrante | Rol |
 | --- | --- |
-| FerrariAgustinNicolas | R1 — Líder / Edge-WAN |
-| Valentinosiadore | R2 — Proveedores |
-| AgusKlos | R3 — Core |
-| naimguar | R4 — Distribución |
-| LoLoo03 | R5 — Hosts / QA / Operación |
+| Ferrari Agustin Nicolas | R1 — Líder / Edge-WAN |
+| Siadore Valentino | R2 — Proveedores |
+| Kloster Agustin Ignacio | R3 — Core |
+| Guarino Naim | R4 — Distribución |
+| Bellomo Lorenzo | R5 — Hosts / QA / Operación |
 
 ---
 
@@ -168,7 +168,7 @@ En EDGE se utilizarán cuentas diferenciadas según su función:
 
 No se utilizarán cuentas compartidas con credenciales personales de los integrantes.
 
-**Servicios de administración — decisión histórica de R1**
+**Servicios de administración**
 
 R1 conservaba SSH o Winbox como opciones restringidas al plano de gestión. La decisión consolidada F0 es SSH-only en todos los routers; Winbox queda deshabilitado. El alcance de gestión nunca incluye los enlaces de proveedores.
 
