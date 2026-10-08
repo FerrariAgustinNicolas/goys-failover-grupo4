@@ -1,4 +1,4 @@
-# 2026-10-08 21:54:33 by RouterOS 7.16
+# 2026-10-08 22:52:24 by RouterOS 7.16
 # software id = 
 #
 /interface ethernet
@@ -18,8 +18,6 @@ add address=10.255.0.13/30 comment=CORE-2 interface=ether4 network=\
     10.255.0.12
 add address=10.255.255.3 comment="Loopback EDGE" interface=lo network=\
     10.255.255.3
-/ip dhcp-client
-add interface=ether1
 /ip service
 set telnet disabled=yes
 set ftp disabled=yes
