@@ -1,4 +1,4 @@
-# 2026-10-08 23:30:29 by RouterOS 7.16
+# 2026-10-09 17:04:37 by RouterOS 7.16
 # software id = 
 #
 /interface ethernet
@@ -32,6 +32,8 @@ set api-ssl disabled=yes
 set name=CORE-2
 /system note
 set show-at-login=no
+/tool bandwidth-server
+set enabled=no
 /tool mac-server
 set allowed-interface-list=none
 /tool mac-server mac-winbox
