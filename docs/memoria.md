@@ -51,17 +51,17 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 
 | Enlace / Red | Subred | Dispositivo A (IP/iface) | Dispositivo B (IP/iface) |
 | --- | --- | --- | --- |
-| ISP-1 ↔ EDGE | `10.255.0.0/30` | ISP-1: `10.255.0.1` / interfaz pendiente | EDGE: `10.255.0.2` / interfaz pendiente |
-| ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2: `10.255.0.5` / interfaz pendiente | EDGE: `10.255.0.6` / interfaz pendiente |
-| EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / interfaz pendiente | CORE-1: `10.255.0.10` / interfaz pendiente |
-| EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / interfaz pendiente | CORE-2: `10.255.0.14` / interfaz pendiente |
-| CORE-1 ↔ CORE-2 | `10.255.0.16/30` | CORE-1: `10.255.0.17` / interfaz pendiente | CORE-2: `10.255.0.18` / interfaz pendiente |
-| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / interfaz pendiente | DIST-1: `10.255.0.22` / interfaz pendiente |
-| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / interfaz pendiente | DIST-2: `10.255.0.26` / interfaz pendiente |
-| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / interfaz pendiente | DIST-1: `10.255.0.30` / interfaz pendiente |
-| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2: `10.255.0.33` / interfaz pendiente | DIST-2: `10.255.0.34` / interfaz pendiente |
-| USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / DIST-2: `192.168.10.3` (interfaz pendiente) | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
-| SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / DIST-2: `192.168.20.3` (interfaz pendiente) | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
+| ISP-1 ↔ EDGE | `10.255.0.0/30` | ISP-1: `10.255.0.1` / `ether1` | EDGE: `10.255.0.2` / `ether1` |
+| ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2: `10.255.0.5` / `ether1` | EDGE: `10.255.0.6` / `ether2` |
+| EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / `ether3` | CORE-1: `10.255.0.10` / `ether1` |
+| EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / `ether4` | CORE-2: `10.255.0.14` / `ether1` |
+| CORE-1 ↔ CORE-2 | `10.255.0.16/30` | CORE-1: `10.255.0.17` / `ether2` | CORE-2: `10.255.0.18` / `ether2` |
+| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / `ether3` | DIST-1: `10.255.0.22` / `ether1` |
+| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / `ether4` | DIST-2: `10.255.0.26` / `ether1` |
+| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / `ether3` | DIST-1: `10.255.0.30` / `ether2` |
+| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2: `10.255.0.33` / `ether4` | DIST-2: `10.255.0.34` / `ether2` |
+| USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / `ether3` · DIST-2: `192.168.10.3` / `ether3` | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
+| SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / `ether4` · DIST-2: `192.168.20.3` / `ether4` | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
 
 > **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. El enlace CORE-1 ↔ CORE-2 usa `10.255.0.16/30`, confirmado por R3. Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`.
 >
@@ -69,7 +69,7 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 
 > **Aporte R3 — enlace CORE ↔ CORE:** se utiliza el bloque reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2, con CORE-1 en `.17` y CORE-2 en `.18`, siguiendo la convención de que el dispositivo con menor numeración toma la primera IP utilizable. Se confirman las direcciones del lado CORE propuestas por R4 en los enlaces CORE ↔ DIST.
 
-> Los nombres de las interfaces se completarán a partir del proyecto GNS3 `topologia_failover_routing`. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
+> Las interfaces se relevaron durante F1 en el proyecto GNS3 `topologia_failover_routing` y se completaron con el mapeo validado en 2.2 (nombres de RouterOS; en GNS3, `eN` corresponde a `ether(N+1)`). No cambian las direcciones ni las decisiones del diseño F0. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
 
 #### VRRP
 
@@ -113,7 +113,7 @@ Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2
 
 CORE-1 (`10.255.255.4/32`) y CORE-2 (`10.255.255.5/32`) también usan su loopback como router-id de OSPF, de modo que el identificador no dependa del estado de ninguna interfaz física (aporte R3).
 
-Las siete loopbacks están asignadas en el bloque reservado y son únicas; las interfaces físicas siguen pendientes del relevamiento F1.
+Las siete loopbacks están asignadas en el bloque reservado y son únicas; las interfaces físicas se relevaron durante F1 (tabla de enlaces y 2.2).
 
 #### Sesiones eBGP
 
@@ -412,7 +412,7 @@ GNS3 rotula las interfaces del CHR `e0`–`e3`; RouterOS las nombra `ether1`–`
 | SW-USERS ↔ PC-USER | `192.168.10.0/24` | SW-USERS | PC-USER · `.100` |
 | SW-SERVERS ↔ SRV | `192.168.20.0/24` | SW-SERVERS | SRV · `.100` |
 
-En la captura, las etiquetas `e2` de DIST-1 y `e3` de DIST-2 quedan tapadas por otros rótulos. Se asignaron por descarte y coinciden con la interfaz LAN de cada export y con los pings de los hosts a ambos DIST (4.1). Los puertos de los switches no son legibles en todos los casos y no se documentan; los switches no tienen configuración. La tabla 1.2 se conserva como diseño F0; esta sección completa la columna de interfaz.
+En la captura, las etiquetas `e2` de DIST-1 y `e3` de DIST-2 quedan tapadas por otros rótulos. Se asignaron por descarte y coinciden con la interfaz LAN de cada export y con los pings de los hosts a ambos DIST (4.1). Los puertos de los switches no son legibles en todos los casos y no se documentan; los switches no tienen configuración. Con este relevamiento se completó la columna de interfaz de la tabla 1.2, sin cambiar direcciones ni decisiones del diseño F0.
 
 ### 2.3 Snapshot BASE
 
@@ -446,6 +446,7 @@ La única instancia GNS3 operativa está en el equipo de R1, que ejecutó la con
 | Pings de los 9 enlaces directos | R1 | R5: revisó resultado por enlace | 4.1 |
 | Configuración de PC-USER y SRV y pings a ambos DIST | R1 | R5 | 3.8, 4.1 |
 | Hardening de los 7 routers y eliminación de clientes DHCP heredados | R1 | R5: contrastó capturas finales y exports | 5.1 |
+| Cambio de contraseña de `admin` en los 7 routers | R1 | R5: registró la confirmación de R1; no hay evidencia publicable | 5.1 |
 | Generación de los exports `/export` | R1 | — | 6.2 |
 | Publicación de los exports por PR | R1 (EDGE), R2 (ISP), R3 (CORE), R4 (DIST) | R5: revisó el contenido de los siete `.rsc` | 6.2 |
 | Selección y organización de capturas | — | R5 | 7 |
@@ -550,7 +551,7 @@ Pendiente de F4.
 
 ### 5.1 Hardening F1 (los siete routers)
 
-R1 aplicó el hardening en los siete routers. R5 lo verificó con las capturas finales del 09/10 (una por router), las capturas previas de administración MAC, Neighbor Discovery y RoMON (08/10, según R1) y los exports del 09/10. Política de referencia: 1.3.
+R1 aplicó el hardening en los siete routers. R5 lo verificó con las capturas finales del 09/10 (una por router), las capturas previas de administración MAC, Neighbor Discovery y RoMON (08/10, según R1) y los exports del 09/10. El cambio de contraseña de `admin` se registra como confirmación de R1. Política de referencia: 1.3.
 
 | Control | Estado verificado en los 7 routers | Evidencia |
 | --- | --- | --- |
@@ -563,6 +564,7 @@ R1 aplicó el hardening en los siete routers. R5 lo verificó con las capturas f
 | Usuario `monitor` | Existe, en el grupo `monitor` con políticas `ssh,read`; el resto de las políticas, negadas | Capturas finales (`/user print`, `/user group print`); definición del grupo en los exports |
 | Clientes DHCP heredados | Eliminados: ningún export del 09/10 contiene `/ip dhcp-client` | Exports; en EDGE, cambio visible en el commit `247101e` |
 | Identidad | `/system identity` igual al nombre del router | Capturas finales y exports |
+| Contraseña de `admin` | Cambiada en los 7 routers: no conserva la contraseña de fábrica | Confirmación de R1 en la revisión de la PR #14 (2026-10-09). No hay captura ni export que la muestre, porque las credenciales no se publican y el export no incluye usuarios |
 
 Para EDGE, las capturas de administración MAC, Neighbor Discovery y RoMON están en [`EDGE_neighbor_discovery_deshabilitado.png`](../capturas/F1/04_hardening/EDGE/EDGE_neighbor_discovery_deshabilitado.png); para ISP-1, en [`ISP-1_servicios_MAC_neighbor_RoMON.png`](../capturas/F1/04_hardening/ISP-1/ISP-1_servicios_MAC_neighbor_RoMON.png). El índice completo está en la sección 7.
 
@@ -570,7 +572,7 @@ Para EDGE, las capturas de administración MAC, Neighbor Discovery y RoMON está
 
 **Consola de GNS3.** Los títulos de ventana `telnet localhost <puerto>` corresponden a la consola virtual de GNS3, no al servicio Telnet de RouterOS, que está deshabilitado. Los puertos de consola cambian entre sesiones de GNS3; el router se identifica por el prompt y por `/system identity print`.
 
-**Credenciales.** No se publican. Los exports `.rsc` no incluyen usuarios ni contraseñas: la existencia de `monitor` se acredita por captura y la recuperación de credenciales requiere el procedimiento privado de 6.2.
+**Credenciales.** No se publican. Los exports `.rsc` no incluyen usuarios ni contraseñas: la existencia de `monitor` se acredita por captura y el cambio de contraseña de `admin`, por confirmación de R1. La recuperación de credenciales requiere el procedimiento privado de 6.2.
 
 **Pendiente de fases siguientes:** autenticación OSPF MD5 y VRRP (F2); BGP TCP-MD5 y firewall de EDGE (F3).
 
@@ -750,7 +752,7 @@ F1 no se declara cerrada ni aprobada: la auditoría y la integración final corr
 - [x] IP de enlace y loopbacks de los 7 routers según el IPAM; 9 enlaces directos probados (3.0, 4.1)
 - [x] PC-USER y SRV configurados y con conectividad a ambos DIST (3.8, 4.1)
 - [x] Snapshot BASE registrado en GNS3 antes de configurar (2.3). Es un snapshot de GNS3; no se probó su restore
-- [x] Hardening de los 7 routers (5.1). SSH queda temporalmente deshabilitado
+- [x] Hardening de los 7 routers (5.1), incluido el cambio de contraseña de `admin` (confirmación de R1). SSH queda temporalmente deshabilitado
 - [x] Backup inicial `/export` de los 7 routers, sanitizado e integrado en `main` (6.2)
 
 **Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:

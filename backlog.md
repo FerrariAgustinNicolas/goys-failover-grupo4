@@ -51,7 +51,7 @@ Nota: la única instancia GNS3 operativa está en el equipo de R1, que ejecutó 
 
 ### Despliegue (7 CHR + 2 switches + 2 hosts)
 - [x] [R1] levantar el proyecto GNS3 `topologia_failover_routing` con los 7 CHR (memoria 2.1)
-- [~] [R1] relevar los nombres de interfaz y completarlos en el IPAM (memoria 1.2). Relevamiento hecho y documentado en memoria 2.2; la tabla 1.2 sigue con "interfaz pendiente"
+- [x] [R1] relevar los nombres de interfaz y completarlos en el IPAM (memoria 1.2; correspondencia GNS3 ↔ RouterOS en 2.2)
 - [x] [R5] levantar SW-USERS, SW-SERVERS, PC-USER y SRV y cablearlos a DIST-1/DIST-2. Ejecutó R1 (memoria 2.1 y 2.2)
 - [x] [R5] configurar PC-USER (`192.168.10.100/24`, gw `192.168.10.1`) y SRV (`192.168.20.100/24`, gw `192.168.20.1`). Ejecutó R1 (memoria 3.8 y 4.1)
 
