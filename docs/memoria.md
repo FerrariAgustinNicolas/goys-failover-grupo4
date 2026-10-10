@@ -51,17 +51,17 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 
 | Enlace / Red | Subred | Dispositivo A (IP/iface) | Dispositivo B (IP/iface) |
 | --- | --- | --- | --- |
-| ISP-1 ↔ EDGE | `10.255.0.0/30` | ISP-1: `10.255.0.1` / interfaz pendiente | EDGE: `10.255.0.2` / interfaz pendiente |
-| ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2: `10.255.0.5` / interfaz pendiente | EDGE: `10.255.0.6` / interfaz pendiente |
-| EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / interfaz pendiente | CORE-1: `10.255.0.10` / interfaz pendiente |
-| EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / interfaz pendiente | CORE-2: `10.255.0.14` / interfaz pendiente |
-| CORE-1 ↔ CORE-2 | `10.255.0.16/30` | CORE-1: `10.255.0.17` / interfaz pendiente | CORE-2: `10.255.0.18` / interfaz pendiente |
-| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / interfaz pendiente | DIST-1: `10.255.0.22` / interfaz pendiente |
-| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / interfaz pendiente | DIST-2: `10.255.0.26` / interfaz pendiente |
-| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / interfaz pendiente | DIST-1: `10.255.0.30` / interfaz pendiente |
-| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2: `10.255.0.33` / interfaz pendiente | DIST-2: `10.255.0.34` / interfaz pendiente |
-| USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / DIST-2: `192.168.10.3` (interfaz pendiente) | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
-| SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / DIST-2: `192.168.20.3` (interfaz pendiente) | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
+| ISP-1 ↔ EDGE | `10.255.0.0/30` | ISP-1: `10.255.0.1` / `ether1` | EDGE: `10.255.0.2` / `ether1` |
+| ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2: `10.255.0.5` / `ether1` | EDGE: `10.255.0.6` / `ether2` |
+| EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE: `10.255.0.9` / `ether3` | CORE-1: `10.255.0.10` / `ether1` |
+| EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE: `10.255.0.13` / `ether4` | CORE-2: `10.255.0.14` / `ether1` |
+| CORE-1 ↔ CORE-2 | `10.255.0.16/30` | CORE-1: `10.255.0.17` / `ether2` | CORE-2: `10.255.0.18` / `ether2` |
+| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1: `10.255.0.21` / `ether3` | DIST-1: `10.255.0.22` / `ether1` |
+| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1: `10.255.0.25` / `ether4` | DIST-2: `10.255.0.26` / `ether1` |
+| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2: `10.255.0.29` / `ether3` | DIST-1: `10.255.0.30` / `ether2` |
+| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2: `10.255.0.33` / `ether4` | DIST-2: `10.255.0.34` / `ether2` |
+| USERS | `192.168.10.0/24` | DIST-1: `192.168.10.2` / `ether3` · DIST-2: `192.168.10.3` / `ether3` | Gateway VRRP: `192.168.10.1` · PC-USER: `192.168.10.100` |
+| SERVERS | `192.168.20.0/24` | DIST-1: `192.168.20.2` / `ether4` · DIST-2: `192.168.20.3` / `ether4` | Gateway VRRP: `192.168.20.1` · SRV: `192.168.20.100` |
 
 > **Aporte R4 — enlaces CORE ↔ DIST:** se continúa la numeración consecutiva de `/30` a partir del bloque que sigue a EDGE. El enlace CORE-1 ↔ CORE-2 usa `10.255.0.16/30`, confirmado por R3. Convención: el CORE toma la primera IP utilizable y el DIST la segunda de cada `/30`.
 >
@@ -69,7 +69,7 @@ Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispo
 
 > **Aporte R3 — enlace CORE ↔ CORE:** se utiliza el bloque reservado `10.255.0.16/30` para CORE-1 ↔ CORE-2, con CORE-1 en `.17` y CORE-2 en `.18`, siguiendo la convención de que el dispositivo con menor numeración toma la primera IP utilizable. Se confirman las direcciones del lado CORE propuestas por R4 en los enlaces CORE ↔ DIST.
 
-> Los nombres de las interfaces se completarán a partir del proyecto GNS3 `topologia_failover_routing`. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
+> Las interfaces se relevaron durante F1 en el proyecto GNS3 `topologia_failover_routing` y se completaron con el mapeo validado en 2.2 (nombres de RouterOS; en GNS3, `eN` corresponde a `ether(N+1)`). No cambian las direcciones ni las decisiones del diseño F0. Los números de interfaz observados en el diagrama de ejemplo no se consideran vinculantes para el diseño del grupo.
 
 #### VRRP
 
@@ -113,7 +113,7 @@ Numeración propuesta, consecutiva y en el orden de las capas: ISP-1 `.1`, ISP-2
 
 CORE-1 (`10.255.255.4/32`) y CORE-2 (`10.255.255.5/32`) también usan su loopback como router-id de OSPF, de modo que el identificador no dependa del estado de ninguna interfaz física (aporte R3).
 
-Las siete loopbacks están asignadas en el bloque reservado y son únicas; las interfaces físicas siguen pendientes del relevamiento F1.
+Las siete loopbacks están asignadas en el bloque reservado y son únicas; las interfaces físicas se relevaron durante F1 (tabla de enlaces y 2.2).
 
 #### Sesiones eBGP
 
@@ -377,43 +377,134 @@ La topología de diseño se basa en la arquitectura de cinco capas definida por 
 
 El esquema de diseño F0 está en [`docs/diagramas/f0-diseno.md`](diagramas/f0-diseno.md). Es un esquema Mermaid authored, no captura ni topología desplegada de GNS3; el ASCII anterior se conserva como referencia.
 
+### 2.1 Topología desplegada en GNS3 (F1)
+
+R1 desplegó el proyecto `topologia_failover_routing` en la única instancia GNS3 operativa del grupo (GNS3 2.2.61, en su equipo). Los routers son MikroTik CHR con RouterOS 7.16; los switches son *Ethernet switch* de GNS3 y los hosts, VPCS. La topología respeta las cinco capas del diseño F0, incluido el enlace CORE-1 ↔ CORE-2.
+
+| Elemento | Cantidad | Nodos |
+| --- | :-: | --- |
+| Routers CHR | 7 | ISP-1, ISP-2, EDGE, CORE-1, CORE-2, DIST-1, DIST-2 |
+| Switches | 2 | SW-USERS, SW-SERVERS |
+| Hosts VPCS | 2 | PC-USER, SRV |
+| **Enlaces** | **15** | 9 router ↔ router, 4 DIST ↔ switch, 2 switch ↔ host |
+
+Evidencia: [`topologia_11_nodos_15_enlaces.png`](../capturas/F1/01_topologia/topologia_11_nodos_15_enlaces.png) (vista general) y [`topologia_interfaces_GNS3.png`](../capturas/F1/01_topologia/topologia_interfaces_GNS3.png) (etiquetas de interfaz). En ambas capturas los routers y hosts figuran detenidos: documentan el cableado, no el estado operativo, que se acredita con las pruebas de 4.1.
+
+### 2.2 Cableado y correspondencia de interfaces GNS3 ↔ RouterOS
+
+GNS3 rotula las interfaces del CHR `e0`–`e3`; RouterOS las nombra `ether1`–`ether4`. La regla es `eN` → `ether(N+1)`. Se verificó cruzando tres fuentes: las etiquetas de la captura de GNS3, la interfaz y el comentario de cada dirección en los exports, y el ping exitoso entre ambos extremos de cada enlace (4.1).
+
+| Enlace | Subred | Extremo A: GNS3 → RouterOS · IP | Extremo B: GNS3 → RouterOS · IP |
+| --- | --- | --- | --- |
+| ISP-1 ↔ EDGE | `10.255.0.0/30` | ISP-1 `e0` → `ether1` · `.1` | EDGE `e0` → `ether1` · `.2` |
+| ISP-2 ↔ EDGE | `10.255.0.4/30` | ISP-2 `e0` → `ether1` · `.5` | EDGE `e1` → `ether2` · `.6` |
+| EDGE ↔ CORE-1 | `10.255.0.8/30` | EDGE `e2` → `ether3` · `.9` | CORE-1 `e0` → `ether1` · `.10` |
+| EDGE ↔ CORE-2 | `10.255.0.12/30` | EDGE `e3` → `ether4` · `.13` | CORE-2 `e0` → `ether1` · `.14` |
+| CORE-1 ↔ CORE-2 | `10.255.0.16/30` | CORE-1 `e1` → `ether2` · `.17` | CORE-2 `e1` → `ether2` · `.18` |
+| CORE-1 ↔ DIST-1 | `10.255.0.20/30` | CORE-1 `e2` → `ether3` · `.21` | DIST-1 `e0` → `ether1` · `.22` |
+| CORE-1 ↔ DIST-2 | `10.255.0.24/30` | CORE-1 `e3` → `ether4` · `.25` | DIST-2 `e0` → `ether1` · `.26` |
+| CORE-2 ↔ DIST-1 | `10.255.0.28/30` | CORE-2 `e2` → `ether3` · `.29` | DIST-1 `e1` → `ether2` · `.30` |
+| CORE-2 ↔ DIST-2 | `10.255.0.32/30` | CORE-2 `e3` → `ether4` · `.33` | DIST-2 `e1` → `ether2` · `.34` |
+| DIST-1 ↔ SW-USERS | `192.168.10.0/24` | DIST-1 `e2` → `ether3` · `.2` | SW-USERS |
+| DIST-2 ↔ SW-USERS | `192.168.10.0/24` | DIST-2 `e2` → `ether3` · `.3` | SW-USERS |
+| DIST-1 ↔ SW-SERVERS | `192.168.20.0/24` | DIST-1 `e3` → `ether4` · `.2` | SW-SERVERS |
+| DIST-2 ↔ SW-SERVERS | `192.168.20.0/24` | DIST-2 `e3` → `ether4` · `.3` | SW-SERVERS |
+| SW-USERS ↔ PC-USER | `192.168.10.0/24` | SW-USERS | PC-USER · `.100` |
+| SW-SERVERS ↔ SRV | `192.168.20.0/24` | SW-SERVERS | SRV · `.100` |
+
+En la captura, las etiquetas `e2` de DIST-1 y `e3` de DIST-2 quedan tapadas por otros rótulos. Se asignaron por descarte y coinciden con la interfaz LAN de cada export y con los pings de los hosts a ambos DIST (4.1). Los puertos de los switches no son legibles en todos los casos y no se documentan; los switches no tienen configuración. Con este relevamiento se completó la columna de interfaz de la tabla 1.2, sin cambiar direcciones ni decisiones del diseño F0.
+
+### 2.3 Snapshot BASE
+
+| Dato | Valor |
+| --- | --- |
+| Nombre | `F1_BASE_2026-10-08_sin-configurar` |
+| Registro en GNS3 | 2026-10-08 16:40:13 (hora del equipo de R1) |
+| Creado por | R1, antes de configurar los routers (informado por R1; el nombre del snapshot lo indica) |
+| Tipo | Snapshot del proyecto GNS3 |
+| Evidencia | [`snapshot_BASE_2026-10-08.png`](../capturas/F1/01_topologia/snapshot_BASE_2026-10-08.png) |
+
+El snapshot BASE es un snapshot de GNS3, no un backup binario de RouterOS ni un export. La captura acredita que está registrado en el proyecto; no reemplaza al snapshot, a una copia portable del proyecto ni a un restore probado. El snapshot reside en el proyecto GNS3 de R1, sin copia portable registrada, y no se probó restaurarlo. Restaurarlo sobre el proyecto en uso revertiría la configuración F1.
+
 ---
 
 ## 3. Configuración
 
-> Esta sección se completará después de la aprobación de F0. Según la regla de la consigna, no se realizará configuración CLI antes de aprobar el diseño.
+> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. No se recibió una aprobación expresa de F0 por parte de la cátedra.
+
+### 3.0 Base común F1
+
+#### Ejecución y verificación
+
+La única instancia GNS3 operativa está en el equipo de R1, que ejecutó la configuración y las pruebas. R5 no operó la instancia: verificó las capturas y los exports, y los documentó.
+
+| Actividad | Ejecución en GNS3 | Verificación y documentación | Evidencia |
+| --- | --- | --- | --- |
+| Despliegue de 11 nodos y 15 enlaces | R1 | R5: contrastó la topología con el diseño F0 | 2.1, 2.2 |
+| Snapshot BASE | R1 | R5: registró nombre, fecha y alcance | 2.3 |
+| Identidad, IP de enlace y loopback de los 7 routers | R1 | R5: contrastó capturas y exports con el IPAM 1.2 | 3.0, 2.2 |
+| Pings de los 9 enlaces directos | R1 | R5: revisó resultado por enlace | 4.1 |
+| Configuración de PC-USER y SRV y pings a ambos DIST | R1 | R5 | 3.8, 4.1 |
+| Hardening de los 7 routers y eliminación de clientes DHCP heredados | R1 | R5: contrastó capturas finales y exports | 5.1 |
+| Cambio de contraseña de `admin` en los 7 routers | R1 | R5: registró la confirmación de R1; no hay evidencia publicable | 5.1 |
+| Generación de los exports `/export` | R1 | — | 6.2 |
+| Publicación de los exports por PR | R1 (EDGE), R2 (ISP), R3 (CORE), R4 (DIST) | R5: revisó el contenido de los siete `.rsc` | 6.2 |
+| Selección y organización de capturas | — | R5 | 7 |
+
+#### Direccionamiento y loopbacks aplicados
+
+Se aplicaron 31 de las 33 asignaciones del IPAM 1.2: las 18 direcciones de enlace, las 4 direcciones LAN de DIST, las 7 loopbacks y las 2 de los hosts. Las IP virtuales VRRP (`192.168.10.1` y `192.168.20.1`) se crean en F2. Todas las direcciones coinciden con el IPAM; cada router tiene `/system identity` igual a su nombre.
+
+| Router | Direcciones de enlace y LAN | Loopback (`lo`) | Captura |
+| --- | --- | --- | --- |
+| ISP-1 | `ether1` `10.255.0.1/30` | `10.255.255.1/32` | [`ISP-1_IPAM_y_ping_EDGE.png`](../capturas/F1/02_ipam_y_conectividad/ISP-1_IPAM_y_ping_EDGE.png) |
+| ISP-2 | `ether1` `10.255.0.5/30` | `10.255.255.2/32` | [`ISP-2_IPAM_y_ping_EDGE.png`](../capturas/F1/02_ipam_y_conectividad/ISP-2_IPAM_y_ping_EDGE.png) |
+| EDGE | `ether1` `10.255.0.2/30` · `ether2` `10.255.0.6/30` · `ether3` `10.255.0.9/30` · `ether4` `10.255.0.13/30` | `10.255.255.3/32` | [`EDGE_IPAM_y_loopback.png`](../capturas/F1/02_ipam_y_conectividad/EDGE_IPAM_y_loopback.png) |
+| CORE-1 | `ether1` `10.255.0.10/30` · `ether2` `10.255.0.17/30` · `ether3` `10.255.0.21/30` · `ether4` `10.255.0.25/30` | `10.255.255.4/32` | [`CORE-1_IPAM_y_ping_EDGE.png`](../capturas/F1/02_ipam_y_conectividad/CORE-1_IPAM_y_ping_EDGE.png) |
+| CORE-2 | `ether1` `10.255.0.14/30` · `ether2` `10.255.0.18/30` · `ether3` `10.255.0.29/30` · `ether4` `10.255.0.33/30` | `10.255.255.5/32` | [`CORE-2_IPAM_y_pings_EDGE_CORE-1.png`](../capturas/F1/02_ipam_y_conectividad/CORE-2_IPAM_y_pings_EDGE_CORE-1.png) |
+| DIST-1 | `ether1` `10.255.0.22/30` · `ether2` `10.255.0.30/30` · `ether3` `192.168.10.2/24` · `ether4` `192.168.20.2/24` | `10.255.255.6/32` | [`DIST-1_IPAM_y_pings_CORE.png`](../capturas/F1/02_ipam_y_conectividad/DIST-1_IPAM_y_pings_CORE.png) |
+| DIST-2 | `ether1` `10.255.0.26/30` · `ether2` `10.255.0.34/30` · `ether3` `192.168.10.3/24` · `ether4` `192.168.20.3/24` | `10.255.255.7/32` | [`DIST-2_IPAM_y_pings_CORE.png`](../capturas/F1/02_ipam_y_conectividad/DIST-2_IPAM_y_pings_CORE.png) |
+
+Los mismos valores figuran en los exports de 6.2.
 
 ### 3.1 ISP-1
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/ISP-1_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-1_2026-10-09_f1.rsc). BGP pendiente de F3.
 
 ### 3.2 ISP-2
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/ISP-2_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-2_2026-10-09_f1.rsc). BGP pendiente de F3.
 
 ### 3.3 EDGE
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/EDGE_2026-10-09_f1.rsc`](../backups/2026-10-09/EDGE_2026-10-09_f1.rsc). OSPF pendiente de F2; BGP y firewall, de F3.
 
 ### 3.4 CORE-1
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-1_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-1_2026-10-09_f1.rsc). OSPF pendiente de F2.
 
 ### 3.5 CORE-2
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-2_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-2_2026-10-09_f1.rsc). OSPF pendiente de F2.
 
 ### 3.6 DIST-1
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-1_2026-10-09_f1.rsc). VRRP y OSPF pendientes de F2.
 
 ### 3.7 DIST-2
 
-Pendiente.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-2_2026-10-09_f1.rsc). VRRP y OSPF pendientes de F2.
 
 ### 3.8 Hosts (PC-USER / SRV)
 
-Pendiente.
+R1 configuró ambos hosts VPCS según el IPAM 1.2:
+
+| Host | LAN | IP/máscara | Gateway | Captura |
+| --- | --- | --- | --- | --- |
+| PC-USER | USERS | `192.168.10.100/24` | `192.168.10.1` | [`PC-USER_IP_y_pings_DIST.png`](../capturas/F1/03_hosts/PC-USER_IP_y_pings_DIST.png) |
+| SRV | SERVERS | `192.168.20.100/24` | `192.168.20.1` | [`SRV_IP_y_pings_DIST.png`](../capturas/F1/03_hosts/SRV_IP_y_pings_DIST.png) |
+
+El gateway de cada host es la IP virtual VRRP, que se crea en F2: en F1 todavía no responde y no se usa como prueba. La conectividad F1 de los hosts se prueba contra las direcciones reales de DIST-1 y DIST-2 (4.1). DNS no se configuró porque no es necesario.
 
 ---
 
@@ -421,7 +512,34 @@ Pendiente.
 
 ### 4.1 Conectividad básica
 
-Pendiente de las fases de implementación.
+#### F1: enlaces directos y hosts
+
+R1 ejecutó estas pruebas después de asignar las direcciones; R5 revisó cada captura. Las capturas no muestran fecha y corresponden a la verificación inicial. R1 informó que, después de eliminar los clientes DHCP heredados, repitió con éxito los pings de los nueve enlaces; esa segunda prueba no tiene captura y estas imágenes no la documentan.
+
+**Enlaces directos entre routers** (`/ping <IP> count=4`):
+
+| # | Enlace | Origen → destino | Resultado | Captura |
+| :-: | --- | --- | --- | --- |
+| 1 | ISP-1 ↔ EDGE | ISP-1 → `10.255.0.2` | 4/4, 0 % de pérdida | [`ISP-1_IPAM_y_ping_EDGE.png`](../capturas/F1/02_ipam_y_conectividad/ISP-1_IPAM_y_ping_EDGE.png) |
+| 2 | ISP-2 ↔ EDGE | ISP-2 → `10.255.0.6` | 4/4, 0 % de pérdida | [`ISP-2_IPAM_y_ping_EDGE.png`](../capturas/F1/02_ipam_y_conectividad/ISP-2_IPAM_y_ping_EDGE.png) |
+| 3 | EDGE ↔ CORE-1 | CORE-1 → `10.255.0.9` | 4/4, 0 % de pérdida | [`CORE-1_IPAM_y_ping_EDGE.png`](../capturas/F1/02_ipam_y_conectividad/CORE-1_IPAM_y_ping_EDGE.png) |
+| 4 | EDGE ↔ CORE-2 | CORE-2 → `10.255.0.13` | 4/4, 0 % de pérdida | [`CORE-2_IPAM_y_pings_EDGE_CORE-1.png`](../capturas/F1/02_ipam_y_conectividad/CORE-2_IPAM_y_pings_EDGE_CORE-1.png) |
+| 5 | CORE-1 ↔ CORE-2 | CORE-2 → `10.255.0.17` | 4/4, 0 % de pérdida | ídem 4 |
+| 6 | CORE-1 ↔ DIST-1 | DIST-1 → `10.255.0.21` | 4/4, 0 % de pérdida | [`DIST-1_IPAM_y_pings_CORE.png`](../capturas/F1/02_ipam_y_conectividad/DIST-1_IPAM_y_pings_CORE.png) |
+| 7 | CORE-2 ↔ DIST-1 | DIST-1 → `10.255.0.29` | 4/4, 0 % de pérdida | ídem 6 |
+| 8 | CORE-1 ↔ DIST-2 | DIST-2 → `10.255.0.25` | 4/4, 0 % de pérdida | [`DIST-2_IPAM_y_pings_CORE.png`](../capturas/F1/02_ipam_y_conectividad/DIST-2_IPAM_y_pings_CORE.png) |
+| 9 | CORE-2 ↔ DIST-2 | DIST-2 → `10.255.0.33` | 4/4, 0 % de pérdida | ídem 8 |
+
+**Hosts hacia ambos DIST** (`ping` de VPCS, 5 solicitudes):
+
+| Origen → destino | Resultado | Captura |
+| --- | --- | --- |
+| PC-USER → DIST-1 `192.168.10.2` | 5/5 respuestas | [`PC-USER_IP_y_pings_DIST.png`](../capturas/F1/03_hosts/PC-USER_IP_y_pings_DIST.png) |
+| PC-USER → DIST-2 `192.168.10.3` | 5/5 respuestas | ídem |
+| SRV → DIST-1 `192.168.20.2` | 5/5 respuestas | [`SRV_IP_y_pings_DIST.png`](../capturas/F1/03_hosts/SRV_IP_y_pings_DIST.png) |
+| SRV → DIST-2 `192.168.20.3` | 5/5 respuestas | ídem |
+
+Alcance: estas pruebas acreditan conectividad en cada segmento directo. Sin OSPF ni BGP no hay enrutamiento entre segmentos; los pings entre LAN, entre loopbacks o hacia los ISP se verifican en F2 y F3.
 
 ### 4.2 Los 5 drills de failover
 
@@ -431,7 +549,32 @@ Pendiente de F4.
 
 ## 5. Seguridad aplicada
 
-Pendiente de las fases de implementación.
+### 5.1 Hardening F1 (los siete routers)
+
+R1 aplicó el hardening en los siete routers. R5 lo verificó con las capturas finales del 09/10 (una por router), las capturas previas de administración MAC, Neighbor Discovery y RoMON (08/10, según R1) y los exports del 09/10. El cambio de contraseña de `admin` se registra como confirmación de R1. Política de referencia: 1.3.
+
+| Control | Estado verificado en los 7 routers | Evidencia |
+| --- | --- | --- |
+| Servicios IP `telnet`, `ftp`, `www`, `www-ssl`, `api`, `api-ssl`, `winbox` y `ssh` | Los ocho deshabilitados | Capturas `*_hardening_final_2026-10-09.png` (`/ip service print`); `/ip service` en los exports |
+| Bandwidth Server | `enabled: no` | Capturas finales; `/tool bandwidth-server set enabled=no` en los exports del 09/10 |
+| MAC Telnet y MAC Winbox | `allowed-interface-list: none` | Capturas `*_MAC_neighbor_RoMON.png`; `/tool mac-server` en los exports |
+| MAC Ping | `enabled: no` | Capturas `*_MAC_neighbor_RoMON.png`; exports |
+| Neighbor Discovery | `discover-interface-list: none` | Capturas `*_MAC_neighbor_RoMON.png`; exports |
+| RoMON | `enabled: no` | Capturas `*_MAC_neighbor_RoMON.png`. Es el valor por defecto, por eso no figura en el export |
+| Usuario `monitor` | Existe, en el grupo `monitor` con políticas `ssh,read`; el resto de las políticas, negadas | Capturas finales (`/user print`, `/user group print`); definición del grupo en los exports |
+| Clientes DHCP heredados | Eliminados: ningún export del 09/10 contiene `/ip dhcp-client` | Exports; en EDGE, cambio visible en el commit `247101e` |
+| Identidad | `/system identity` igual al nombre del router | Capturas finales y exports |
+| Contraseña de `admin` | Cambiada en los 7 routers: no conserva la contraseña de fábrica | Confirmación de R1 en la revisión de la PR #14 (2026-10-09). No hay captura ni export que la muestre, porque las credenciales no se publican y el export no incluye usuarios |
+
+Para EDGE, las capturas de administración MAC, Neighbor Discovery y RoMON están en [`EDGE_neighbor_discovery_deshabilitado.png`](../capturas/F1/04_hardening/EDGE/EDGE_neighbor_discovery_deshabilitado.png); para ISP-1, en [`ISP-1_servicios_MAC_neighbor_RoMON.png`](../capturas/F1/04_hardening/ISP-1/ISP-1_servicios_MAC_neighbor_RoMON.png). El índice completo está en la sección 7.
+
+**SSH temporalmente deshabilitado.** La política 1.3 define SSH como único servicio de administración, restringido a fuentes de gestión autorizadas. Ese origen todavía no está definido, por lo que SSH permanece deshabilitado en los siete routers y la administración se hace solo por la consola de GNS3. El usuario `monitor` existe, pero su acceso remoto no está operativo. Queda pendiente definir el origen de gestión autorizado y habilitar SSH restringido a él.
+
+**Consola de GNS3.** Los títulos de ventana `telnet localhost <puerto>` corresponden a la consola virtual de GNS3, no al servicio Telnet de RouterOS, que está deshabilitado. Los puertos de consola cambian entre sesiones de GNS3; el router se identifica por el prompt y por `/system identity print`.
+
+**Credenciales.** No se publican. Los exports `.rsc` no incluyen usuarios ni contraseñas: la existencia de `monitor` se acredita por captura y el cambio de contraseña de `admin`, por confirmación de R1. La recuperación de credenciales requiere el procedimiento privado de 6.2.
+
+**Pendiente de fases siguientes:** autenticación OSPF MD5 y VRRP (F2); BGP TCP-MD5 y firewall de EDGE (F3).
 
 ---
 
@@ -463,21 +606,78 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-01 | R2 | `feaecc6` docs(seguridad): define politica de hardening y autenticacion BGP de ISP | F0: define hardening y autenticación de ISP | `git revert feaecc6` |
 | 2026-10-01 | R1 — FerrariAgustinNicolas (integración PR #3) | `dd1b8ab` docs(f0): consolida diseno y seguridad preservando aportes por rol | Consolidación F0, corrección IPAM y diagrama; integrado por PR #3 (merge `e316152`) | `git revert dd1b8ab` (PR #3 completo: `git revert -m 1 e316152`) |
 | 2026-10-01 | R1 — FerrariAgustinNicolas | `8f5d4f1` chore(repo): excluye archivos locales del entorno | Evita versionar archivos locales de herramientas; integrado por PR #5 (merge `531056f`) | `git revert 8f5d4f1` |
+| 2026-10-02 | R5 | `91454d7` docs(f0): actualiza tracking y change log tras integracion | F0: estado del backlog y del checklist tras integrar PR #1 a #4; PR #6 (merge `49510c6`) | `git revert 91454d7` |
+| 2026-10-02 | R5 | `3f12c89` docs(f0): cierra defecto 1 y evita autorreferencia en change log | F0: cierre documental del defecto 1 y regla de filas del change log (1.4); PR #6 | `git revert 3f12c89` |
+| 2026-10-02 | R5 | `a87eeb4` docs(backlog): ajusta tareas a la estructura de la consigna | Backlog alineado con las historias de la consigna; PR #7 (merge `07306e5`) | `git revert a87eeb4` |
+| 2026-10-02 | R1 | `731ec42` docs(f0): corrige integrantes y presentacion de la memoria | Integrantes y presentación de README y memoria; PR #8 (merge `8741527`) | `git revert 731ec42` |
+| 2026-10-08 | R1 | `4ebb2fb` ops(backup): incorpora export F1 de EDGE | F1: primer export de EDGE; PR #9 (merge `dbbe755`) | `git revert 4ebb2fb` |
+| 2026-10-08 | R1 | `247101e` fix(backup): elimina cliente DHCP heredado de EDGE | F1: el export refleja la eliminación del cliente DHCP heredado; PR #9 | `git revert 247101e` |
+| 2026-10-09 | R3 | `1e52151` ops(backup): incorpora exports F1 de CORE | F1: primeros exports de CORE-1/CORE-2; PR #10 (merge `6beba24`) | `git revert 1e52151` |
+| 2026-10-09 | R1 | `2f4cf66` ops(backup): incorpora export F1 actualizado de EDGE | F1: export de EDGE del 09/10, con Bandwidth Server deshabilitado; PR #11 (merge `170975b`) | `git revert 2f4cf66` |
+| 2026-10-09 | R2 | `60d0148` ops(backup): incorpora exports F1 de proveedores | F1: exports de ISP-1/ISP-2; PR #12 (merge `83119f5`) | `git revert 60d0148` |
+| 2026-10-09 | R3 | `bbd594e` fix(backup): actualiza exports F1 de CORE tras hardening | F1: reemplaza los exports de CORE del 08/10 por los del 09/10, con Bandwidth Server deshabilitado; PR #10 | `git revert bbd594e` |
+| 2026-10-09 | R4 — naimguar (PR #13) | `2309460` ops(backup): incorpora exports F1 de distribucion | F1: exports de DIST-1/DIST-2; PR #13 (merge `703c5b9`) | `git revert 2309460` |
+| 2026-10-09 | R5 | `982fc39` docs(capturas): organiza evidencias F1 seleccionadas | F1: 26 capturas de R1 seleccionadas y organizadas en `capturas/F1/`; rama `docs/f1-r5-evidencias-operacion` | `git revert e154b47` |
+| 2026-10-09 | R5 | `2d293ca` docs(memoria): documenta despliegue, conectividad, hardening y exports de F1 | F1: memoria 2.1–2.3, 3, 4.1, 5.1, 6.2 y 7.1; misma rama | `git revert 96dcdeb` |
+| 2026-10-09 | R5 | `cd8c8d5` docs(memoria): integra exports de DIST y checklist F1 tras PR #13 | F1: referencias a los exports de DIST y checklist F1 (10); misma rama | `git revert 9643d08` |
+| 2026-10-09 | R5 | `f80979d` docs(backlog): marca tareas F1 respaldadas por evidencia | F1: estado de las tareas F1 con evidencia; misma rama | `git revert 610d04c` |
 
-> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152` y PR #5 (`.gitignore`) `531056f`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
+> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152`, PR #5 (`.gitignore`) `531056f`, PR #6 (R5) `49510c6`, PR #7 (R5) `07306e5`, PR #8 (R1) `8741527`, PR #9 (R1) `dbbe755`, PR #11 (R1) `170975b`, PR #12 (R2) `83119f5`, PR #10 (R3) `6beba24` y PR #13 (R4) `703c5b9`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
 >
-> `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Los commits individuales conservan su autoría y no se reescriben.
+> `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Del mismo modo, `77d59a9` lleva `main` a la rama `docs/f1-r5-evidencias-operacion` después de la PR #13. Los commits individuales conservan su autoría y no se reescriben.
+>
+> Los commits de F1 publican exports, capturas y documentación. La configuración aplicada en los routers no tiene commit propio: se revierte con el comando inverso en la consola o, para volver al estado previo a F1, con el snapshot BASE de GNS3 (2.3), cuyo restore no fue probado.
+>
+> El commit `2309460` figura en git con autor "Claude"; la PR #13 la abrió R4 (naimguar). Las filas de la rama `docs/f1-r5-evidencias-operacion` corresponden a commits existentes; su merge a `main` sigue pendiente de la revisión de R1.
 
 ### 6.2 Backups
 
 Política: ver 1.4.
 
-A F0 no hay backups reales: F0 solo exige la política definida. El snapshot BASE y el restore probado corresponden a F1.
+A F0 no había backups reales: F0 solo exigía la política definida.
 
-**Pendiente de F1.** La evidencia se carga en esta sección a medida que se toman los backups:
+#### Exports F1 (`/export`)
 
-- **Registro de backups:** una fila por router e hito (BASE, F1, F2, F3 y drills), con fecha, versión de RouterOS, propietario, checksum, resultado y referencia a un localizador privado no secreto. Solo los `.rsc` inspeccionados y sanitizados y los metadatos no sensibles pueden estar en el repositorio público; los `.backup` y exports sensibles permanecen cifrados fuera del repositorio y bajo acceso controlado.
-- **Restore probado (F1):** router y versión coincidente, referencia privada al artefacto, resultado y comparación con el export sanitizado; documentar el protocolo privado para reinyectar las claves de laboratorio y provisionar usuarios de gestión. Las capturas y salidas se redactan; no se registran contraseñas ni rutas secretas.
+Los exports se generaron en la instancia GNS3 de R1 y cada rol publicó los de sus routers por PR. Los siete del 09/10 son **posteriores** a la asignación de direcciones y al hardening: representan el estado F1 final, no el estado previo a la configuración. La fecha y hora son las que RouterOS escribe en la primera línea de cada export.
+
+| Router | Archivo | Encabezado del export | Publicado por | Commit · PR | Estado |
+| --- | --- | --- | --- | --- | --- |
+| EDGE | [`backups/2026-10-09/EDGE_2026-10-09_f1.rsc`](../backups/2026-10-09/EDGE_2026-10-09_f1.rsc) | 2026-10-09 17:23:56 · RouterOS 7.16 | R1 | `2f4cf66` · PR #11 (merge `170975b`) | En `main` |
+| ISP-1 | [`backups/2026-10-09/ISP-1_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-1_2026-10-09_f1.rsc) | 2026-10-09 17:24:45 · RouterOS 7.16 | R2 | `60d0148` · PR #12 (merge `83119f5`) | En `main` |
+| ISP-2 | [`backups/2026-10-09/ISP-2_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-2_2026-10-09_f1.rsc) | 2026-10-09 17:25:21 · RouterOS 7.16 | R2 | `60d0148` · PR #12 (merge `83119f5`) | En `main` |
+| CORE-1 | [`backups/2026-10-09/CORE-1_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-1_2026-10-09_f1.rsc) | 2026-10-09 17:03:17 · RouterOS 7.16 | R3 | `1e52151`, `bbd594e` · PR #10 (merge `6beba24`) | En `main` |
+| CORE-2 | [`backups/2026-10-09/CORE-2_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-2_2026-10-09_f1.rsc) | 2026-10-09 17:04:37 · RouterOS 7.16 | R3 | `1e52151`, `bbd594e` · PR #10 (merge `6beba24`) | En `main` |
+| DIST-1 | [`backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-1_2026-10-09_f1.rsc) | 2026-10-09 17:25:52 · RouterOS 7.16 | R4 | `2309460` · PR #13 (merge `703c5b9`) | En `main` |
+| DIST-2 | [`backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-2_2026-10-09_f1.rsc) | 2026-10-09 17:26:33 · RouterOS 7.16 | R4 | `2309460` · PR #13 (merge `703c5b9`) | En `main` |
+
+Versiones anteriores: [`backups/2026-10-08/EDGE_2026-10-08_f1.rsc`](../backups/2026-10-08/EDGE_2026-10-08_f1.rsc) (PR #9, merge `dbbe755`) es el export previo de EDGE, todavía sin `bandwidth-server enabled=no`. Se conserva como historial y lo reemplaza el del 09/10. Los exports de CORE del 08/10 se reemplazaron en `bbd594e` y quedan en el historial de git.
+
+**Revisión R5 de los siete exports del 09/10** (los siete están en `main`; los de DIST integrados son idénticos a los revisados en la PR #13):
+
+- `/system identity` coincide con el nombre del archivo.
+- Direcciones y loopbacks coinciden con el IPAM 1.2 y con las capturas de 3.0.
+- Hardening de 5.1: servicios IP, Bandwidth Server, administración MAC, Neighbor Discovery y grupo `monitor`.
+- Ningún export contiene `/ip dhcp-client`.
+- Ningún export contiene usuarios, contraseñas, claves ni salida `show-sensitive`.
+
+En la captura final de DIST-1 se ve el comando `/export file=DIST-2_F1_2026-10-09`, ejecutado en DIST-1. El export publicado de DIST-1 corresponde a DIST-1, según su identidad y sus direcciones. El archivo con nombre equivocado, si existe, queda en el almacenamiento local de DIST-1 y no se publica.
+
+#### Política interna de backup: procedimientos adicionales
+
+La política 1.4 agrega procedimientos que van más allá del export inicial de F1. Su estado actual:
+
+| Procedimiento (política 1.4) | Estado |
+| --- | --- |
+| Snapshot BASE | Registrado en GNS3 (2.3). No es un backup de RouterOS y no se probó su restore |
+| Export `base` de cada router antes de configurar | No se generó |
+| Backup binario `.backup` cifrado, fuera del repositorio | **Pendiente**: no hay evidencia de que se haya realizado |
+| Registro de localizador privado, checksum y resultado de cada binario | **Pendiente**: depende del binario |
+| Restore probado en un router con la misma versión de RouterOS | **Pendiente** |
+| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente** |
+
+Cuando se realicen, se registrarán aquí con los metadatos que exige 1.4: localizador privado no secreto, checksum, versión de RouterOS, propietario, fecha, hito y resultado.
+
+Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. Esa recuperación requiere el procedimiento privado, que todavía no está documentado. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
 
 ### 6.3 Monitoreo
 
@@ -487,7 +687,32 @@ Pendiente R5.
 
 ## 7. Capturas
 
-Pendiente.
+### 7.1 F1
+
+R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 seleccionó 26 de las 27 recibidas y las organizó en [`capturas/F1/`](../capturas/F1/). Las copias del repositorio son idénticas a las del paquete recibido (verificado por SHA-256). Las capturas de consola no muestran fecha; solo se indica fecha cuando la imagen o su origen la acreditan.
+
+| Archivo (`capturas/F1/…`) | Qué demuestra | Sección |
+| --- | --- | --- |
+| `01_topologia/topologia_11_nodos_15_enlaces.png` | 7 CHR, 2 switches, 2 VPCS y 15 enlaces | 2.1 |
+| `01_topologia/topologia_interfaces_GNS3.png` | Etiquetas de interfaz `e0`–`e3` de cada enlace | 2.2 |
+| `01_topologia/snapshot_BASE_2026-10-08.png` | Snapshot `F1_BASE_2026-10-08_sin-configurar`, 2026-10-08 16:40:13 | 2.3 |
+| `02_ipam_y_conectividad/ISP-1_IPAM_y_ping_EDGE.png` | IP y loopback de ISP-1; ping a EDGE | 3.0, 4.1 |
+| `02_ipam_y_conectividad/ISP-2_IPAM_y_ping_EDGE.png` | IP y loopback de ISP-2; ping a EDGE | 3.0, 4.1 |
+| `02_ipam_y_conectividad/EDGE_IPAM_y_loopback.png` | IP de los cuatro enlaces y loopback de EDGE | 3.0 |
+| `02_ipam_y_conectividad/CORE-1_IPAM_y_ping_EDGE.png` | IP y loopback de CORE-1; ping a EDGE | 3.0, 4.1 |
+| `02_ipam_y_conectividad/CORE-2_IPAM_y_pings_EDGE_CORE-1.png` | IP y loopback de CORE-2; pings a EDGE y CORE-1 | 3.0, 4.1 |
+| `02_ipam_y_conectividad/DIST-1_IPAM_y_pings_CORE.png` | IP, LAN y loopback de DIST-1; pings a CORE-1 y CORE-2 | 3.0, 4.1 |
+| `02_ipam_y_conectividad/DIST-2_IPAM_y_pings_CORE.png` | IP, LAN y loopback de DIST-2; pings a CORE-1 y CORE-2 | 3.0, 4.1 |
+| `03_hosts/PC-USER_IP_y_pings_DIST.png` | Configuración de PC-USER; pings a DIST-1 y DIST-2 | 3.8, 4.1 |
+| `03_hosts/SRV_IP_y_pings_DIST.png` | Configuración de SRV; pings a DIST-1 y DIST-2 | 3.8, 4.1 |
+| `04_hardening/<router>/<router>_hardening_final_2026-10-09.png` (7) | Identidad, Bandwidth Server, servicios IP y usuario/grupo `monitor`, 09/10 | 5.1 |
+| `04_hardening/<router>/<router>_MAC_neighbor_RoMON.png` (CORE-1, CORE-2, DIST-1, DIST-2, ISP-2) | Administración MAC, Neighbor Discovery y RoMON, 08/10 según R1 | 5.1 |
+| `04_hardening/ISP-1/ISP-1_servicios_MAC_neighbor_RoMON.png` | Servicios IP, administración MAC, Neighbor Discovery y RoMON de ISP-1, 08/10 según R1 | 5.1 |
+| `04_hardening/EDGE/EDGE_neighbor_discovery_deshabilitado.png` | Administración MAC y RoMON; cambio de Neighbor Discovery a `none` en EDGE, 08/10 según R1 | 5.1 |
+
+**Excluida:** `EDGE_administracion_MAC.png`, del paquete de R1. Es un estado intermedio: muestra SSH todavía habilitado y la administración MAC antes y después del cambio. El estado final está cubierto por `EDGE_neighbor_discovery_deshabilitado.png` y por la captura final del 09/10. Queda fuera del repositorio, en el paquete original.
+
+**Observación:** la captura final de DIST-1 conserva arriba el comando `/export file=DIST-2_F1_2026-10-09` (ver 6.2). No altera lo que la captura demuestra, pero conviene repetirla sin ese comando antes de la entrega definitiva.
 
 ---
 
@@ -509,17 +734,44 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 - **Diseño interno:** completado y documentado.
 - **Integración Git:** completada (PR #1 `58db8cd`, PR #2 `5427689`, PR #4 `e35fdeb`, PR #3 `e316152`).
-- **Aprobación formal de la cátedra:** todavía no otorgada.
-- **F1:** todavía no iniciada. Nada de lo documentado implica despliegue.
+- **Aprobación formal de la cátedra:** no recibida de forma expresa.
+- **F1:** ejecutada el 08 y 09/10/2026; estado en la lista F1 de esta sección.
 
 - [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)
 - [x] Cuatro correcciones de diseño aplicadas; SPOF EDGE queda como recomendación
 - [x] Política integrada de gestión, autenticación y servicios
 - [x] Política de operación y change log documentados
 
+### Topología, hardening y backup (F1)
+
+F1 no se declara cerrada ni aprobada: la auditoría y la integración final corresponden a R1.
+
+**Criterios de aceptación de F1** (estructura del backlog de la consigna):
+
+- [x] 7 CHR + 2 switches + 2 hosts desplegados y cableados: 11 nodos y 15 enlaces (2.1, 2.2)
+- [x] IP de enlace y loopbacks de los 7 routers según el IPAM; 9 enlaces directos probados (3.0, 4.1)
+- [x] PC-USER y SRV configurados y con conectividad a ambos DIST (3.8, 4.1)
+- [x] Snapshot BASE registrado en GNS3 antes de configurar (2.3). Es un snapshot de GNS3; no se probó su restore
+- [x] Hardening de los 7 routers (5.1), incluido el cambio de contraseña de `admin` (confirmación de R1). SSH queda temporalmente deshabilitado
+- [x] Backup inicial `/export` de los 7 routers, sanitizado e integrado en `main` (6.2)
+
+**Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:
+
+- [ ] Backup binario `.backup` cifrado, fuera del repositorio, con metadatos registrados en 6.2
+- [ ] Restore probado en un router con la misma versión de RouterOS
+- [ ] Procedimiento privado para reinyectar claves y reprovisionar usuarios de gestión
+- [ ] Export `base` de cada router antes de configurar: no se generó; solo existe el snapshot GNS3
+
+El ítem "Backups con restore probado" de Operación sigue pendiente para la entrega final.
+
+**Pendientes operativos de F1:**
+
+- [ ] Definir el origen de gestión autorizado y habilitar SSH restringido a él
+- [ ] Repetir la captura final de DIST-1 sin el comando `/export` previo (7.1)
+
 ### Redes
 
-- [ ] 7 CHR + 2 switches + 2 hosts levantados y cableados
+- [x] 7 CHR + 2 switches + 2 hosts levantados y cableados (F1, 2.1)
 - [ ] VRRP operativo (2 grupos, load-sharing)
 - [ ] OSPF área 0 con adyacencias (incluido core-core)
 - [ ] BGP eBGP ×2 establecido (multi-homing)
@@ -527,7 +779,7 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 ### Seguridad
 
-- [ ] Hardening aplicado
+- [x] Hardening aplicado (F1, 5.1; SSH temporalmente deshabilitado)
 - [ ] OSPF MD5 funcionando
 - [ ] BGP TCP-MD5 funcionando
 - [ ] VRRP auth funcionando
@@ -546,5 +798,5 @@ Pendiente de completar con los recursos efectivamente utilizados.
 - [ ] Memoria completa
 - [ ] Repo git con estructura correcta y commits por rol
 - [ ] `backlog.md` con todas las tareas en done
-- [ ] Capturas organizadas
+- [ ] Capturas organizadas (F1 organizadas en 7.1; faltan las de F2–F4)
 - [ ] Cada integrante puede defender su parte y una parte ajena

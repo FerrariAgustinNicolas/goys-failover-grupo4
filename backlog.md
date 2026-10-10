@@ -47,34 +47,41 @@ La corrección del solapamiento y su integración IPAM reúnen aportes de R1–R
 
 ## Epic F1 — Topología + hardening + backup · *vence vie 9/10*
 
+Nota: la única instancia GNS3 operativa está en el equipo de R1, que ejecutó la configuración y las pruebas de F1 en los siete routers y en los hosts. Cada `[x]` conserva su dueño original y se respalda con la evidencia indicada; R5 verificó y documentó esa evidencia (memoria 3.0).
+
 ### Despliegue (7 CHR + 2 switches + 2 hosts)
-- [ ] [R1] levantar el proyecto GNS3 `topologia_failover_routing` con los 7 CHR
-- [ ] [R1] relevar los nombres de interfaz y completarlos en el IPAM (memoria 1.2)
-- [ ] [R5] levantar SW-USERS, SW-SERVERS, PC-USER y SRV y cablearlos a DIST-1/DIST-2
-- [ ] [R5] configurar PC-USER (`192.168.10.100/24`, gw `192.168.10.1`) y SRV (`192.168.20.100/24`, gw `192.168.20.1`)
+- [x] [R1] levantar el proyecto GNS3 `topologia_failover_routing` con los 7 CHR (memoria 2.1)
+- [x] [R1] relevar los nombres de interfaz y completarlos en el IPAM (memoria 1.2; correspondencia GNS3 ↔ RouterOS en 2.2)
+- [x] [R5] levantar SW-USERS, SW-SERVERS, PC-USER y SRV y cablearlos a DIST-1/DIST-2. Ejecutó R1 (memoria 2.1 y 2.2)
+- [x] [R5] configurar PC-USER (`192.168.10.100/24`, gw `192.168.10.1`) y SRV (`192.168.20.100/24`, gw `192.168.20.1`). Ejecutó R1 (memoria 3.8 y 4.1)
 
 ### IPs de enlace + loopbacks
-- [ ] [R1] IPs de enlace y loopback de EDGE
-- [ ] [R2] IPs de enlace y loopback de ISP-1/ISP-2
-- [ ] [R3] IPs de enlace y loopback de CORE-1/CORE-2
-- [ ] [R4] IPs de enlace y loopback de DIST
+- [x] [R1] IPs de enlace y loopback de EDGE (memoria 3.0 y 4.1)
+- [x] [R2] IPs de enlace y loopback de ISP-1/ISP-2. Ejecutó R1 (memoria 3.0 y 4.1)
+- [x] [R3] IPs de enlace y loopback de CORE-1/CORE-2. Ejecutó R1 (memoria 3.0 y 4.1)
+- [x] [R4] IPs de enlace y loopback de DIST. Ejecutó R1 (memoria 3.0 y 4.1)
 
 ### Snapshot BASE
-- [ ] [R5] obtener y revisar un `/export` sanitizado de cada uno de los 7 routers antes de configurar; publicar solo esos `.rsc` y metadatos no sensibles
+
+Nota: R1 creó el snapshot GNS3 `F1_BASE_2026-10-08_sin-configurar` antes de configurar (memoria 2.3). No es un backup de RouterOS y su restore no se probó. Las tres tareas siguientes, de la política interna 1.4, siguen pendientes.
+
+- [ ] [R5] obtener y revisar un `/export` sanitizado de cada uno de los 7 routers antes de configurar; publicar solo esos `.rsc` y metadatos no sensibles. No se generó antes de configurar (memoria 6.2); ajuste de la tarea propuesto a R1
 - [ ] [R5] guardar los backups binarios completos y cualquier export sensible cifrados fuera del repositorio público, en almacenamiento privado con acceso controlado; indicar solo un localizador privado no secreto y registrar metadatos, checksum y resultado en 6.1/6.2
 - [ ] [R5] probar en F1 el restore del backup privado en un router de la misma versión de RouterOS; documentar el protocolo privado para inyectar las claves de laboratorio y provisionar usuarios de gestión, con evidencia redactada en 6.2
 
 ### Hardening (los 7 routers)
-- [ ] [R1] hardening de EDGE
-- [ ] [R2] hardening de ISP-1/ISP-2
-- [ ] [R3] hardening de CORE-1/CORE-2
-- [ ] [R4] hardening de DIST-1/DIST-2
+Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir el origen de gestión autorizado (memoria 5.1).
+
+- [x] [R1] hardening de EDGE (memoria 5.1)
+- [x] [R2] hardening de ISP-1/ISP-2. Ejecutó R1 (memoria 5.1)
+- [x] [R3] hardening de CORE-1/CORE-2. Ejecutó R1 (memoria 5.1)
+- [x] [R4] hardening de DIST-1/DIST-2. Ejecutó R1 (memoria 5.1)
 
 ### Backup inicial (`/export`)
-- [ ] [R1] backup `/export` de EDGE
-- [ ] [R2] backup `/export` de ISP-1/ISP-2
-- [ ] [R3] backup `/export` de CORE-1/CORE-2
-- [ ] [R4] backup `/export` de DIST
+- [x] [R1] backup `/export` de EDGE: `backups/2026-10-09/EDGE_2026-10-09_f1.rsc`, PR #11 (merge `170975b`)
+- [x] [R2] backup `/export` de ISP-1/ISP-2: PR #12 (merge `83119f5`)
+- [x] [R3] backup `/export` de CORE-1/CORE-2: PR #10 (merge `6beba24`)
+- [x] [R4] backup `/export` de DIST: PR #13 (merge `703c5b9`)
 
 ---
 
