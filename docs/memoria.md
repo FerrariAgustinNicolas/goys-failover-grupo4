@@ -488,11 +488,11 @@ F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-2_2
 
 ### 3.6 DIST-1
 
-F1: base común de 3.0 y hardening de 5.1. Export: `backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`, en la PR #13, todavía no integrada. VRRP y OSPF pendientes de F2.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-1_2026-10-09_f1.rsc). VRRP y OSPF pendientes de F2.
 
 ### 3.7 DIST-2
 
-F1: base común de 3.0 y hardening de 5.1. Export: `backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`, en la PR #13, todavía no integrada. VRRP y OSPF pendientes de F2.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-2_2026-10-09_f1.rsc). VRRP y OSPF pendientes de F2.
 
 ### 3.8 Hosts (PC-USER / SRV)
 
@@ -626,12 +626,12 @@ Los exports se generaron en la instancia GNS3 de R1 y cada rol publicó los de s
 | ISP-2 | [`backups/2026-10-09/ISP-2_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-2_2026-10-09_f1.rsc) | 2026-10-09 17:25:21 · RouterOS 7.16 | R2 | `60d0148` · PR #12 (merge `83119f5`) | En `main` |
 | CORE-1 | [`backups/2026-10-09/CORE-1_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-1_2026-10-09_f1.rsc) | 2026-10-09 17:03:17 · RouterOS 7.16 | R3 | `1e52151`, `bbd594e` · PR #10 (merge `6beba24`) | En `main` |
 | CORE-2 | [`backups/2026-10-09/CORE-2_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-2_2026-10-09_f1.rsc) | 2026-10-09 17:04:37 · RouterOS 7.16 | R3 | `1e52151`, `bbd594e` · PR #10 (merge `6beba24`) | En `main` |
-| DIST-1 | `backups/2026-10-09/DIST-1_2026-10-09_f1.rsc` | 2026-10-09 17:25:52 · RouterOS 7.16 | R4 | `2309460` · PR #13 | PR abierta, sin integrar |
-| DIST-2 | `backups/2026-10-09/DIST-2_2026-10-09_f1.rsc` | 2026-10-09 17:26:33 · RouterOS 7.16 | R4 | `2309460` · PR #13 | PR abierta, sin integrar |
+| DIST-1 | [`backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-1_2026-10-09_f1.rsc) | 2026-10-09 17:25:52 · RouterOS 7.16 | R4 | `2309460` · PR #13 (merge `703c5b9`) | En `main` |
+| DIST-2 | [`backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-2_2026-10-09_f1.rsc) | 2026-10-09 17:26:33 · RouterOS 7.16 | R4 | `2309460` · PR #13 (merge `703c5b9`) | En `main` |
 
 Versiones anteriores: [`backups/2026-10-08/EDGE_2026-10-08_f1.rsc`](../backups/2026-10-08/EDGE_2026-10-08_f1.rsc) (PR #9, merge `dbbe755`) es el export previo de EDGE, todavía sin `bandwidth-server enabled=no`. Se conserva como historial y lo reemplaza el del 09/10. Los exports de CORE del 08/10 se reemplazaron en `bbd594e` y quedan en el historial de git.
 
-**Revisión R5 de los siete exports del 09/10** (incluidos los dos de la PR #13):
+**Revisión R5 de los siete exports del 09/10** (los siete están en `main`; los de DIST integrados son idénticos a los revisados en la PR #13):
 
 - `/system identity` coincide con el nombre del archivo.
 - Direcciones y loopbacks coinciden con el IPAM 1.2 y con las capturas de 3.0.
@@ -713,17 +713,44 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 - **Diseño interno:** completado y documentado.
 - **Integración Git:** completada (PR #1 `58db8cd`, PR #2 `5427689`, PR #4 `e35fdeb`, PR #3 `e316152`).
-- **Aprobación formal de la cátedra:** todavía no otorgada.
-- **F1:** todavía no iniciada. Nada de lo documentado implica despliegue.
+- **Aprobación formal de la cátedra:** no recibida de forma expresa.
+- **F1:** ejecutada el 08 y 09/10/2026; estado en la lista F1 de esta sección.
 
 - [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)
 - [x] Cuatro correcciones de diseño aplicadas; SPOF EDGE queda como recomendación
 - [x] Política integrada de gestión, autenticación y servicios
 - [x] Política de operación y change log documentados
 
+### Topología, hardening y backup (F1)
+
+F1 no se declara cerrada ni aprobada: la auditoría y la integración final corresponden a R1.
+
+**Criterios de aceptación de F1** (estructura del backlog de la consigna):
+
+- [x] 7 CHR + 2 switches + 2 hosts desplegados y cableados: 11 nodos y 15 enlaces (2.1, 2.2)
+- [x] IP de enlace y loopbacks de los 7 routers según el IPAM; 9 enlaces directos probados (3.0, 4.1)
+- [x] PC-USER y SRV configurados y con conectividad a ambos DIST (3.8, 4.1)
+- [x] Snapshot BASE registrado en GNS3 antes de configurar (2.3). Es un snapshot de GNS3; no se probó su restore
+- [x] Hardening de los 7 routers (5.1). SSH queda temporalmente deshabilitado
+- [x] Backup inicial `/export` de los 7 routers, sanitizado e integrado en `main` (6.2)
+
+**Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:
+
+- [ ] Backup binario `.backup` cifrado, fuera del repositorio, con metadatos registrados en 6.2
+- [ ] Restore probado en un router con la misma versión de RouterOS
+- [ ] Procedimiento privado para reinyectar claves y reprovisionar usuarios de gestión
+- [ ] Export `base` de cada router antes de configurar: no se generó; solo existe el snapshot GNS3
+
+El ítem "Backups con restore probado" de Operación sigue pendiente para la entrega final.
+
+**Pendientes operativos de F1:**
+
+- [ ] Definir el origen de gestión autorizado y habilitar SSH restringido a él
+- [ ] Repetir la captura final de DIST-1 sin el comando `/export` previo (7.1)
+
 ### Redes
 
-- [ ] 7 CHR + 2 switches + 2 hosts levantados y cableados
+- [x] 7 CHR + 2 switches + 2 hosts levantados y cableados (F1, 2.1)
 - [ ] VRRP operativo (2 grupos, load-sharing)
 - [ ] OSPF área 0 con adyacencias (incluido core-core)
 - [ ] BGP eBGP ×2 establecido (multi-homing)
@@ -731,7 +758,7 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 ### Seguridad
 
-- [ ] Hardening aplicado
+- [x] Hardening aplicado (F1, 5.1; SSH temporalmente deshabilitado)
 - [ ] OSPF MD5 funcionando
 - [ ] BGP TCP-MD5 funcionando
 - [ ] VRRP auth funcionando
@@ -750,5 +777,5 @@ Pendiente de completar con los recursos efectivamente utilizados.
 - [ ] Memoria completa
 - [ ] Repo git con estructura correcta y commits por rol
 - [ ] `backlog.md` con todas las tareas en done
-- [ ] Capturas organizadas
+- [ ] Capturas organizadas (F1 organizadas en 7.1; faltan las de F2–F4)
 - [ ] Cada integrante puede defender su parte y una parte ajena
