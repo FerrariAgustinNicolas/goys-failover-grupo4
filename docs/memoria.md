@@ -604,10 +604,29 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-01 | R2 | `feaecc6` docs(seguridad): define politica de hardening y autenticacion BGP de ISP | F0: define hardening y autenticación de ISP | `git revert feaecc6` |
 | 2026-10-01 | R1 — FerrariAgustinNicolas (integración PR #3) | `dd1b8ab` docs(f0): consolida diseno y seguridad preservando aportes por rol | Consolidación F0, corrección IPAM y diagrama; integrado por PR #3 (merge `e316152`) | `git revert dd1b8ab` (PR #3 completo: `git revert -m 1 e316152`) |
 | 2026-10-01 | R1 — FerrariAgustinNicolas | `8f5d4f1` chore(repo): excluye archivos locales del entorno | Evita versionar archivos locales de herramientas; integrado por PR #5 (merge `531056f`) | `git revert 8f5d4f1` |
+| 2026-10-02 | R5 | `91454d7` docs(f0): actualiza tracking y change log tras integracion | F0: estado del backlog y del checklist tras integrar PR #1 a #4; PR #6 (merge `49510c6`) | `git revert 91454d7` |
+| 2026-10-02 | R5 | `3f12c89` docs(f0): cierra defecto 1 y evita autorreferencia en change log | F0: cierre documental del defecto 1 y regla de filas del change log (1.4); PR #6 | `git revert 3f12c89` |
+| 2026-10-02 | R5 | `a87eeb4` docs(backlog): ajusta tareas a la estructura de la consigna | Backlog alineado con las historias de la consigna; PR #7 (merge `07306e5`) | `git revert a87eeb4` |
+| 2026-10-02 | R1 | `731ec42` docs(f0): corrige integrantes y presentacion de la memoria | Integrantes y presentación de README y memoria; PR #8 (merge `8741527`) | `git revert 731ec42` |
+| 2026-10-08 | R1 | `4ebb2fb` ops(backup): incorpora export F1 de EDGE | F1: primer export de EDGE; PR #9 (merge `dbbe755`) | `git revert 4ebb2fb` |
+| 2026-10-08 | R1 | `247101e` fix(backup): elimina cliente DHCP heredado de EDGE | F1: el export refleja la eliminación del cliente DHCP heredado; PR #9 | `git revert 247101e` |
+| 2026-10-09 | R3 | `1e52151` ops(backup): incorpora exports F1 de CORE | F1: primeros exports de CORE-1/CORE-2; PR #10 (merge `6beba24`) | `git revert 1e52151` |
+| 2026-10-09 | R1 | `2f4cf66` ops(backup): incorpora export F1 actualizado de EDGE | F1: export de EDGE del 09/10, con Bandwidth Server deshabilitado; PR #11 (merge `170975b`) | `git revert 2f4cf66` |
+| 2026-10-09 | R2 | `60d0148` ops(backup): incorpora exports F1 de proveedores | F1: exports de ISP-1/ISP-2; PR #12 (merge `83119f5`) | `git revert 60d0148` |
+| 2026-10-09 | R3 | `bbd594e` fix(backup): actualiza exports F1 de CORE tras hardening | F1: reemplaza los exports de CORE del 08/10 por los del 09/10, con Bandwidth Server deshabilitado; PR #10 | `git revert bbd594e` |
+| 2026-10-09 | R4 — naimguar (PR #13) | `2309460` ops(backup): incorpora exports F1 de distribucion | F1: exports de DIST-1/DIST-2; PR #13 (merge `703c5b9`) | `git revert 2309460` |
+| 2026-10-09 | R5 | `982fc39` docs(capturas): organiza evidencias F1 seleccionadas | F1: 26 capturas de R1 seleccionadas y organizadas en `capturas/F1/`; rama `docs/f1-r5-evidencias-operacion` | `git revert e154b47` |
+| 2026-10-09 | R5 | `2d293ca` docs(memoria): documenta despliegue, conectividad, hardening y exports de F1 | F1: memoria 2.1–2.3, 3, 4.1, 5.1, 6.2 y 7.1; misma rama | `git revert 96dcdeb` |
+| 2026-10-09 | R5 | `cd8c8d5` docs(memoria): integra exports de DIST y checklist F1 tras PR #13 | F1: referencias a los exports de DIST y checklist F1 (10); misma rama | `git revert 9643d08` |
+| 2026-10-09 | R5 | `f80979d` docs(backlog): marca tareas F1 respaldadas por evidencia | F1: estado de las tareas F1 con evidencia; misma rama | `git revert 610d04c` |
 
-> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152` y PR #5 (`.gitignore`) `531056f`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
+> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152`, PR #5 (`.gitignore`) `531056f`, PR #6 (R5) `49510c6`, PR #7 (R5) `07306e5`, PR #8 (R1) `8741527`, PR #9 (R1) `dbbe755`, PR #11 (R1) `170975b`, PR #12 (R2) `83119f5`, PR #10 (R3) `6beba24` y PR #13 (R4) `703c5b9`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
 >
-> `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Los commits individuales conservan su autoría y no se reescriben.
+> `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Del mismo modo, `77d59a9` lleva `main` a la rama `docs/f1-r5-evidencias-operacion` después de la PR #13. Los commits individuales conservan su autoría y no se reescriben.
+>
+> Los commits de F1 publican exports, capturas y documentación. La configuración aplicada en los routers no tiene commit propio: se revierte con el comando inverso en la consola o, para volver al estado previo a F1, con el snapshot BASE de GNS3 (2.3), cuyo restore no fue probado.
+>
+> El commit `2309460` figura en git con autor "Claude"; la PR #13 la abrió R4 (naimguar). Las filas de la rama `docs/f1-r5-evidencias-operacion` corresponden a commits existentes; su merge a `main` sigue pendiente de la revisión de R1.
 
 ### 6.2 Backups
 
