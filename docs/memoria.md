@@ -818,17 +818,19 @@ F1 no se declara cerrada ni aprobada: la auditoría y la integración final corr
 
 **Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:
 
-- [ ] Backup binario `.backup` cifrado, fuera del repositorio, con metadatos registrados en 6.2
-- [ ] Restore probado en un router con la misma versión de RouterOS
+- [x] Backup binario `.backup` cifrado de los 7 routers, fuera del repositorio, con metadatos en 6.2: ejecutó R1; tamaño y SHA-256 verificados por R1. R5 no tuvo acceso a los binarios
+- [x] Restore probado en un router con la misma versión de RouterOS: solo ISP-1, RouterOS 7.16, en proyecto aislado; satisfactorio (6.2). Los otros seis binarios no se restauraron
+- [x] Recuperación del proyecto GNS3 desde el archivo portable, validada en una copia aislada (2.3). La importación estándar falló y el restore de snapshots individuales no se probó
 - [ ] Procedimiento privado para reinyectar claves y reprovisionar usuarios de gestión
 - [ ] Export `base` de cada router antes de configurar: no se generó; solo existe el snapshot GNS3
 
-El ítem "Backups con restore probado" de Operación sigue pendiente para la entrega final.
+El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 tiene los siete backups y el restore de ISP-1, pero faltan los hitos F2 y F3 y los backups antes y después de cada drill.
 
 **Pendientes operativos de F1:**
 
 - [ ] Definir el origen de gestión autorizado y habilitar SSH restringido a él
 - [ ] Repetir la captura final de DIST-1 sin el comando `/export` previo (7.1)
+- [ ] Capturas originales de R1 de la restauración de ISP-1 y de la recuperación portable; comparación del resultado de ISP-1 con su export sanitizado
 
 ### Redes
 
