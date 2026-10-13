@@ -22,7 +22,7 @@
 
 ### 1.1 Corrección del diagrama
 
-La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. El diseño F0 está integrado en `main` (PR #1 a #4); la aprobación formal de la cátedra todavía no fue otorgada.
+La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. El diseño F0 está integrado en `main` (PR #1 a #4) y la cátedra lo devolvió como aprobado, 100/100 (devolución informada por R1).
 
 | # | Defecto detectado | Corrección aplicada | Justificación |
 | :-: | --- | --- | --- |
@@ -430,7 +430,7 @@ El snapshot BASE es un snapshot de GNS3, no un backup binario de RouterOS ni un 
 
 ## 3. Configuración
 
-> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. No se recibió una aprobación expresa de F0 por parte de la cátedra.
+> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. F0 fue devuelto por la cátedra como aprobado, 100/100; F1 se inició antes de recibirse esa devolución.
 
 ### 3.0 Base común F1
 
@@ -734,7 +734,7 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 - **Diseño interno:** completado y documentado.
 - **Integración Git:** completada (PR #1 `58db8cd`, PR #2 `5427689`, PR #4 `e35fdeb`, PR #3 `e316152`).
-- **Aprobación formal de la cátedra:** no recibida de forma expresa.
+- **Aprobación de la cátedra:** F0 aprobado, 100/100 (devolución informada por R1). F1 comenzó antes de recibirse esa devolución.
 - **F1:** ejecutada el 08 y 09/10/2026; estado en la lista F1 de esta sección.
 
 - [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)

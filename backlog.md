@@ -6,7 +6,7 @@
 
 - `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 - Cada tarea lleva **dueño** (rol): `[R1]` … `[R5]`.
-- **"Hecho" requiere satisfacer el criterio de aceptación de esa fase y registrar evidencia revisable.** En F0, `[x]` acredita el diseño documentado en `docs/memoria.md` e integrado a `main` (PR #1 a #4); no equivale a la aprobación formal de la cátedra. En F1–F5, `[x]` requiere ejecución y evidencia posteriores a F0.
+- **"Hecho" requiere satisfacer el criterio de aceptación de esa fase y registrar evidencia revisable.** En F0, `[x]` acredita el diseño documentado en `docs/memoria.md` e integrado a `main` (PR #1 a #4); la cátedra aprobó F0 con 100/100. En F1–F5, `[x]` requiere ejecución y evidencia posteriores a F0.
 
 ---
 
