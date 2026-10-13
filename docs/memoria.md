@@ -449,6 +449,7 @@ La única instancia GNS3 operativa está en el equipo de R1, que ejecutó la con
 | Cambio de contraseña de `admin` en los 7 routers | R1 | R5: registró la confirmación de R1; no hay evidencia publicable | 5.1 |
 | Generación de los exports `/export` | R1 | — | 6.2 |
 | Publicación de los exports por PR | R1 (EDGE), R2 (ISP), R3 (CORE), R4 (DIST) | R5: revisó el contenido de los siete `.rsc` | 6.2 |
+| Backups binarios cifrados, snapshot `F1_FINAL_2026-10-09`, copia portable y restore de ISP-1 | R1 | R5: documentó lo informado por R1; sin acceso directo a los binarios | 2.3, 6.2 |
 | Selección y organización de capturas | — | R5 | 7 |
 
 #### Direccionamiento y loopbacks aplicados
@@ -662,22 +663,72 @@ Versiones anteriores: [`backups/2026-10-08/EDGE_2026-10-08_f1.rsc`](../backups/2
 
 En la captura final de DIST-1 se ve el comando `/export file=DIST-2_F1_2026-10-09`, ejecutado en DIST-1. El export publicado de DIST-1 corresponde a DIST-1, según su identidad y sus direcciones. El archivo con nombre equivocado, si existe, queda en el almacenamiento local de DIST-1 y no se publica.
 
+#### Tipos de respaldo
+
+| Tipo | Contenido | Dónde está | ¿Se publica? |
+| --- | --- | --- | --- |
+| Export `.rsc` sanitizado | Configuración en texto, sin usuarios ni secretos | `backups/` del repositorio (tabla anterior) | Sí |
+| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1 (siguiente subsección) | No |
+| Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | Almacenamiento privado de R1 (2.3) | No |
+
+#### Backups binarios F1 (privados)
+
+R1 generó los siete archivos con `/system backup save`, indicando de forma explícita `encryption=aes-sha256` y una contraseña privada (1.4). Los transfirió en Base64 desde las consolas RouterOS a su almacenamiento privado, los reconstruyó y verificó tamaño y SHA-256 sobre los archivos reconstruidos. R1 informó que repitió la verificación en una auditoría conjunta. R5 documenta lo informado por R1: no tuvo acceso directo a los binarios y no recalculó los SHA-256.
+
+| Router | Archivo | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| ISP-1 | `ISP-1_2026-10-10_f1.backup` | 22701 | `c6ba5ff14b7e878c948632a51e665da2b3de117c04d4ec119d80ae657c8a52ac` |
+| ISP-2 | `ISP-2_2026-10-13_f1.backup` | 20205 | `d5f728f3e68153f0ee53d974f38c11f52a0026633c81bc091f0758864816213c` |
+| EDGE | `EDGE_2026-10-13_f1.backup` | 20400 | `64a44e330edb0bf528a0443932c7d7c3fa8f13c7083d9a374b4b98e01b5bcf2b` |
+| CORE-1 | `CORE-1_2026-10-13_f1.backup` | 20441 | `89ec6b810444a855c025f00c9c8bfd684ed607e5fe23d4dc472a50ed1afcdf62` |
+| CORE-2 | `CORE-2_2026-10-13_f1.backup` | 20441 | `8c43e7c2e282ab8f999d8924cef610921a3113cc204044fc1b6b5bb8042b90fb` |
+| DIST-1 | `DIST-1_2026-10-13_f1.backup` | 20451 | `983523bb88417052e4b4d5ecfc8d7a80cb98162d3fa5db2e20c7a19b8d794324` |
+| DIST-2 | `DIST-2_2026-10-13_f1.backup` | 20451 | `fe4156ea9ba651ab2d823ba4b0f93d117ffc94f0f645ef06c44a1cf6805b467f` |
+
+| Dato | Valor |
+| --- | --- |
+| Hito | `f1`. La fecha es la del nombre del archivo: ISP-1, 2026-10-10; los otros seis, 2026-10-13 |
+| RouterOS | 7.16 |
+| Cifrado | `aes-sha256`, solicitado explícitamente al crear cada backup |
+| Ejecución | R1 |
+| Custodia | Almacenamiento privado local de R1, `GOYS/Respaldos_Privados`, fuera del repositorio. La contraseña se gestiona por un canal privado |
+| Permisos | `600` (`-rw-------`) en los siete archivos |
+| Comprobación | Tamaño y SHA-256 verificados por R1 después de reconstruir los archivos (informado por R1) |
+
+No se publican los archivos, las contraseñas ni el contenido Base64. Los binarios no se comparan contra los `.rsc` públicos: el formato no es legible sin restaurarlo.
+
+#### Restore binario de ISP-1
+
+R1 probó la restauración de un solo router, ISP-1, en una copia aislada del proyecto. No se restauraron los otros seis binarios: están generados y verificados, pero no probados.
+
+| Dato | Valor |
+| --- | --- |
+| Proyecto | `topologia_failover_F1_TRABAJO_BACKUP`, con identificadores distintos de `F1_TRABAJO` (verificado por R1) |
+| Archivo | `ISP-1_2026-10-10_f1.backup` (cifrado) |
+| RouterOS | 7.16 |
+| Ejecución | R1. Fecha de ejecución no informada |
+| Procedimiento | Se cambió deliberadamente la identidad a `ISP-1_RESTORE_TEST`; se ejecutó `/system backup load` con el archivo cifrado y la contraseña ingresada de forma privada; RouterOS restauró la configuración y reinició; se inició sesión de nuevo y se verificó el resultado |
+| Resultado verificado (informado por R1) | Identidad `ISP-1`; `10.255.0.1/30` en `ether1`; loopback `10.255.255.1/32`; Bandwidth Server deshabilitado; servicios IP deshabilitados; usuario `monitor` presente; grupo `monitor` limitado a `read,ssh`; sin cliente DHCP; acceso administrativo funcional tras la restauración |
+| Veredicto | **Restore binario de ISP-1 satisfactorio (RouterOS 7.16)** |
+| Evidencia | Informada por R1. Capturas originales de la restauración y de la verificación posterior pendientes (no hay captura publicada en 7.1) |
+
+La comparación formal del resultado contra el export sanitizado de ISP-1, que pide 1.4, no está registrada: las direcciones, los servicios y el grupo `monitor` informados coinciden con ese export, pero R5 no la ejecutó.
+
 #### Política interna de backup: procedimientos adicionales
 
-La política 1.4 agrega procedimientos que van más allá del export inicial de F1. Su estado actual:
+Estado de los procedimientos de 1.4:
 
 | Procedimiento (política 1.4) | Estado |
 | --- | --- |
 | Snapshot BASE | Registrado en GNS3 (2.3). No es un backup de RouterOS y no se probó su restore |
+| Snapshot `F1_FINAL_2026-10-09` y copia portable del proyecto GNS3 | Realizados por R1. Recuperación del proyecto validada en una copia aislada (2.3). El restore de snapshots individuales de GNS3 no se probó |
 | Export `base` de cada router antes de configurar | No se generó |
-| Backup binario `.backup` cifrado, fuera del repositorio | **Pendiente**: no hay evidencia de que se haya realizado |
-| Registro de localizador privado, checksum y resultado de cada binario | **Pendiente**: depende del binario |
-| Restore probado en un router con la misma versión de RouterOS | **Pendiente** |
-| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente** |
+| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers; archivos verificados por R1 |
+| Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba: localizador privado, tamaño, SHA-256, RouterOS 7.16 y fecha |
+| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1**, satisfactorio. Pendientes: seis binarios sin restaurar, comparación con el export y capturas originales |
+| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: el restore de ISP-1 recuperó el acceso administrativo, pero el procedimiento escrito no existe |
 
-Cuando se realicen, se registrarán aquí con los metadatos que exige 1.4: localizador privado no secreto, checksum, versión de RouterOS, propietario, fecha, hito y resultado.
-
-Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. Esa recuperación requiere el procedimiento privado, que todavía no está documentado. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
+Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. En ISP-1, el binario cifrado sí las recuperó (acceso administrativo funcional tras el restore, informado por R1). El procedimiento privado por escrito sigue pendiente. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
 
 ### 6.3 Monitoreo
 
