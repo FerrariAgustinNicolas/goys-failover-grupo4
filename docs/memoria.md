@@ -414,17 +414,27 @@ GNS3 rotula las interfaces del CHR `e0`–`e3`; RouterOS las nombra `ether1`–`
 
 En la captura, las etiquetas `e2` de DIST-1 y `e3` de DIST-2 quedan tapadas por otros rótulos. Se asignaron por descarte y coinciden con la interfaz LAN de cada export y con los pings de los hosts a ambos DIST (4.1). Los puertos de los switches no son legibles en todos los casos y no se documentan; los switches no tienen configuración. Con este relevamiento se completó la columna de interfaz de la tabla 1.2, sin cambiar direcciones ni decisiones del diseño F0.
 
-### 2.3 Snapshot BASE
+### 2.3 Snapshots GNS3 y recuperación del proyecto
 
-| Dato | Valor |
-| --- | --- |
-| Nombre | `F1_BASE_2026-10-08_sin-configurar` |
-| Registro en GNS3 | 2026-10-08 16:40:13 (hora del equipo de R1) |
-| Creado por | R1, antes de configurar los routers (informado por R1; el nombre del snapshot lo indica) |
-| Tipo | Snapshot del proyecto GNS3 |
-| Evidencia | [`snapshot_BASE_2026-10-08.png`](../capturas/F1/01_topologia/snapshot_BASE_2026-10-08.png) |
+| Dato | Snapshot BASE | Snapshot FINAL |
+| --- | --- | --- |
+| Nombre | `F1_BASE_2026-10-08_sin-configurar` | `F1_FINAL_2026-10-09` |
+| Registro en GNS3 | 2026-10-08 16:40:13 (hora del equipo de R1) | 2026-10-09 23:35:42 (informado por R1) |
+| Creado por | R1, antes de configurar los routers (informado por R1; el nombre del snapshot lo indica) | R1, al cierre de F1 |
+| Tipo | Snapshot del proyecto GNS3 | Snapshot del proyecto GNS3 |
+| Evidencia | [`snapshot_BASE_2026-10-08.png`](../capturas/F1/01_topologia/snapshot_BASE_2026-10-08.png) | Informada por R1; sin captura publicada |
 
-El snapshot BASE es un snapshot de GNS3, no un backup binario de RouterOS ni un export. La captura acredita que está registrado en el proyecto; no reemplaza al snapshot, a una copia portable del proyecto ni a un restore probado. El snapshot reside en el proyecto GNS3 de R1, sin copia portable registrada, y no se probó restaurarlo. Restaurarlo sobre el proyecto en uso revertiría la configuración F1.
+Los snapshots son de GNS3, no backups binarios de RouterOS ni exports. La captura del BASE acredita que está registrado en el proyecto; no reemplaza al snapshot. Restaurar un snapshot sobre el proyecto en uso revertiría la configuración posterior. **El restore de snapshots individuales de GNS3 no se probó.**
+
+#### Recuperación portable del proyecto
+
+R1 exportó el proyecto como `topologia_failover_F1.gns3project` (unos 159 MB, sin compresión) y verificó el ZIP sin errores. El archivo contiene siete discos QEMU, los dos snapshots, dos configuraciones VPCS, la imagen CHR 7.16 y el archivo del proyecto. Contiene discos completos de los routers: no se publica en el repositorio.
+
+- La importación estándar de GNS3 falló porque intentó usar GNS3 VM, que no está configurada en la Mac de R1. No se atribuye con certeza el problema del proyecto original a una causa concreta.
+- R1 recuperó el laboratorio extrayendo el archivo en una carpeta aislada y abriendo una copia independiente mediante el archivo `.gns3`. Luego creó una copia de trabajo con `Save project as`, con identificadores independientes.
+- Resultado informado por R1: los siete routers arrancaron y conservaron IP, loopbacks y hardening; PC-USER y SRV conservaron IP y gateway y respondieron a DIST-1 y DIST-2; se verificó la conectividad EDGE–ISP-1.
+
+Se validó la recuperación del estado del proyecto por esta vía; no se validó la importación estándar ni el restore de snapshots. Sin capturas publicadas.
 
 ---
 
@@ -669,7 +679,7 @@ En la captura final de DIST-1 se ve el comando `/export file=DIST-2_F1_2026-10-0
 | --- | --- | --- | --- |
 | Export `.rsc` sanitizado | Configuración en texto, sin usuarios ni secretos | `backups/` del repositorio (tabla anterior) | Sí |
 | Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1 (siguiente subsección) | No |
-| Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | Almacenamiento privado de R1 (2.3) | No |
+| Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | En poder de R1, fuera del repositorio (2.3) | No |
 
 #### Backups binarios F1 (privados)
 
