@@ -632,14 +632,31 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-09 | R5 | `2d293ca` docs(memoria): documenta despliegue, conectividad, hardening y exports de F1 | F1: memoria 2.1–2.3, 3, 4.1, 5.1, 6.2 y 7.1; misma rama | `git revert 2d293ca` |
 | 2026-10-09 | R5 | `cd8c8d5` docs(memoria): integra exports de DIST y checklist F1 tras PR #13 | F1: referencias a los exports de DIST y checklist F1 (10); misma rama | `git revert cd8c8d5` |
 | 2026-10-09 | R5 | `f80979d` docs(backlog): marca tareas F1 respaldadas por evidencia | F1: estado de las tareas F1 con evidencia; misma rama | `git revert f80979d` |
+| 2026-10-09 | R5 | `341c938` docs(f1): completa interfaces del IPAM y registra cambio de clave de admin | F1: interfaces en la tabla 1.2 y confirmación del cambio de contraseña de `admin`; PR #14 (merge `07e8364`) | `git revert 341c938` |
+| 2026-10-13 | R5 | `b80dd30` docs(f0): actualiza estado de aprobacion de F0 tras la devolucion de la catedra | F0 devuelto como aprobado, 100/100; rama `docs/f1-r5-backups-restore` | `git revert b80dd30` |
+| 2026-10-13 | R5 | `c108a85` docs(backup): registra backups binarios cifrados de F1 y restore de ISP-1 | F1: inventario privado de los siete `.backup` y restore de ISP-1 informados por R1 (6.2); misma rama | `git revert c108a85` |
+| 2026-10-13 | R5 | `1951d06` docs(memoria): registra snapshot F1_FINAL y recuperacion portable del proyecto GNS3 | F1: snapshot final y recuperación portable informados por R1 (2.3); misma rama | `git revert 1951d06` |
+| 2026-10-13 | R5 | `e91d251` docs(memoria): actualiza checklist F1 con backups binarios y restore de ISP-1 | F1: checklist (10) alineado con 6.2; misma rama | `git revert e91d251` |
+| 2026-10-13 | R5 | `f7f5b79` docs(backlog): marca backups binarios y restore de ISP-1 de F1 | F1: tareas del backlog respaldadas por 6.2; misma rama | `git revert f7f5b79` |
 
-> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152`, PR #5 (`.gitignore`) `531056f`, PR #6 (R5) `49510c6`, PR #7 (R5) `07306e5`, PR #8 (R1) `8741527`, PR #9 (R1) `dbbe755`, PR #11 (R1) `170975b`, PR #12 (R2) `83119f5`, PR #10 (R3) `6beba24` y PR #13 (R4) `703c5b9`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
+> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152`, PR #5 (`.gitignore`) `531056f`, PR #6 (R5) `49510c6`, PR #7 (R5) `07306e5`, PR #8 (R1) `8741527`, PR #9 (R1) `dbbe755`, PR #11 (R1) `170975b`, PR #12 (R2) `83119f5`, PR #10 (R3) `6beba24`, PR #13 (R4) `703c5b9` y PR #14 (R5) `07e8364`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
 >
 > `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Del mismo modo, `77d59a9` lleva `main` a la rama `docs/f1-r5-evidencias-operacion` después de la PR #13. Los commits individuales conservan su autoría y no se reescriben.
 >
-> Los commits de F1 publican exports, capturas y documentación. La configuración aplicada en los routers no tiene commit propio: se revierte con el comando inverso en la consola o, para volver al estado previo a F1, con el snapshot BASE de GNS3 (2.3), cuyo restore no fue probado.
+> Los commits de F1 publican exports, capturas y documentación. La configuración aplicada en los routers no tiene commit propio: se revierte con el comando inverso en la consola o, para volver al estado previo a F1, con el snapshot BASE de GNS3 (2.3), cuyo restore no fue probado. Para recuperar un router, el backup binario cifrado de 6.2 se probó solo en ISP-1.
 >
-> El commit `2309460` figura en git con autor "Claude"; la PR #13 la abrió R4 (naimguar). Las filas de la rama `docs/f1-r5-evidencias-operacion` corresponden a commits existentes; su merge a `main` sigue pendiente de la revisión de R1.
+> El commit `2309460` figura en git con autor "Claude"; la PR #13 la abrió R4 (naimguar). Las filas de la rama `docs/f1-r5-evidencias-operacion` corresponden a commits existentes, integrados por la PR #14. Las filas de la rama `docs/f1-r5-backups-restore` corresponden a commits existentes; su merge sigue pendiente de la revisión de R1.
+
+#### Operaciones ejecutadas fuera de Git
+
+Estas operaciones las ejecutó R1 en GNS3 y en las consolas RouterOS; no tienen commit ni hash. R5 las registra según lo informado por R1. La fecha de ejecución se indica solo cuando R1 la informó o el nombre del archivo la acredita; `s/f` significa sin fecha informada (R1 las comunicó a R5 el 2026-10-13).
+
+| Fecha | Responsable | Operación | Motivo | Cómo se revierte |
+| --- | --- | --- | --- | --- |
+| 2026-10-09 | R1 | Snapshot GNS3 `F1_FINAL_2026-10-09` (23:35:42) | Cierre de F1 (2.3) | Eliminar el snapshot en GNS3; no modifica la configuración de los routers |
+| 2026-10-10 y 2026-10-13 | R1 | `/system backup save` con `encryption=aes-sha256` en los siete routers: ISP-1 el 10/10 y los otros seis el 13/10 (fechas de los nombres de archivo) | F1: backups binarios de la política 1.4 (6.2) | No modifica la configuración; eliminar los archivos generados |
+| s/f | R1 | Exportación `topologia_failover_F1.gns3project`, verificación ZIP y recuperación en carpeta aislada; copia de trabajo con `Save project as` | F1: probar la recuperación portable del proyecto (2.3) | Descartar la carpeta aislada y la copia; el proyecto en uso no participó de la prueba |
+| s/f | R1 | `/system backup load` de `ISP-1_2026-10-10_f1.backup` en `topologia_failover_F1_TRABAJO_BACKUP`, tras cambiar la identidad a `ISP-1_RESTORE_TEST` | F1: probar el restore binario (6.2); satisfactorio | Descartar el proyecto aislado `topologia_failover_F1_TRABAJO_BACKUP` |
 
 ### 6.2 Backups
 
