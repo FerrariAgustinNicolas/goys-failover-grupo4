@@ -63,11 +63,12 @@ Nota: la única instancia GNS3 operativa está en el equipo de R1, que ejecutó 
 
 ### Snapshot BASE
 
-Nota: R1 creó el snapshot GNS3 `F1_BASE_2026-10-08_sin-configurar` antes de configurar (memoria 2.3). No es un backup de RouterOS y su restore no se probó. Las tres tareas siguientes, de la política interna 1.4, siguen pendientes.
+Nota: R1 creó los snapshots GNS3 `F1_BASE_2026-10-08_sin-configurar` y `F1_FINAL_2026-10-09`, y validó la recuperación del proyecto desde el archivo portable en una copia aislada (memoria 2.3). Los snapshots no son backups de RouterOS y su restore individual no se probó. Las tareas siguientes son de la política interna 1.4.
 
 - [ ] [R5] obtener y revisar un `/export` sanitizado de cada uno de los 7 routers antes de configurar; publicar solo esos `.rsc` y metadatos no sensibles. No se generó antes de configurar (memoria 6.2); ajuste de la tarea propuesto a R1
-- [ ] [R5] guardar los backups binarios completos y cualquier export sensible cifrados fuera del repositorio público, en almacenamiento privado con acceso controlado; indicar solo un localizador privado no secreto y registrar metadatos, checksum y resultado en 6.1/6.2
-- [ ] [R5] probar en F1 el restore del backup privado en un router de la misma versión de RouterOS; documentar el protocolo privado para inyectar las claves de laboratorio y provisionar usuarios de gestión, con evidencia redactada en 6.2
+- [x] [R5] guardar los backups binarios completos cifrados fuera del repositorio público, en almacenamiento privado con acceso controlado; indicar solo un localizador privado no secreto y registrar metadatos, checksum y resultado en 6.1/6.2. Ejecutó R1 (siete `.backup` con `aes-sha256`, verificados por R1); R5 verificó la documentación, sin acceso a los binarios (memoria 6.2). No se informaron exports sensibles
+- [x] [R5] probar en F1 el restore del backup privado en un router de la misma versión de RouterOS, con evidencia redactada en 6.2. Ejecutó R1: ISP-1, RouterOS 7.16, proyecto aislado, satisfactorio; los otros seis binarios no se restauraron (memoria 6.2). Capturas originales y comparación con el export, pendientes
+- [ ] [R5] documentar el protocolo privado para inyectar las claves de laboratorio y provisionar usuarios de gestión (memoria 6.2)
 
 ### Hardening (los 7 routers)
 Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir el origen de gestión autorizado (memoria 5.1).
