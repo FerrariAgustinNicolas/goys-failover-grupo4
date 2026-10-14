@@ -22,7 +22,7 @@
 
 ### 1.1 Corrección del diagrama
 
-La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. El diseño F0 está integrado en `main` (PR #1 a #4); la aprobación formal de la cátedra todavía no fue otorgada.
+La consigna identifica cinco problemas en el diseño original. Se aplican cuatro correcciones de diseño; el SPOF de EDGE queda como recomendación de producción, fuera del mínimo F0. El diseño F0 está integrado en `main` (PR #1 a #4) y la cátedra lo devolvió como aprobado, 100/100 (devolución informada por R1).
 
 | # | Defecto detectado | Corrección aplicada | Justificación |
 | :-: | --- | --- | --- |
@@ -414,23 +414,33 @@ GNS3 rotula las interfaces del CHR `e0`–`e3`; RouterOS las nombra `ether1`–`
 
 En la captura, las etiquetas `e2` de DIST-1 y `e3` de DIST-2 quedan tapadas por otros rótulos. Se asignaron por descarte y coinciden con la interfaz LAN de cada export y con los pings de los hosts a ambos DIST (4.1). Los puertos de los switches no son legibles en todos los casos y no se documentan; los switches no tienen configuración. Con este relevamiento se completó la columna de interfaz de la tabla 1.2, sin cambiar direcciones ni decisiones del diseño F0.
 
-### 2.3 Snapshot BASE
+### 2.3 Snapshots GNS3 y recuperación del proyecto
 
-| Dato | Valor |
-| --- | --- |
-| Nombre | `F1_BASE_2026-10-08_sin-configurar` |
-| Registro en GNS3 | 2026-10-08 16:40:13 (hora del equipo de R1) |
-| Creado por | R1, antes de configurar los routers (informado por R1; el nombre del snapshot lo indica) |
-| Tipo | Snapshot del proyecto GNS3 |
-| Evidencia | [`snapshot_BASE_2026-10-08.png`](../capturas/F1/01_topologia/snapshot_BASE_2026-10-08.png) |
+| Dato | Snapshot BASE | Snapshot FINAL |
+| --- | --- | --- |
+| Nombre | `F1_BASE_2026-10-08_sin-configurar` | `F1_FINAL_2026-10-09` |
+| Registro en GNS3 | 2026-10-08 16:40:13 (hora del equipo de R1) | 2026-10-09 23:35:42 (informado por R1) |
+| Creado por | R1, antes de configurar los routers (informado por R1; el nombre del snapshot lo indica) | R1, al cierre de F1 |
+| Tipo | Snapshot del proyecto GNS3 | Snapshot del proyecto GNS3 |
+| Evidencia | [`snapshot_BASE_2026-10-08.png`](../capturas/F1/01_topologia/snapshot_BASE_2026-10-08.png) | Informada por R1; sin captura publicada |
 
-El snapshot BASE es un snapshot de GNS3, no un backup binario de RouterOS ni un export. La captura acredita que está registrado en el proyecto; no reemplaza al snapshot, a una copia portable del proyecto ni a un restore probado. El snapshot reside en el proyecto GNS3 de R1, sin copia portable registrada, y no se probó restaurarlo. Restaurarlo sobre el proyecto en uso revertiría la configuración F1.
+Los snapshots son de GNS3, no backups binarios de RouterOS ni exports. La captura del BASE acredita que está registrado en el proyecto; no reemplaza al snapshot. Restaurar un snapshot sobre el proyecto en uso revertiría la configuración posterior. **El restore de snapshots individuales de GNS3 no se probó.**
+
+#### Recuperación portable del proyecto
+
+R1 exportó el proyecto como `topologia_failover_F1.gns3project` (unos 159 MB, sin compresión) y verificó el ZIP sin errores. El archivo contiene siete discos QEMU, los dos snapshots, dos configuraciones VPCS, la imagen CHR 7.16 y el archivo del proyecto. Contiene discos completos de los routers: no se publica en el repositorio.
+
+- La importación estándar de GNS3 falló porque intentó usar GNS3 VM, que no está configurada en la Mac de R1. No se atribuye con certeza el problema del proyecto original a una causa concreta.
+- El 2026-10-10 (fecha informada por R1), R1 recuperó el laboratorio extrayendo el archivo en una carpeta aislada y abriendo una copia independiente mediante el archivo `.gns3`. Luego creó una copia de trabajo con `Save project as`, con identificadores independientes.
+- Resultado informado por R1: los siete routers arrancaron y conservaron IP, loopbacks y hardening; PC-USER y SRV conservaron IP y gateway y respondieron a DIST-1 y DIST-2; se verificó la conectividad EDGE–ISP-1.
+
+Se validó la recuperación del estado del proyecto por esta vía; no se validó la importación estándar ni el restore de snapshots. Sin capturas publicadas.
 
 ---
 
 ## 3. Configuración
 
-> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. No se recibió una aprobación expresa de F0 por parte de la cátedra.
+> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. F0 fue devuelto por la cátedra como aprobado, 100/100; F1 se inició antes de recibirse esa devolución.
 
 ### 3.0 Base común F1
 
@@ -449,6 +459,7 @@ La única instancia GNS3 operativa está en el equipo de R1, que ejecutó la con
 | Cambio de contraseña de `admin` en los 7 routers | R1 | R5: registró la confirmación de R1; no hay evidencia publicable | 5.1 |
 | Generación de los exports `/export` | R1 | — | 6.2 |
 | Publicación de los exports por PR | R1 (EDGE), R2 (ISP), R3 (CORE), R4 (DIST) | R5: revisó el contenido de los siete `.rsc` | 6.2 |
+| Backups binarios cifrados, snapshot `F1_FINAL_2026-10-09`, copia portable y restore de ISP-1 | R1 | R5: documentó lo informado por R1; sin acceso directo a los binarios | 2.3, 6.2 |
 | Selección y organización de capturas | — | R5 | 7 |
 
 #### Direccionamiento y loopbacks aplicados
@@ -617,18 +628,35 @@ Formato y convención de commits: ver 1.4.
 | 2026-10-09 | R2 | `60d0148` ops(backup): incorpora exports F1 de proveedores | F1: exports de ISP-1/ISP-2; PR #12 (merge `83119f5`) | `git revert 60d0148` |
 | 2026-10-09 | R3 | `bbd594e` fix(backup): actualiza exports F1 de CORE tras hardening | F1: reemplaza los exports de CORE del 08/10 por los del 09/10, con Bandwidth Server deshabilitado; PR #10 | `git revert bbd594e` |
 | 2026-10-09 | R4 — naimguar (PR #13) | `2309460` ops(backup): incorpora exports F1 de distribucion | F1: exports de DIST-1/DIST-2; PR #13 (merge `703c5b9`) | `git revert 2309460` |
-| 2026-10-09 | R5 | `982fc39` docs(capturas): organiza evidencias F1 seleccionadas | F1: 26 capturas de R1 seleccionadas y organizadas en `capturas/F1/`; rama `docs/f1-r5-evidencias-operacion` | `git revert e154b47` |
-| 2026-10-09 | R5 | `2d293ca` docs(memoria): documenta despliegue, conectividad, hardening y exports de F1 | F1: memoria 2.1–2.3, 3, 4.1, 5.1, 6.2 y 7.1; misma rama | `git revert 96dcdeb` |
-| 2026-10-09 | R5 | `cd8c8d5` docs(memoria): integra exports de DIST y checklist F1 tras PR #13 | F1: referencias a los exports de DIST y checklist F1 (10); misma rama | `git revert 9643d08` |
-| 2026-10-09 | R5 | `f80979d` docs(backlog): marca tareas F1 respaldadas por evidencia | F1: estado de las tareas F1 con evidencia; misma rama | `git revert 610d04c` |
+| 2026-10-09 | R5 | `982fc39` docs(capturas): organiza evidencias F1 seleccionadas | F1: 26 capturas de R1 seleccionadas y organizadas en `capturas/F1/`; rama `docs/f1-r5-evidencias-operacion` | `git revert 982fc39` |
+| 2026-10-09 | R5 | `2d293ca` docs(memoria): documenta despliegue, conectividad, hardening y exports de F1 | F1: memoria 2.1–2.3, 3, 4.1, 5.1, 6.2 y 7.1; misma rama | `git revert 2d293ca` |
+| 2026-10-09 | R5 | `cd8c8d5` docs(memoria): integra exports de DIST y checklist F1 tras PR #13 | F1: referencias a los exports de DIST y checklist F1 (10); misma rama | `git revert cd8c8d5` |
+| 2026-10-09 | R5 | `f80979d` docs(backlog): marca tareas F1 respaldadas por evidencia | F1: estado de las tareas F1 con evidencia; misma rama | `git revert f80979d` |
+| 2026-10-09 | R5 | `341c938` docs(f1): completa interfaces del IPAM y registra cambio de clave de admin | F1: interfaces en la tabla 1.2 y confirmación del cambio de contraseña de `admin`; PR #14 (merge `07e8364`) | `git revert 341c938` |
+| 2026-10-13 | R5 | `b80dd30` docs(f0): actualiza estado de aprobacion de F0 tras la devolucion de la catedra | F0 devuelto como aprobado, 100/100; rama `docs/f1-r5-backups-restore` | `git revert b80dd30` |
+| 2026-10-13 | R5 | `c108a85` docs(backup): registra backups binarios cifrados de F1 y restore de ISP-1 | F1: inventario privado de los siete `.backup` y restore de ISP-1 informados por R1 (6.2); misma rama | `git revert c108a85` |
+| 2026-10-13 | R5 | `1951d06` docs(memoria): registra snapshot F1_FINAL y recuperacion portable del proyecto GNS3 | F1: snapshot final y recuperación portable informados por R1 (2.3); misma rama | `git revert 1951d06` |
+| 2026-10-13 | R5 | `e91d251` docs(memoria): actualiza checklist F1 con backups binarios y restore de ISP-1 | F1: checklist (10) alineado con 6.2; misma rama | `git revert e91d251` |
+| 2026-10-13 | R5 | `f7f5b79` docs(backlog): marca backups binarios y restore de ISP-1 de F1 | F1: tareas del backlog respaldadas por 6.2; misma rama | `git revert f7f5b79` |
 
-> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152`, PR #5 (`.gitignore`) `531056f`, PR #6 (R5) `49510c6`, PR #7 (R5) `07306e5`, PR #8 (R1) `8741527`, PR #9 (R1) `dbbe755`, PR #11 (R1) `170975b`, PR #12 (R2) `83119f5`, PR #10 (R3) `6beba24` y PR #13 (R4) `703c5b9`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
+> Integraciones a `main` (merges): PR #1 (R4) `58db8cd`, PR #2 (R3) `5427689`, PR #4 (R5) `e35fdeb`, PR #3 (R2 y consolidación) `e316152`, PR #5 (`.gitignore`) `531056f`, PR #6 (R5) `49510c6`, PR #7 (R5) `07306e5`, PR #8 (R1) `8741527`, PR #9 (R1) `dbbe755`, PR #11 (R1) `170975b`, PR #12 (R2) `83119f5`, PR #10 (R3) `6beba24`, PR #13 (R4) `703c5b9` y PR #14 (R5) `07e8364`. Los merges no llevan fila propia; para revertir un PR completo: `git revert -m 1 <merge>`, por ejemplo `git revert -m 1 e316152` (PR #3) o `git revert -m 1 e35fdeb` (PR #4).
 >
 > `be128f7` fue un merge histórico de `main` hacia la rama de R2 (`docs/f0-r2-proveedores`) para integrar cambios. **No** es el merge final del PR #3: el merge final es `e316152`. Del mismo modo, `77d59a9` lleva `main` a la rama `docs/f1-r5-evidencias-operacion` después de la PR #13. Los commits individuales conservan su autoría y no se reescriben.
 >
-> Los commits de F1 publican exports, capturas y documentación. La configuración aplicada en los routers no tiene commit propio: se revierte con el comando inverso en la consola o, para volver al estado previo a F1, con el snapshot BASE de GNS3 (2.3), cuyo restore no fue probado.
+> Los commits de F1 publican exports, capturas y documentación. La configuración aplicada en los routers no tiene commit propio: se revierte con el comando inverso en la consola o, para volver al estado previo a F1, con el snapshot BASE de GNS3 (2.3), cuyo restore no fue probado. Para recuperar un router, el backup binario cifrado de 6.2 se probó solo en ISP-1.
 >
-> El commit `2309460` figura en git con autor "Claude"; la PR #13 la abrió R4 (naimguar). Las filas de la rama `docs/f1-r5-evidencias-operacion` corresponden a commits existentes; su merge a `main` sigue pendiente de la revisión de R1.
+> El commit `2309460` figura en git con autor "Claude"; la PR #13 la abrió R4 (naimguar). Las filas de la rama `docs/f1-r5-evidencias-operacion` corresponden a commits existentes, integrados por la PR #14. Las filas de la rama `docs/f1-r5-backups-restore` corresponden a commits existentes; su merge sigue pendiente de la revisión de R1.
+
+#### Operaciones ejecutadas fuera de Git
+
+Estas operaciones las ejecutó R1 en GNS3 y en las consolas RouterOS; no tienen commit ni hash. R5 las registra según lo informado por R1. Las fechas son las informadas por R1 o las que acreditan los nombres de archivo.
+
+| Fecha | Responsable | Operación | Motivo | Cómo se revierte |
+| --- | --- | --- | --- | --- |
+| 2026-10-09 | R1 | Snapshot GNS3 `F1_FINAL_2026-10-09` (23:35:42) | Cierre de F1 (2.3) | Eliminar el snapshot en GNS3; no modifica la configuración de los routers |
+| 2026-10-10 y 2026-10-13 | R1 | `/system backup save` con `encryption=aes-sha256` en los siete routers: ISP-1 el 10/10 y los otros seis el 13/10 (fechas de los nombres de archivo) | F1: backups binarios de la política 1.4 (6.2) | No modifica la configuración; eliminar los archivos generados |
+| 2026-10-10 | R1 | Exportación `topologia_failover_F1.gns3project`, verificación ZIP y recuperación en carpeta aislada; copia de trabajo con `Save project as` | F1: probar la recuperación portable del proyecto (2.3) | Descartar la carpeta aislada y la copia; el proyecto en uso no participó de la prueba |
+| 2026-10-13 | R1 | `/system backup load` de `ISP-1_2026-10-10_f1.backup` en `topologia_failover_F1_TRABAJO_BACKUP`, tras cambiar la identidad a `ISP-1_RESTORE_TEST` | F1: probar el restore binario (6.2); satisfactorio | Descartar el proyecto aislado `topologia_failover_F1_TRABAJO_BACKUP` |
 
 ### 6.2 Backups
 
@@ -662,22 +690,89 @@ Versiones anteriores: [`backups/2026-10-08/EDGE_2026-10-08_f1.rsc`](../backups/2
 
 En la captura final de DIST-1 se ve el comando `/export file=DIST-2_F1_2026-10-09`, ejecutado en DIST-1. El export publicado de DIST-1 corresponde a DIST-1, según su identidad y sus direcciones. El archivo con nombre equivocado, si existe, queda en el almacenamiento local de DIST-1 y no se publica.
 
+#### Tipos de respaldo
+
+| Tipo | Contenido | Dónde está | ¿Se publica? |
+| --- | --- | --- | --- |
+| Export `.rsc` sanitizado | Configuración en texto, sin usuarios ni secretos | `backups/` del repositorio (tabla anterior) | Sí |
+| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1 (siguiente subsección) | No |
+| Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | En poder de R1, fuera del repositorio (2.3) | No |
+
+#### Backups binarios F1 (privados)
+
+R1 generó los siete archivos con `/system backup save`, indicando de forma explícita `encryption=aes-sha256` y una contraseña privada (1.4). Los transfirió en Base64 desde las consolas RouterOS a su almacenamiento privado, los reconstruyó y verificó tamaño y SHA-256 sobre los archivos reconstruidos. R1 informó que repitió la verificación en una auditoría conjunta. R5 documenta lo informado por R1: no tuvo acceso directo a los binarios y no recalculó los SHA-256.
+
+| Router | Archivo | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| ISP-1 | `ISP-1_2026-10-10_f1.backup` | 22701 | `c6ba5ff14b7e878c948632a51e665da2b3de117c04d4ec119d80ae657c8a52ac` |
+| ISP-2 | `ISP-2_2026-10-13_f1.backup` | 20205 | `d5f728f3e68153f0ee53d974f38c11f52a0026633c81bc091f0758864816213c` |
+| EDGE | `EDGE_2026-10-13_f1.backup` | 20400 | `64a44e330edb0bf528a0443932c7d7c3fa8f13c7083d9a374b4b98e01b5bcf2b` |
+| CORE-1 | `CORE-1_2026-10-13_f1.backup` | 20441 | `89ec6b810444a855c025f00c9c8bfd684ed607e5fe23d4dc472a50ed1afcdf62` |
+| CORE-2 | `CORE-2_2026-10-13_f1.backup` | 20441 | `8c43e7c2e282ab8f999d8924cef610921a3113cc204044fc1b6b5bb8042b90fb` |
+| DIST-1 | `DIST-1_2026-10-13_f1.backup` | 20451 | `983523bb88417052e4b4d5ecfc8d7a80cb98162d3fa5db2e20c7a19b8d794324` |
+| DIST-2 | `DIST-2_2026-10-13_f1.backup` | 20451 | `fe4156ea9ba651ab2d823ba4b0f93d117ffc94f0f645ef06c44a1cf6805b467f` |
+
+| Dato | Valor |
+| --- | --- |
+| Hito | `f1`. La fecha es la del nombre del archivo: ISP-1, 2026-10-10; los otros seis, 2026-10-13 |
+| RouterOS | 7.16 |
+| Cifrado | `aes-sha256`, solicitado explícitamente al crear cada backup |
+| Ejecución | R1 |
+| Custodia | Almacenamiento privado local de R1, `GOYS/Respaldos_Privados`, fuera del repositorio. La contraseña se gestiona por un canal privado |
+| Permisos | `600` (`-rw-------`) en los siete archivos |
+| Comprobación | Tamaño y SHA-256 verificados por R1 después de reconstruir los archivos (informado por R1) |
+
+No se publican los archivos, las contraseñas ni el contenido Base64. Los binarios no se comparan contra los `.rsc` públicos: el formato no es legible sin restaurarlo.
+
+#### Restore binario de ISP-1
+
+R1 probó la restauración de un solo router, ISP-1, en una copia aislada del proyecto. No se restauraron los otros seis binarios: están generados y verificados, pero no probados.
+
+| Dato | Valor |
+| --- | --- |
+| Proyecto | `topologia_failover_F1_TRABAJO_BACKUP`, con identificadores distintos de `F1_TRABAJO` (verificado por R1) |
+| Archivo | `ISP-1_2026-10-10_f1.backup` (cifrado) |
+| RouterOS | 7.16 |
+| Ejecución | R1, 2026-10-13 (fecha informada por R1) |
+| Procedimiento | Se cambió deliberadamente la identidad a `ISP-1_RESTORE_TEST`; se ejecutó `/system backup load` con el archivo cifrado y la contraseña ingresada de forma privada; RouterOS restauró la configuración y reinició; se inició sesión de nuevo y se verificó el resultado |
+| Resultado verificado (informado por R1) | Identidad `ISP-1`; `10.255.0.1/30` en `ether1`; loopback `10.255.255.1/32`; Bandwidth Server deshabilitado; servicios IP deshabilitados; usuario `monitor` presente; grupo `monitor` limitado a `read,ssh`; sin cliente DHCP; acceso administrativo funcional tras la restauración |
+| Veredicto | **Restore binario de ISP-1 satisfactorio (RouterOS 7.16)** |
+| Evidencia | Dos capturas de la verificación posterior: [`ISP-1_restore_F1_2026-10-13.png`](../capturas/F1/05_restore/ISP-1_restore_F1_2026-10-13.png) (captura 1) e [`ISP-1_restore_usuarios_DHCP_2026-10-13.png`](../capturas/F1/05_restore/ISP-1_restore_usuarios_DHCP_2026-10-13.png) (captura 2). No muestran el `backup load`, el reinicio, el proyecto ni la fecha: eso lo informó R1 |
+
+##### Comparación con el export sanitizado
+
+Se compara lo que muestran las capturas con [`ISP-1_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-1_2026-10-09_f1.rsc). "Captura" indica que se ve en la imagen y coincide con el export; "R1" indica que lo informó R1 y no hay captura.
+
+| Elemento | Export del 09/10 | Observado tras restaurar | Respaldo |
+| --- | --- | --- | --- |
+| Identidad | `name=ISP-1` | `ISP-1` | Captura 1 |
+| Dirección de enlace | `10.255.0.1/30` en `ether1` (comentario `EDGE`) | Igual | Captura 1 |
+| Loopback | `10.255.255.1` (/32) en `lo` | `10.255.255.1/32` en `lo` | Captura 1 |
+| Bandwidth Server | `enabled=no` | `enabled: no` | Captura 1 |
+| Servicios IP | `telnet`, `ftp`, `www`, `ssh`, `api`, `winbox` y `api-ssl` deshabilitados; `www-ssl` en su valor por defecto (deshabilitado) | Los ocho servicios con la marca `X` (deshabilitado) | Captura 1 |
+| Grupo `monitor` | `ssh,read` y el resto negado | Misma política: `ssh,read,!local,…,!rest-api` | Captura 2 |
+| Cliente DHCP | Sin `/ip dhcp-client` | `/ip dhcp-client print` sin entradas | Captura 2 |
+| Usuario `monitor` | No figura: el export no incluye usuarios | Presente, en el grupo `monitor` | Captura 2 (sin contraparte en el export) |
+| Acceso administrativo | No aplica | Las capturas muestran una sesión `admin` ejecutando los comandos. Que el acceso funcione tras el reinicio del restore lo informó R1 | Captura (prompt) y R1 |
+| Restauración | No aplica | `backup load` del archivo cifrado, reinicio, identidad previa `ISP-1_RESTORE_TEST` y proyecto aislado | R1; sin captura |
+
+Todos los elementos comparables coinciden con el export. Las capturas no llevan fecha ni muestran el proyecto: que correspondan a la copia aislada, después del restore, se apoya en el informe de R1. Los usuarios y las contraseñas no están en el export, por lo que esa parte de la recuperación solo se acredita por la captura 2 y por R1.
+
 #### Política interna de backup: procedimientos adicionales
 
-La política 1.4 agrega procedimientos que van más allá del export inicial de F1. Su estado actual:
+Estado de los procedimientos de 1.4:
 
 | Procedimiento (política 1.4) | Estado |
 | --- | --- |
 | Snapshot BASE | Registrado en GNS3 (2.3). No es un backup de RouterOS y no se probó su restore |
+| Snapshot `F1_FINAL_2026-10-09` y copia portable del proyecto GNS3 | Realizados por R1. Recuperación del proyecto validada en una copia aislada (2.3). El restore de snapshots individuales de GNS3 no se probó |
 | Export `base` de cada router antes de configurar | No se generó |
-| Backup binario `.backup` cifrado, fuera del repositorio | **Pendiente**: no hay evidencia de que se haya realizado |
-| Registro de localizador privado, checksum y resultado de cada binario | **Pendiente**: depende del binario |
-| Restore probado en un router con la misma versión de RouterOS | **Pendiente** |
-| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente** |
+| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers; archivos verificados por R1 |
+| Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba: localizador privado, tamaño, SHA-256, RouterOS 7.16 y fecha |
+| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1**, satisfactorio, con capturas y comparación contra el export (arriba). Pendiente: seis binarios sin restaurar |
+| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: el restore de ISP-1 recuperó el acceso administrativo, pero el procedimiento escrito no existe |
 
-Cuando se realicen, se registrarán aquí con los metadatos que exige 1.4: localizador privado no secreto, checksum, versión de RouterOS, propietario, fecha, hito y resultado.
-
-Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. Esa recuperación requiere el procedimiento privado, que todavía no está documentado. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
+Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. En ISP-1, el binario cifrado sí las recuperó (acceso administrativo funcional tras el restore, informado por R1). El procedimiento privado por escrito sigue pendiente. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
 
 ### 6.3 Monitoreo
 
@@ -689,7 +784,7 @@ Pendiente R5.
 
 ### 7.1 F1
 
-R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 seleccionó 26 de las 27 recibidas y las organizó en [`capturas/F1/`](../capturas/F1/). Las copias del repositorio son idénticas a las del paquete recibido (verificado por SHA-256). Las capturas de consola no muestran fecha; solo se indica fecha cuando la imagen o su origen la acreditan.
+R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 seleccionó 26 de las 27 recibidas y las organizó en [`capturas/F1/`](../capturas/F1/). Las copias del repositorio son idénticas a las del paquete recibido (verificado por SHA-256). Las capturas de consola no muestran fecha; solo se indica fecha cuando la imagen o su origen la acreditan. Las dos de `05_restore/` las entregó R1 después (verificación de ISP-1 tras el restore): son fotografías de pantalla de la consola GNS3 tomadas desde un celular, incluyen la barra de estado del teléfono y se convirtieron a PNG sin otra edición. No exponen contraseñas ni secretos.
 
 | Archivo (`capturas/F1/…`) | Qué demuestra | Sección |
 | --- | --- | --- |
@@ -709,6 +804,8 @@ R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 se
 | `04_hardening/<router>/<router>_MAC_neighbor_RoMON.png` (CORE-1, CORE-2, DIST-1, DIST-2, ISP-2) | Administración MAC, Neighbor Discovery y RoMON, 08/10 según R1 | 5.1 |
 | `04_hardening/ISP-1/ISP-1_servicios_MAC_neighbor_RoMON.png` | Servicios IP, administración MAC, Neighbor Discovery y RoMON de ISP-1, 08/10 según R1 | 5.1 |
 | `04_hardening/EDGE/EDGE_neighbor_discovery_deshabilitado.png` | Administración MAC y RoMON; cambio de Neighbor Discovery a `none` en EDGE, 08/10 según R1 | 5.1 |
+| `05_restore/ISP-1_restore_F1_2026-10-13.png` | ISP-1 tras el restore: identidad, direcciones, loopback, Bandwidth Server y servicios IP | 6.2 |
+| `05_restore/ISP-1_restore_usuarios_DHCP_2026-10-13.png` | ISP-1 tras el restore: usuario y grupo `monitor`, y ausencia de cliente DHCP | 6.2 |
 
 **Excluida:** `EDGE_administracion_MAC.png`, del paquete de R1. Es un estado intermedio: muestra SSH todavía habilitado y la administración MAC antes y después del cambio. El estado final está cubierto por `EDGE_neighbor_discovery_deshabilitado.png` y por la captura final del 09/10. Queda fuera del repositorio, en el paquete original.
 
@@ -734,7 +831,7 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 - **Diseño interno:** completado y documentado.
 - **Integración Git:** completada (PR #1 `58db8cd`, PR #2 `5427689`, PR #4 `e35fdeb`, PR #3 `e316152`).
-- **Aprobación formal de la cátedra:** no recibida de forma expresa.
+- **Aprobación de la cátedra:** F0 aprobado, 100/100 (devolución informada por R1). F1 comenzó antes de recibirse esa devolución.
 - **F1:** ejecutada el 08 y 09/10/2026; estado en la lista F1 de esta sección.
 
 - [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)
@@ -757,17 +854,19 @@ F1 no se declara cerrada ni aprobada: la auditoría y la integración final corr
 
 **Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:
 
-- [ ] Backup binario `.backup` cifrado, fuera del repositorio, con metadatos registrados en 6.2
-- [ ] Restore probado en un router con la misma versión de RouterOS
+- [x] Backup binario `.backup` cifrado de los 7 routers, fuera del repositorio, con metadatos en 6.2: ejecutó R1; tamaño y SHA-256 verificados por R1. R5 no tuvo acceso a los binarios
+- [x] Restore probado en un router con la misma versión de RouterOS: solo ISP-1, RouterOS 7.16, en proyecto aislado; satisfactorio, con capturas y comparación contra el export (6.2, 7.1). Los otros seis binarios no se restauraron
+- [x] Recuperación del proyecto GNS3 desde el archivo portable, validada en una copia aislada (2.3). La importación estándar falló y el restore de snapshots individuales no se probó
 - [ ] Procedimiento privado para reinyectar claves y reprovisionar usuarios de gestión
 - [ ] Export `base` de cada router antes de configurar: no se generó; solo existe el snapshot GNS3
 
-El ítem "Backups con restore probado" de Operación sigue pendiente para la entrega final.
+El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 tiene los siete backups y el restore de ISP-1, pero faltan los hitos F2 y F3 y los backups antes y después de cada drill.
 
 **Pendientes operativos de F1:**
 
 - [ ] Definir el origen de gestión autorizado y habilitar SSH restringido a él
 - [ ] Repetir la captura final de DIST-1 sin el comando `/export` previo (7.1)
+- [ ] Capturas de R1 de la recuperación portable del proyecto GNS3 (las del restore de ISP-1 están en 7.1)
 
 ### Redes
 
