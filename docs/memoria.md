@@ -431,7 +431,7 @@ Los snapshots son de GNS3, no backups binarios de RouterOS ni exports. La captur
 R1 exportó el proyecto como `topologia_failover_F1.gns3project` (unos 159 MB, sin compresión) y verificó el ZIP sin errores. El archivo contiene siete discos QEMU, los dos snapshots, dos configuraciones VPCS, la imagen CHR 7.16 y el archivo del proyecto. Contiene discos completos de los routers: no se publica en el repositorio.
 
 - La importación estándar de GNS3 falló porque intentó usar GNS3 VM, que no está configurada en la Mac de R1. No se atribuye con certeza el problema del proyecto original a una causa concreta.
-- R1 recuperó el laboratorio extrayendo el archivo en una carpeta aislada y abriendo una copia independiente mediante el archivo `.gns3`. Luego creó una copia de trabajo con `Save project as`, con identificadores independientes.
+- El 2026-10-10 (fecha informada por R1), R1 recuperó el laboratorio extrayendo el archivo en una carpeta aislada y abriendo una copia independiente mediante el archivo `.gns3`. Luego creó una copia de trabajo con `Save project as`, con identificadores independientes.
 - Resultado informado por R1: los siete routers arrancaron y conservaron IP, loopbacks y hardening; PC-USER y SRV conservaron IP y gateway y respondieron a DIST-1 y DIST-2; se verificó la conectividad EDGE–ISP-1.
 
 Se validó la recuperación del estado del proyecto por esta vía; no se validó la importación estándar ni el restore de snapshots. Sin capturas publicadas.
@@ -649,14 +649,14 @@ Formato y convención de commits: ver 1.4.
 
 #### Operaciones ejecutadas fuera de Git
 
-Estas operaciones las ejecutó R1 en GNS3 y en las consolas RouterOS; no tienen commit ni hash. R5 las registra según lo informado por R1. La fecha de ejecución se indica solo cuando R1 la informó o el nombre del archivo la acredita; `s/f` significa sin fecha informada (R1 las comunicó a R5 el 2026-10-13).
+Estas operaciones las ejecutó R1 en GNS3 y en las consolas RouterOS; no tienen commit ni hash. R5 las registra según lo informado por R1. Las fechas son las informadas por R1 o las que acreditan los nombres de archivo.
 
 | Fecha | Responsable | Operación | Motivo | Cómo se revierte |
 | --- | --- | --- | --- | --- |
 | 2026-10-09 | R1 | Snapshot GNS3 `F1_FINAL_2026-10-09` (23:35:42) | Cierre de F1 (2.3) | Eliminar el snapshot en GNS3; no modifica la configuración de los routers |
 | 2026-10-10 y 2026-10-13 | R1 | `/system backup save` con `encryption=aes-sha256` en los siete routers: ISP-1 el 10/10 y los otros seis el 13/10 (fechas de los nombres de archivo) | F1: backups binarios de la política 1.4 (6.2) | No modifica la configuración; eliminar los archivos generados |
-| s/f | R1 | Exportación `topologia_failover_F1.gns3project`, verificación ZIP y recuperación en carpeta aislada; copia de trabajo con `Save project as` | F1: probar la recuperación portable del proyecto (2.3) | Descartar la carpeta aislada y la copia; el proyecto en uso no participó de la prueba |
-| s/f | R1 | `/system backup load` de `ISP-1_2026-10-10_f1.backup` en `topologia_failover_F1_TRABAJO_BACKUP`, tras cambiar la identidad a `ISP-1_RESTORE_TEST` | F1: probar el restore binario (6.2); satisfactorio | Descartar el proyecto aislado `topologia_failover_F1_TRABAJO_BACKUP` |
+| 2026-10-10 | R1 | Exportación `topologia_failover_F1.gns3project`, verificación ZIP y recuperación en carpeta aislada; copia de trabajo con `Save project as` | F1: probar la recuperación portable del proyecto (2.3) | Descartar la carpeta aislada y la copia; el proyecto en uso no participó de la prueba |
+| 2026-10-13 | R1 | `/system backup load` de `ISP-1_2026-10-10_f1.backup` en `topologia_failover_F1_TRABAJO_BACKUP`, tras cambiar la identidad a `ISP-1_RESTORE_TEST` | F1: probar el restore binario (6.2); satisfactorio | Descartar el proyecto aislado `topologia_failover_F1_TRABAJO_BACKUP` |
 
 ### 6.2 Backups
 
@@ -733,13 +733,30 @@ R1 probó la restauración de un solo router, ISP-1, en una copia aislada del pr
 | Proyecto | `topologia_failover_F1_TRABAJO_BACKUP`, con identificadores distintos de `F1_TRABAJO` (verificado por R1) |
 | Archivo | `ISP-1_2026-10-10_f1.backup` (cifrado) |
 | RouterOS | 7.16 |
-| Ejecución | R1. Fecha de ejecución no informada |
+| Ejecución | R1, 2026-10-13 (fecha informada por R1) |
 | Procedimiento | Se cambió deliberadamente la identidad a `ISP-1_RESTORE_TEST`; se ejecutó `/system backup load` con el archivo cifrado y la contraseña ingresada de forma privada; RouterOS restauró la configuración y reinició; se inició sesión de nuevo y se verificó el resultado |
 | Resultado verificado (informado por R1) | Identidad `ISP-1`; `10.255.0.1/30` en `ether1`; loopback `10.255.255.1/32`; Bandwidth Server deshabilitado; servicios IP deshabilitados; usuario `monitor` presente; grupo `monitor` limitado a `read,ssh`; sin cliente DHCP; acceso administrativo funcional tras la restauración |
 | Veredicto | **Restore binario de ISP-1 satisfactorio (RouterOS 7.16)** |
-| Evidencia | Informada por R1. Capturas originales de la restauración y de la verificación posterior pendientes (no hay captura publicada en 7.1) |
+| Evidencia | Dos capturas de la verificación posterior: [`ISP-1_restore_F1_2026-10-13.png`](../capturas/F1/05_restore/ISP-1_restore_F1_2026-10-13.png) (captura 1) e [`ISP-1_restore_usuarios_DHCP_2026-10-13.png`](../capturas/F1/05_restore/ISP-1_restore_usuarios_DHCP_2026-10-13.png) (captura 2). No muestran el `backup load`, el reinicio, el proyecto ni la fecha: eso lo informó R1 |
 
-La comparación formal del resultado contra el export sanitizado de ISP-1, que pide 1.4, no está registrada: las direcciones, los servicios y el grupo `monitor` informados coinciden con ese export, pero R5 no la ejecutó.
+##### Comparación con el export sanitizado
+
+Se compara lo que muestran las capturas con [`ISP-1_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-1_2026-10-09_f1.rsc). "Captura" indica que se ve en la imagen y coincide con el export; "R1" indica que lo informó R1 y no hay captura.
+
+| Elemento | Export del 09/10 | Observado tras restaurar | Respaldo |
+| --- | --- | --- | --- |
+| Identidad | `name=ISP-1` | `ISP-1` | Captura 1 |
+| Dirección de enlace | `10.255.0.1/30` en `ether1` (comentario `EDGE`) | Igual | Captura 1 |
+| Loopback | `10.255.255.1` (/32) en `lo` | `10.255.255.1/32` en `lo` | Captura 1 |
+| Bandwidth Server | `enabled=no` | `enabled: no` | Captura 1 |
+| Servicios IP | `telnet`, `ftp`, `www`, `ssh`, `api`, `winbox` y `api-ssl` deshabilitados; `www-ssl` en su valor por defecto (deshabilitado) | Los ocho servicios con la marca `X` (deshabilitado) | Captura 1 |
+| Grupo `monitor` | `ssh,read` y el resto negado | Misma política: `ssh,read,!local,…,!rest-api` | Captura 2 |
+| Cliente DHCP | Sin `/ip dhcp-client` | `/ip dhcp-client print` sin entradas | Captura 2 |
+| Usuario `monitor` | No figura: el export no incluye usuarios | Presente, en el grupo `monitor` | Captura 2 (sin contraparte en el export) |
+| Acceso administrativo | No aplica | Las capturas muestran una sesión `admin` ejecutando los comandos. Que el acceso funcione tras el reinicio del restore lo informó R1 | Captura (prompt) y R1 |
+| Restauración | No aplica | `backup load` del archivo cifrado, reinicio, identidad previa `ISP-1_RESTORE_TEST` y proyecto aislado | R1; sin captura |
+
+Todos los elementos comparables coinciden con el export. Las capturas no llevan fecha ni muestran el proyecto: que correspondan a la copia aislada, después del restore, se apoya en el informe de R1. Los usuarios y las contraseñas no están en el export, por lo que esa parte de la recuperación solo se acredita por la captura 2 y por R1.
 
 #### Política interna de backup: procedimientos adicionales
 
@@ -752,7 +769,7 @@ Estado de los procedimientos de 1.4:
 | Export `base` de cada router antes de configurar | No se generó |
 | Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers; archivos verificados por R1 |
 | Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba: localizador privado, tamaño, SHA-256, RouterOS 7.16 y fecha |
-| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1**, satisfactorio. Pendientes: seis binarios sin restaurar, comparación con el export y capturas originales |
+| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1**, satisfactorio, con capturas y comparación contra el export (arriba). Pendiente: seis binarios sin restaurar |
 | Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: el restore de ISP-1 recuperó el acceso administrativo, pero el procedimiento escrito no existe |
 
 Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. En ISP-1, el binario cifrado sí las recuperó (acceso administrativo funcional tras el restore, informado por R1). El procedimiento privado por escrito sigue pendiente. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
@@ -767,7 +784,7 @@ Pendiente R5.
 
 ### 7.1 F1
 
-R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 seleccionó 26 de las 27 recibidas y las organizó en [`capturas/F1/`](../capturas/F1/). Las copias del repositorio son idénticas a las del paquete recibido (verificado por SHA-256). Las capturas de consola no muestran fecha; solo se indica fecha cuando la imagen o su origen la acreditan.
+R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 seleccionó 26 de las 27 recibidas y las organizó en [`capturas/F1/`](../capturas/F1/). Las copias del repositorio son idénticas a las del paquete recibido (verificado por SHA-256). Las capturas de consola no muestran fecha; solo se indica fecha cuando la imagen o su origen la acreditan. Las dos de `05_restore/` las entregó R1 después (verificación de ISP-1 tras el restore): son fotografías de pantalla de la consola GNS3 tomadas desde un celular, incluyen la barra de estado del teléfono y se convirtieron a PNG sin otra edición. No exponen contraseñas ni secretos.
 
 | Archivo (`capturas/F1/…`) | Qué demuestra | Sección |
 | --- | --- | --- |
@@ -787,6 +804,8 @@ R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 se
 | `04_hardening/<router>/<router>_MAC_neighbor_RoMON.png` (CORE-1, CORE-2, DIST-1, DIST-2, ISP-2) | Administración MAC, Neighbor Discovery y RoMON, 08/10 según R1 | 5.1 |
 | `04_hardening/ISP-1/ISP-1_servicios_MAC_neighbor_RoMON.png` | Servicios IP, administración MAC, Neighbor Discovery y RoMON de ISP-1, 08/10 según R1 | 5.1 |
 | `04_hardening/EDGE/EDGE_neighbor_discovery_deshabilitado.png` | Administración MAC y RoMON; cambio de Neighbor Discovery a `none` en EDGE, 08/10 según R1 | 5.1 |
+| `05_restore/ISP-1_restore_F1_2026-10-13.png` | ISP-1 tras el restore: identidad, direcciones, loopback, Bandwidth Server y servicios IP | 6.2 |
+| `05_restore/ISP-1_restore_usuarios_DHCP_2026-10-13.png` | ISP-1 tras el restore: usuario y grupo `monitor`, y ausencia de cliente DHCP | 6.2 |
 
 **Excluida:** `EDGE_administracion_MAC.png`, del paquete de R1. Es un estado intermedio: muestra SSH todavía habilitado y la administración MAC antes y después del cambio. El estado final está cubierto por `EDGE_neighbor_discovery_deshabilitado.png` y por la captura final del 09/10. Queda fuera del repositorio, en el paquete original.
 
@@ -836,7 +855,7 @@ F1 no se declara cerrada ni aprobada: la auditoría y la integración final corr
 **Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:
 
 - [x] Backup binario `.backup` cifrado de los 7 routers, fuera del repositorio, con metadatos en 6.2: ejecutó R1; tamaño y SHA-256 verificados por R1. R5 no tuvo acceso a los binarios
-- [x] Restore probado en un router con la misma versión de RouterOS: solo ISP-1, RouterOS 7.16, en proyecto aislado; satisfactorio (6.2). Los otros seis binarios no se restauraron
+- [x] Restore probado en un router con la misma versión de RouterOS: solo ISP-1, RouterOS 7.16, en proyecto aislado; satisfactorio, con capturas y comparación contra el export (6.2, 7.1). Los otros seis binarios no se restauraron
 - [x] Recuperación del proyecto GNS3 desde el archivo portable, validada en una copia aislada (2.3). La importación estándar falló y el restore de snapshots individuales no se probó
 - [ ] Procedimiento privado para reinyectar claves y reprovisionar usuarios de gestión
 - [ ] Export `base` de cada router antes de configurar: no se generó; solo existe el snapshot GNS3
@@ -847,7 +866,7 @@ El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 tiene 
 
 - [ ] Definir el origen de gestión autorizado y habilitar SSH restringido a él
 - [ ] Repetir la captura final de DIST-1 sin el comando `/export` previo (7.1)
-- [ ] Capturas originales de R1 de la restauración de ISP-1 y de la recuperación portable; comparación del resultado de ISP-1 con su export sanitizado
+- [ ] Capturas de R1 de la recuperación portable del proyecto GNS3 (las del restore de ISP-1 están en 7.1)
 
 ### Redes
 
