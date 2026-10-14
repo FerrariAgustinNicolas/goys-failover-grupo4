@@ -31,9 +31,9 @@ capaz de mantener conectividad frente a fallas de enlaces y dispositivos.
 | F4 | Drills y monitoreo | 20/10/2026 | Pendiente de ejecución. |
 | F5 | Memoria y defensa | 23/10/2026 | Pendiente de finalización. |
 
-F1 no se declara aprobada por la cátedra ni cerrada operativamente:
-permanecen pendientes los procedimientos internos de backup/restore
-(incluida la prueba de restauración) y el acceso de gestión restringido.
+F1 todavía no cuenta con aprobación de la cátedra. Se generaron siete backups binarios cifrados y se verificó la restauración de ISP-1 en una copia aislada, además de integrar los siete exports sanitizados.
+
+Permanecen pendientes la habilitación de SSH desde un origen de gestión autorizado, el procedimiento privado de recuperación de credenciales y las demás observaciones operativas detalladas en la memoria.
 
 ## Índice de documentación
 
