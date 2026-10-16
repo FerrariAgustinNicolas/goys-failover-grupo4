@@ -47,6 +47,8 @@ Para evitar solapamientos y simplificar la administración de la red, se propone
 
 Los enlaces punto a punto utilizan subredes `/30` independientes. Cada una dispone de dos direcciones utilizables y pertenece exclusivamente a un enlace, evitando solapamientos.
 
+> **Posterior a F1:** el 14/10 se agregó la red de gestión aislada `172.31.250.0/28`, que no se solapa con ningún bloque de esta tabla. No forma parte del diseño F0; su direccionamiento está en 2.4.
+
 #### Enlaces y LAN
 
 | Enlace / Red | Subred | Dispositivo A (IP/iface) | Dispositivo B (IP/iface) |
@@ -436,11 +438,32 @@ R1 exportó el proyecto como `topologia_failover_F1.gns3project` (unos 159 MB, s
 
 Se validó la recuperación del estado del proyecto por esta vía; no se validó la importación estándar ni el restore de snapshots. Sin capturas publicadas.
 
+### 2.4 Red de gestión SSH-MGMT (14/10/2026, posterior a F1)
+
+Al cierre de F1 (09/10), SSH estaba deshabilitado en los siete routers porque no se había definido un origen de gestión autorizado (5.1). El 14/10, R1 implementó en GNS3 una red de gestión aislada para habilitar SSH de forma restringida. Las pruebas las hizo R1; R5 las documenta a partir de lo informado por R1 y de los exports publicados.
+
+Sobre la topología F1 se agregaron dos nodos auxiliares, el switch **SW-MGMT** y el host **MGMT-CLIENT**, y ocho enlaces de gestión: uno por router y uno del cliente. La copia SSH-MGMT del proyecto queda con 13 nodos y 23 enlaces. No se modificó ningún enlace de producción: el cableado de 2.2 sigue igual.
+
+| Nodo | Interfaz de gestión (RouterOS) | Dirección |
+| --- | --- | --- |
+| EDGE | `ether5` | `172.31.250.1/28` |
+| ISP-1 | `ether2` | `172.31.250.2/28` |
+| ISP-2 | `ether2` | `172.31.250.3/28` |
+| CORE-1 | `ether5` | `172.31.250.4/28` |
+| CORE-2 | `ether5` | `172.31.250.5/28` |
+| DIST-1 | `ether5` | `172.31.250.6/28` |
+| DIST-2 | `ether5` | `172.31.250.7/28` |
+| MGMT-CLIENT | — | `172.31.250.10` (único origen autorizado) |
+
+En los ISP la gestión usa `ether2`, la primera interfaz libre; en los demás routers usa `ether5`, porque `ether1`–`ether4` ya están ocupadas. Para la prueba de rechazo se usó un origen no autorizado, `172.31.250.11` (4.1). Las direcciones de la tabla figuran en los exports de `backups/2026-10-14/` (6.2). No se publicó una captura de la topología SSH-MGMT.
+
 ---
 
 ## 3. Configuración
 
-> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. F0 fue devuelto por la cátedra como aprobado, 100/100; F1 se inició antes de recibirse esa devolución.
+> **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. F0 fue devuelto por la cátedra como aprobado, 100/100; F1 se inició antes de recibirse esa devolución. F1 también fue aprobado, 100/100 (10).
+>
+> **Posterior a F1 (14/10/2026):** R1 agregó la red de gestión SSH-MGMT en los siete routers (2.4 y 3.9). Las secciones 3.0 a 3.8 describen el estado al 09/10 y no se reescribieron.
 
 ### 3.0 Base común F1
 
@@ -461,6 +484,9 @@ La única instancia GNS3 operativa está en el equipo de R1, que ejecutó la con
 | Publicación de los exports por PR | R1 (EDGE), R2 (ISP), R3 (CORE), R4 (DIST) | R5: revisó el contenido de los siete `.rsc` | 6.2 |
 | Backups binarios cifrados, snapshot `F1_FINAL_2026-10-09`, copia portable y restore de ISP-1 | R1 | R5: documentó lo informado por R1; sin acceso directo a los binarios | 2.3, 6.2 |
 | Selección y organización de capturas | — | R5 | 7 |
+| Red SSH-MGMT y pruebas de acceso SSH (14/10) | R1 | R5: contrastó lo informado por R1 con los siete exports | 2.4, 3.9, 4.1, 5.2 |
+| Publicación de los exports SSH-MGMT por PR | R1 (EDGE), R2 (ISP), R3 (CORE), R4 (DIST) | R5: revisó el contenido de los siete `.rsc` | 6.2 |
+| Backups binarios SSH-MGMT (15/10) y restore aislado de ISP-1 (16/10) | R1 | R5: documentó lo informado por R1 y revisó las capturas; sin acceso directo a los binarios | 6.2, 7.2 |
 
 #### Direccionamiento y loopbacks aplicados
 
@@ -480,31 +506,31 @@ Los mismos valores figuran en los exports de 6.2.
 
 ### 3.1 ISP-1
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/ISP-1_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-1_2026-10-09_f1.rsc). BGP pendiente de F3.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/ISP-1_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-1_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/ISP-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/ISP-1_2026-10-14_SSH_MGMT.rsc). BGP pendiente de F3.
 
 ### 3.2 ISP-2
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/ISP-2_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-2_2026-10-09_f1.rsc). BGP pendiente de F3.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/ISP-2_2026-10-09_f1.rsc`](../backups/2026-10-09/ISP-2_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/ISP-2_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/ISP-2_2026-10-14_SSH_MGMT.rsc). BGP pendiente de F3.
 
 ### 3.3 EDGE
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/EDGE_2026-10-09_f1.rsc`](../backups/2026-10-09/EDGE_2026-10-09_f1.rsc). OSPF pendiente de F2; BGP y firewall, de F3.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/EDGE_2026-10-09_f1.rsc`](../backups/2026-10-09/EDGE_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/EDGE_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/EDGE_2026-10-14_SSH_MGMT.rsc). OSPF pendiente de F2; BGP y firewall, de F3.
 
 ### 3.4 CORE-1
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-1_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-1_2026-10-09_f1.rsc). OSPF pendiente de F2.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-1_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-1_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/CORE-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/CORE-1_2026-10-14_SSH_MGMT.rsc). OSPF pendiente de F2.
 
 ### 3.5 CORE-2
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-2_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-2_2026-10-09_f1.rsc). OSPF pendiente de F2.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/CORE-2_2026-10-09_f1.rsc`](../backups/2026-10-09/CORE-2_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/CORE-2_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/CORE-2_2026-10-14_SSH_MGMT.rsc). OSPF pendiente de F2.
 
 ### 3.6 DIST-1
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-1_2026-10-09_f1.rsc). VRRP y OSPF pendientes de F2.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-1_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-1_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/DIST-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/DIST-1_2026-10-14_SSH_MGMT.rsc). VRRP y OSPF pendientes de F2.
 
 ### 3.7 DIST-2
 
-F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-2_2026-10-09_f1.rsc). VRRP y OSPF pendientes de F2.
+F1: base común de 3.0 y hardening de 5.1. Export: [`backups/2026-10-09/DIST-2_2026-10-09_f1.rsc`](../backups/2026-10-09/DIST-2_2026-10-09_f1.rsc). Gestión SSH-MGMT desde el 14/10 (3.9): [`backups/2026-10-14/DIST-2_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/DIST-2_2026-10-14_SSH_MGMT.rsc). VRRP y OSPF pendientes de F2.
 
 ### 3.8 Hosts (PC-USER / SRV)
 
@@ -516,6 +542,20 @@ R1 configuró ambos hosts VPCS según el IPAM 1.2:
 | SRV | SERVERS | `192.168.20.100/24` | `192.168.20.1` | [`SRV_IP_y_pings_DIST.png`](../capturas/F1/03_hosts/SRV_IP_y_pings_DIST.png) |
 
 El gateway de cada host es la IP virtual VRRP, que se crea en F2: en F1 todavía no responde y no se usa como prueba. La conectividad F1 de los hosts se prueba contra las direcciones reales de DIST-1 y DIST-2 (4.1). DNS no se configuró porque no es necesario.
+
+### 3.9 Gestión SSH-MGMT (14/10/2026)
+
+R1 aplicó la misma configuración en los siete routers; solo cambian la interfaz y la dirección de gestión de cada uno (2.4). Respecto de los exports F1 del 09/10, la única línea modificada es la del servicio SSH; el resto son altas:
+
+| Bloque | F1 (09/10) | SSH-MGMT (14/10) |
+| --- | --- | --- |
+| `/ip vrf` | — | VRF `MGMT` con la interfaz de gestión como única interfaz |
+| `/ip address` | Enlaces, LAN y loopback | Se agrega la dirección de gestión, comentario `Red de gestion aislada` |
+| `/ip firewall filter` | Sin reglas | Tres reglas `chain=input` sobre `in-interface=MGMT`: aceptar ICMP desde `172.31.250.10`, aceptar TCP/22 desde `172.31.250.10` (ambas hacia la dirección de gestión propia) y descartar el resto |
+| `/ip service ssh` | `disabled=yes` | `address=172.31.250.10/32 vrf=MGMT` |
+| `/ip ssh` | Valores por defecto | `strong-crypto=yes` |
+
+La VRF separa la red de gestión de la tabla principal, donde F2 y F3 configurarán OSPF y BGP. El firewall solo filtra lo que entra por `MGMT`; las reglas de entrada de EDGE por las demás interfaces siguen pendientes para F3. Se conservan las direcciones de producción, las loopbacks y el hardening de F1. No hay clientes DHCP ni configuración de OSPF, BGP o VRRP.
 
 ---
 
@@ -552,6 +592,18 @@ R1 ejecutó estas pruebas después de asignar las direcciones; R5 revisó cada c
 
 Alcance: estas pruebas acreditan conectividad en cada segmento directo. Sin OSPF ni BGP no hay enrutamiento entre segmentos; los pings entre LAN, entre loopbacks o hacia los ISP se verifican en F2 y F3.
 
+#### SSH-MGMT: acceso autorizado y rechazo (14/10)
+
+R1 ejecutó estas pruebas en la topología SSH-MGMT (2.4) sobre los siete routers. R5 registra el resultado informado por R1 y por las PR #18 a #21; no hay capturas de estas pruebas en el repositorio.
+
+| Prueba | Origen | Resultado en los 7 routers |
+| --- | --- | --- |
+| Acceso SSH a la dirección de gestión del router | MGMT-CLIENT `172.31.250.10` | Exitoso |
+| Acceso SSH desde un origen no autorizado | `172.31.250.11` | Rechazado |
+| Conectividad de los enlaces de producción después del cambio | Pings entre vecinos directos, como en F1 | Conservada. En DIST, además, PC-USER y SRV siguieron alcanzando ambos DIST (PR #19) |
+
+Estas pruebas no se repitieron en el restore aislado de ISP-1 (6.2), que no tiene enlaces con ningún otro nodo.
+
 ### 4.2 Los 5 drills de failover
 
 Pendiente de F4.
@@ -579,13 +631,28 @@ R1 aplicó el hardening en los siete routers. R5 lo verificó con las capturas f
 
 Para EDGE, las capturas de administración MAC, Neighbor Discovery y RoMON están en [`EDGE_neighbor_discovery_deshabilitado.png`](../capturas/F1/04_hardening/EDGE/EDGE_neighbor_discovery_deshabilitado.png); para ISP-1, en [`ISP-1_servicios_MAC_neighbor_RoMON.png`](../capturas/F1/04_hardening/ISP-1/ISP-1_servicios_MAC_neighbor_RoMON.png). El índice completo está en la sección 7.
 
-**SSH temporalmente deshabilitado.** La política 1.3 define SSH como único servicio de administración, restringido a fuentes de gestión autorizadas. Ese origen todavía no está definido, por lo que SSH permanece deshabilitado en los siete routers y la administración se hace solo por la consola de GNS3. El usuario `monitor` existe, pero su acceso remoto no está operativo. Queda pendiente definir el origen de gestión autorizado y habilitar SSH restringido a él.
+**SSH temporalmente deshabilitado (estado al 09/10).** La política 1.3 define SSH como único servicio de administración, restringido a fuentes de gestión autorizadas. Al cierre de F1 ese origen todavía no estaba definido, por lo que SSH quedó deshabilitado en los siete routers y la administración se hacía solo por la consola de GNS3. El usuario `monitor` existía, pero su acceso remoto no estaba operativo. Este pendiente se resolvió después de F1, el 14/10 (5.2).
 
 **Consola de GNS3.** Los títulos de ventana `telnet localhost <puerto>` corresponden a la consola virtual de GNS3, no al servicio Telnet de RouterOS, que está deshabilitado. Los puertos de consola cambian entre sesiones de GNS3; el router se identifica por el prompt y por `/system identity print`.
 
 **Credenciales.** No se publican. Los exports `.rsc` no incluyen usuarios ni contraseñas: la existencia de `monitor` se acredita por captura y el cambio de contraseña de `admin`, por confirmación de R1. La recuperación de credenciales requiere el procedimiento privado de 6.2.
 
 **Pendiente de fases siguientes:** autenticación OSPF MD5 y VRRP (F2); BGP TCP-MD5 y firewall de EDGE (F3).
+
+### 5.2 Plano de gestión SSH-MGMT (14/10/2026)
+
+Con la red de gestión de 2.4, SSH quedó habilitado de forma restringida. Los controles se verifican en los siete exports del 14/10 (6.2) y en el restore aislado de ISP-1 (capturas de 7.2).
+
+| Control | Estado en los 7 routers |
+| --- | --- |
+| Servicio SSH | Habilitado solo en la VRF `MGMT` y solo para `172.31.250.10/32` |
+| Cifrado SSH | `strong-crypto=yes` |
+| Firewall de entrada en `MGMT` | ICMP y SSH aceptados solo desde `172.31.250.10`; el resto, descartado |
+| Telnet, FTP, `www`, `www-ssl`, API, API-SSL y Winbox | Siguen deshabilitados |
+| Administración MAC, Neighbor Discovery, RoMON y Bandwidth Server | Sin cambios respecto de 5.1 |
+| Usuario `monitor` | Sin cambios: grupo `monitor` con `ssh,read`. No se informó una prueba de SSH específica con esta cuenta |
+
+Las reglas de firewall no reemplazan el firewall de EDGE de F3: solo protegen la interfaz de gestión. Las credenciales siguen sin publicarse.
 
 ---
 
@@ -690,12 +757,30 @@ Versiones anteriores: [`backups/2026-10-08/EDGE_2026-10-08_f1.rsc`](../backups/2
 
 En la captura final de DIST-1 se ve el comando `/export file=DIST-2_F1_2026-10-09`, ejecutado en DIST-1. El export publicado de DIST-1 corresponde a DIST-1, según su identidad y sus direcciones. El archivo con nombre equivocado, si existe, queda en el almacenamiento local de DIST-1 y no se publica.
 
+#### Exports SSH-MGMT (`/export`, 14/10)
+
+Después de implementar la red de gestión (2.4), R1 generó un nuevo export de cada router y cada rol publicó los suyos por PR. Se agregaron en `backups/2026-10-14/`, sin reemplazar los exports F1 del 09/10, que se conservan como estado histórico.
+
+| Router | Archivo | Encabezado del export | Publicado por | Commit · PR | SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| EDGE | [`EDGE_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/EDGE_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 01:53:09 | R1 | `6bc8c99` · PR #21 (merge `102f1a1`) | `be0af195…139fafff` |
+| ISP-1 | [`ISP-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/ISP-1_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 02:04:02 | R2 | `2ad2c9b` · PR #18 (merge `b38ee30`) | `106bdd4f…cc8b42f6` |
+| ISP-2 | [`ISP-2_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/ISP-2_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 02:08:53 | R2 | `2ad2c9b` · PR #18 (merge `b38ee30`) | `6a26f6b7…c44893af` |
+| CORE-1 | [`CORE-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/CORE-1_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 02:11:37 | R3 | `7ba05ad` · PR #20 (merge `e5ed9e8`) | `a382cb19…b22ee9f7` |
+| CORE-2 | [`CORE-2_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/CORE-2_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 02:14:27 | R3 | `7ba05ad` · PR #20 (merge `e5ed9e8`) | `326949dc…236764e3` |
+| DIST-1 | [`DIST-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/DIST-1_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 02:17:50 | R4 | `9337572` · PR #19 (merge `dc57333`) | `e4ca0757…4c229cf9` |
+| DIST-2 | [`DIST-2_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/DIST-2_2026-10-14_SSH_MGMT.rsc) | 2026-10-15 02:20:39 | R4 | `9337572` · PR #19 (merge `dc57333`) | `5fce77ec…26ad2431` |
+
+Todos son de RouterOS 7.16. Los nombres usan la fecha del hito (14/10) y los encabezados, la del reloj de RouterOS (15/10 de madrugada). La diferencia es coherente con un reloj en UTC, pero no se verificó en los equipos; los archivos no se modificaron para no alterar su SHA-256. Los SHA-256 abreviados corresponden a los archivos de `main` y coinciden con los informados en cada PR.
+
+**Revisión R5 de los siete exports SSH-MGMT:** frente al export F1 de cada router, la única línea eliminada es `set ssh disabled=yes`; el resto son las altas de 3.9. Direcciones de producción y loopbacks sin cambios, hardening de 5.1 conservado, sin `/ip dhcp-client` y sin usuarios, contraseñas, claves ni salida `show-sensitive`. Las revisiones de R2, R3 y R4 en sus PR llegaron al mismo resultado.
+
 #### Tipos de respaldo
 
 | Tipo | Contenido | Dónde está | ¿Se publica? |
 | --- | --- | --- | --- |
 | Export `.rsc` sanitizado | Configuración en texto, sin usuarios ni secretos | `backups/` del repositorio (tabla anterior) | Sí |
-| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1 (siguiente subsección) | No |
+| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1: un juego F1 y un juego SSH-MGMT (subsecciones siguientes) | No |
 | Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | En poder de R1, fuera del repositorio (2.3) | No |
 
 #### Backups binarios F1 (privados)
@@ -724,7 +809,7 @@ R1 generó los siete archivos con `/system backup save`, indicando de forma expl
 
 No se publican los archivos, las contraseñas ni el contenido Base64. Los binarios no se comparan contra los `.rsc` públicos: el formato no es legible sin restaurarlo.
 
-#### Restore binario de ISP-1
+#### Restore binario de ISP-1 (F1, 13/10)
 
 R1 probó la restauración de un solo router, ISP-1, en una copia aislada del proyecto. No se restauraron los otros seis binarios: están generados y verificados, pero no probados.
 
@@ -758,6 +843,70 @@ Se compara lo que muestran las capturas con [`ISP-1_2026-10-09_f1.rsc`](../backu
 
 Todos los elementos comparables coinciden con el export. Las capturas no llevan fecha ni muestran el proyecto: que correspondan a la copia aislada, después del restore, se apoya en el informe de R1. Los usuarios y las contraseñas no están en el export, por lo que esa parte de la recuperación solo se acredita por la captura 2 y por R1.
 
+#### Backups binarios SSH-MGMT (privados, 15/10)
+
+Con la red de gestión ya validada, R1 generó un segundo juego de backups binarios de los siete routers con `/system backup save`, `encryption=aes-sha256` y una contraseña privada. Es un juego independiente: no reemplaza a los backups F1, que se conservan. R1 transfirió los archivos en Base64, los reconstruyó en su Mac y verificó cantidad de fragmentos, tamaño, SHA-256 y permisos restringidos. R5 documenta los metadatos informados por R1; no tuvo acceso a los binarios ni recalculó los hashes.
+
+| Router | Archivo | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| EDGE | `EDGE_2026-10-15_SSH_MGMT.backup` | 22904 | `879566e683245af4f4f618cccbd7d984a97b43b7eac3cbbb040ab61abf667885` |
+| ISP-1 | `ISP-1_2026-10-15_SSH_MGMT.backup` | 23667 | `778255bab6554952c352e74c128dc2327365c5cd57793a6891935929a9ef51f7` |
+| ISP-2 | `ISP-2_2026-10-15_SSH_MGMT.backup` | 22430 | `79d77a91f324eba0bf4f2ce1633b30bf2c1c2457d81d565eedf7ac7297a291a9` |
+| CORE-1 | `CORE-1_2026-10-15_SSH_MGMT.backup` | 22947 | `ba4882cdefa42b800c4cf754183f307e08814150f0430e5f189a22be15567dbd` |
+| CORE-2 | `CORE-2_2026-10-15_SSH_MGMT.backup` | 22945 | `db4f8071ad4c7e69011bbfa2e624971b915db34a6a9679ce4d1494e41c406201` |
+| DIST-1 | `DIST-1_2026-10-15_SSH_MGMT.backup` | 22955 | `edbfc964fb2d82af11ba74c786d2f91e20198c799cd7bb3a5596556d1b291486` |
+| DIST-2 | `DIST-2_2026-10-15_SSH_MGMT.backup` | 24192 | `8c1aa08610619e92865f043fae0cc2e8f08f3e2f0f8202c9e830b3f4b23dcfdd` |
+
+| Dato | Valor |
+| --- | --- |
+| Hito | `SSH_MGMT`, 2026-10-15 (fecha del nombre de archivo) |
+| RouterOS | 7.16 |
+| Cifrado | `aes-sha256`, solicitado explícitamente |
+| Ejecución | R1 |
+| Custodia | Carpeta privada de R1 `GOYS-Privado/SSH_MGMT_2026-10-15/`, fuera del repositorio. La contraseña se gestiona por un canal privado |
+| Tamaño total | 162.040 bytes |
+| Restore probado | Solo ISP-1 (subsección siguiente). Los otros seis no se restauraron |
+
+No se publican los binarios, las contraseñas, los archivos de captura Base64 ni los lotes de transferencia.
+
+#### Restore aislado de ISP-1 (SSH-MGMT, 16/10)
+
+R1 restauró el backup `ISP-1_2026-10-15_SSH_MGMT.backup` en un proyecto GNS3 nuevo, `RESTORE_TEST_SSH_MGMT_2026-10-16`, con un único CHR RouterOS 7.16 sin enlaces con la topología principal (captura 01). La restauración funcionó, pero **no fue automática**: por tratarse de otra máquina virtual, R1 tuvo que corregir a mano las referencias de interfaces, direcciones IP y VRF.
+
+**Procedimiento (ejecutado por R1):**
+
+1. Transfirió el backup al clon por la consola y comprobó que el SHA-512 del archivo coincidía en el ISP-1 original, en su Mac y en el clon: `b67ba46fca073fddb0af322547981aaba2c7e02398068e58ada0ecd1dfc543c0033b10236f235c868dd15b05c1ea80652260a59d0a2be57c2c557a59b257b2b9`.
+2. Ejecutó `/system backup load` con la contraseña privada. RouterOS aceptó el archivo, restauró la configuración y reinició.
+3. Después del reinicio, el router recuperó la identidad `ISP-1`, los usuarios `admin` y `monitor`, las direcciones y la configuración de servicios. Sin embargo, la dirección de enlace, la de gestión y la VRF `MGMT` apuntaban a interfaces inexistentes (`*2` y `*3`, marcadas como inválidas; captura 02).
+4. Las cuatro interfaces Ethernet del clon aparecían como `ether5` a `ether8`, con `default-name` `ether1` a `ether4` (captura 03).
+5. R1 renombró las interfaces a `ether1`–`ether4`, volvió a asociar la VRF `MGMT` a `ether2` (captura 04) y reasignó `10.255.0.1/30` a `ether1` y `172.31.250.2/28` a `ether2` (captura 05). La loopback `10.255.255.1/32` no necesitó cambios. El renombrado no tiene captura propia; se deduce de que los comandos siguientes usan `ether1` y `ether2` con resultado válido.
+6. Verificó firewall, SSH, usuarios y hardening (capturas 06 y 07).
+
+**Comparación con el export sanitizado** [`ISP-1_2026-10-14_SSH_MGMT.rsc`](../backups/2026-10-14/ISP-1_2026-10-14_SSH_MGMT.rsc), después de los ajustes:
+
+| Elemento | Export del 14/10 | Observado tras el restore y los ajustes | Captura |
+| --- | --- | --- | --- |
+| Identidad | `ISP-1` | `ISP-1` | 02 |
+| Enlace a EDGE | `10.255.0.1/30` en `ether1` | Igual, válida tras reasignarla | 02 (inválida), 05 |
+| Loopback | `10.255.255.1` en `lo` | Igual, válida desde el restore | 02, 05 |
+| Gestión | `172.31.250.2/28` en `ether2` | Igual, válida tras reasignarla | 02 (inválida), 05 |
+| VRF `MGMT` | `interfaces=ether2` | Igual, tras reasociarla | 02 (`*3`), 04 |
+| Firewall de `MGMT` | Tres reglas `input` | Las tres, sin marcas de inválida ni deshabilitada | 06 |
+| Servicio SSH | `172.31.250.10/32`, VRF `MGMT` | Igual | 02, 07 |
+| `strong-crypto` | `yes` | `yes` | 06 |
+| Grupo `monitor` | `ssh,read`, resto negado | Igual | 06 |
+| Usuario `monitor` | No figura: el export no incluye usuarios | Presente, en el grupo `monitor` | 06 |
+| Telnet, FTP, `www`, `www-ssl`, API, API-SSL y Winbox | Deshabilitados | Deshabilitados | 07 |
+| Neighbor Discovery | `none` | `none` | 07 |
+| MAC Telnet, MAC Winbox y MAC Ping | `none`, `none` y `enabled=no` | Igual | 07 |
+| Bandwidth Server | `enabled=no` | `enabled: no` | 07 |
+| RoMON | Valor por defecto (no figura) | `enabled: no` | 07 |
+| Cliente DHCP | No hay | `/ip dhcp-client print` sin entradas | 07 |
+
+**Veredicto:** restore binario de ISP-1 **exitoso, con ajuste manual de las referencias de interfaces**. Por el aislamiento deliberado del clon no se probó conectividad con otros routers ni se repitieron las pruebas SSH de 4.1. Los otros seis backups SSH-MGMT no se restauraron.
+
+**Lección para el procedimiento de restore:** el binario conserva la configuración, pero en otra máquina virtual las interfaces no quedan asociadas automáticamente. Después de un `backup load` en otra VM hay que revisar `/interface print`, `/ip address print detail` y `/ip vrf print detail` antes de dar el restore por bueno. Este paso tiene que formar parte del procedimiento privado de recuperación, que sigue pendiente.
+
 #### Política interna de backup: procedimientos adicionales
 
 Estado de los procedimientos de 1.4:
@@ -767,12 +916,26 @@ Estado de los procedimientos de 1.4:
 | Snapshot BASE | Registrado en GNS3 (2.3). No es un backup de RouterOS y no se probó su restore |
 | Snapshot `F1_FINAL_2026-10-09` y copia portable del proyecto GNS3 | Realizados por R1. Recuperación del proyecto validada en una copia aislada (2.3). El restore de snapshots individuales de GNS3 no se probó |
 | Export `base` de cada router antes de configurar | No se generó |
-| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers; archivos verificados por R1 |
-| Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba: localizador privado, tamaño, SHA-256, RouterOS 7.16 y fecha |
-| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1**, satisfactorio, con capturas y comparación contra el export (arriba). Pendiente: seis binarios sin restaurar |
-| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: el restore de ISP-1 recuperó el acceso administrativo, pero el procedimiento escrito no existe |
+| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers en dos hitos: F1 (10 y 13/10) y SSH-MGMT (15/10); archivos verificados por R1 |
+| Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba para los dos juegos: localizador privado, tamaño, SHA-256, RouterOS 7.16 y fecha |
+| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1** en los dos juegos, con capturas y comparación contra el export (arriba). F1: satisfactorio. SSH-MGMT: exitoso con ajuste manual de interfaces, direcciones y VRF. En cada juego, seis binarios sin restaurar |
+| Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: los dos restores de ISP-1 recuperaron el acceso administrativo, pero el procedimiento escrito no existe. Debe incluir la revisión de interfaces tras un restore en otra VM |
 
 Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. En ISP-1, el binario cifrado sí las recuperó (acceso administrativo funcional tras el restore, informado por R1). El procedimiento privado por escrito sigue pendiente. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
+
+#### Respaldos por hito: estado y planificación
+
+En la devolución de F1, la cátedra pidió sostener un juego de backups independiente por hito en F2, F3 y los drills de F4. Cada juego se suma a los anteriores sin sobrescribirlos y sigue la política 1.4: export `.rsc` sanitizado publicado por PR y backup binario cifrado fuera del repositorio. R5 coordina cada hito y verifica los metadatos de los siete routers antes de darlo por cerrado.
+
+| Hito | Exports en `backups/` | Binarios cifrados | Restore probado | Estado |
+| --- | --- | --- | --- | --- |
+| F1 | `2026-10-09/` (y EDGE `2026-10-08/`) | 7, del 10 y 13/10 | ISP-1, 13/10 | Realizado |
+| SSH-MGMT | `2026-10-14/` | 7, del 15/10 | ISP-1, 16/10, con ajuste manual | Realizado |
+| F2 (VRRP y OSPF) | — | — | — | Planificado: al cerrar F2 |
+| F3 (BGP y firewall) | — | — | — | Planificado: al cerrar F3 |
+| F4 (5 drills) | — | — | — | Planificado: `pre-drillN` y `post-drillN` en cada drill |
+
+Los hitos planificados se marcarán como realizados solo cuando existan los archivos y su registro en 6.1 y en esta sección.
 
 ### 6.3 Monitoreo
 
@@ -811,6 +974,20 @@ R1 tomó las capturas en su instancia GNS3 y las entregó a R5 sin editar. R5 se
 
 **Observación:** la captura final de DIST-1 conserva arriba el comando `/export file=DIST-2_F1_2026-10-09` (ver 6.2). No altera lo que la captura demuestra, pero conviene repetirla sin ese comando antes de la entrega definitiva.
 
+### 7.2 SSH-MGMT y restore aislado de ISP-1 (16/10)
+
+R1 tomó estas siete capturas en la prueba de restore de 6.2 y R5 las incorporó sin editar en [`capturas/F1/06_ssh_mgmt_restore/`](../capturas/F1/06_ssh_mgmt_restore/); las copias del repositorio son idénticas a las recibidas (verificado por SHA-256). Son capturas de pantalla de la Mac de R1. Las de consola no muestran fecha: la fecha surge del nombre del proyecto en la captura 01 y de lo informado por R1. Revisamos las siete: son legibles y no exponen contraseñas, claves ni contenido Base64. No hay capturas de las pruebas SSH de 4.1 sobre la topología principal.
+
+| Archivo (`capturas/F1/06_ssh_mgmt_restore/…`) | Qué demuestra | Sección |
+| --- | --- | --- |
+| `01_proyecto_restore_aislado.png` | Proyecto `RESTORE_TEST_SSH_MGMT_2026-10-16` con un único CHR `ISP-1`, sin enlaces y detenido antes de la prueba | 6.2 |
+| `02_restore_referencias_invalidas.png` | Tras el restore: identidad `ISP-1`, direcciones de enlace y gestión inválidas (`*2`, `*3`), VRF `MGMT` en `*3` y servicio SSH recuperado | 6.2 |
+| `03_interfaces_clon_mapeo.png` | Interfaces del clon con nombres `ether5` a `ether8` y `default-name` `ether1` a `ether4` | 6.2 |
+| `04_vrf_mgmt_recuperada.png` | VRF `MGMT` reasociada a `ether2` | 6.2 |
+| `05_ipam_corregido.png` | Direcciones reasignadas a `ether1` y `ether2`, y loopback válida | 6.2 |
+| `06_firewall_ssh_monitor_restaurado.png` | Tres reglas de firewall de `MGMT`, `strong-crypto=yes`, grupo y usuario `monitor` | 5.2, 6.2 |
+| `07_hardening_restore.png` | Servicios IP, SSH solo desde `.10` en `MGMT`, Neighbor Discovery, administración MAC, Bandwidth Server, RoMON y ausencia de cliente DHCP | 5.2, 6.2 |
+
 ---
 
 ## 8. Conclusiones y lecciones aprendidas
@@ -832,7 +1009,7 @@ Pendiente de completar con los recursos efectivamente utilizados.
 - **Diseño interno:** completado y documentado.
 - **Integración Git:** completada (PR #1 `58db8cd`, PR #2 `5427689`, PR #4 `e35fdeb`, PR #3 `e316152`).
 - **Aprobación de la cátedra:** F0 aprobado, 100/100 (devolución informada por R1). F1 comenzó antes de recibirse esa devolución.
-- **F1:** ejecutada el 08 y 09/10/2026; estado en la lista F1 de esta sección.
+- **F1:** ejecutada el 08 y 09/10/2026 y aprobada, 100/100; estado en la lista F1 de esta sección.
 
 - [x] IPAM de diseño: 9 enlaces `/30`, 2 LAN, 7 loopbacks `/32`, sin solapamiento (verificación matemática documentada)
 - [x] Cuatro correcciones de diseño aplicadas; SPOF EDGE queda como recomendación
@@ -841,7 +1018,22 @@ Pendiente de completar con los recursos efectivamente utilizados.
 
 ### Topología, hardening y backup (F1)
 
-F1 no se declara cerrada ni aprobada: la auditoría y la integración final corresponden a R1.
+**Devolución de la cátedra (informada por R1):** F1 aprobado, **Logrado, 100/100**, sin correcciones bloqueantes.
+
+| Criterio | Nivel | Lo que destacó la cátedra |
+| --- | :-: | --- |
+| Topología e IP | 4 | Capturas organizadas, IPAM comprobado con ping y mapeo real de interfaces GNS3 |
+| Hardening | 4 | Captura por router; control de servicios, administración MAC, Neighbor Discovery y ausencia de cliente DHCP |
+| Backup inicial | 4 | Ocho exports F1 versionados, incluidos los dos de EDGE (08 y 09/10) |
+| Operación | 4 | Restore de ISP-1, backups binarios cifrados y change log con los hashes de reversión corregidos (`1a8d0f2`) |
+
+También destacó la trazabilidad del trabajo de los cinco integrantes. Observaciones de continuidad, no bloqueantes:
+
+- Mantener el README legible sin necesidad de abrir la memoria. Se actualizó con el estado posterior a F1.
+- Sostener backups independientes por hito en F2, F3 y los drills de F4 (planificación en 6.2).
+- Las decisiones técnicas y la autoría son responsabilidad de los integrantes, aunque usemos asistencia de IA. La cátedra señaló el commit `2309460`, cuyo autor Git figura como "Claude" (6.1). No se reescribe el historial; los commits nuevos se hacen con la identidad Git real de cada integrante.
+
+El registro de F1 que sigue conserva el estado al cierre del 09/10. La red SSH-MGMT y su segundo juego de backups son posteriores y se listan aparte.
 
 **Criterios de aceptación de F1** (estructura del backlog de la consigna):
 
@@ -849,7 +1041,7 @@ F1 no se declara cerrada ni aprobada: la auditoría y la integración final corr
 - [x] IP de enlace y loopbacks de los 7 routers según el IPAM; 9 enlaces directos probados (3.0, 4.1)
 - [x] PC-USER y SRV configurados y con conectividad a ambos DIST (3.8, 4.1)
 - [x] Snapshot BASE registrado en GNS3 antes de configurar (2.3). Es un snapshot de GNS3; no se probó su restore
-- [x] Hardening de los 7 routers (5.1), incluido el cambio de contraseña de `admin` (confirmación de R1). SSH queda temporalmente deshabilitado
+- [x] Hardening de los 7 routers (5.1), incluido el cambio de contraseña de `admin` (confirmación de R1). Al 09/10, SSH quedó temporalmente deshabilitado
 - [x] Backup inicial `/export` de los 7 routers, sanitizado e integrado en `main` (6.2)
 
 **Procedimientos adicionales de la política interna de backup (1.4)**, no exigidos por los criterios anteriores:
@@ -860,13 +1052,21 @@ F1 no se declara cerrada ni aprobada: la auditoría y la integración final corr
 - [ ] Procedimiento privado para reinyectar claves y reprovisionar usuarios de gestión
 - [ ] Export `base` de cada router antes de configurar: no se generó; solo existe el snapshot GNS3
 
-El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 tiene los siete backups y el restore de ISP-1, pero faltan los hitos F2 y F3 y los backups antes y después de cada drill.
+El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 y SSH-MGMT tienen sus siete backups y un restore de ISP-1 cada uno, pero faltan los hitos F2 y F3 y los backups antes y después de cada drill.
 
 **Pendientes operativos de F1:**
 
-- [ ] Definir el origen de gestión autorizado y habilitar SSH restringido a él
+- [x] Definir el origen de gestión autorizado y habilitar SSH restringido a él: resuelto después del cierre de F1, el 14/10 (hito SSH-MGMT, abajo)
 - [ ] Repetir la captura final de DIST-1 sin el comando `/export` previo (7.1)
 - [ ] Capturas de R1 de la recuperación portable del proyecto GNS3 (las del restore de ISP-1 están en 7.1)
+
+**Hito SSH-MGMT (14 a 16/10, posterior a F1):**
+
+- [x] Red de gestión `172.31.250.0/28` con VRF `MGMT` en los 7 routers; SW-MGMT y MGMT-CLIENT agregados (2.4, 3.9). Ejecutó R1
+- [x] SSH desde `172.31.250.10` aceptado y desde `172.31.250.11` rechazado en los 7 routers; enlaces de producción sin cambios (4.1). Ejecutó R1; sin capturas publicadas
+- [x] Siete exports SSH-MGMT sanitizados en `backups/2026-10-14/`, PR #18 a #21 (6.2)
+- [x] Siete backups binarios cifrados del 15/10, fuera del repositorio, con metadatos en 6.2. Ejecutó R1
+- [x] Restore aislado de ISP-1 el 16/10: exitoso con ajuste manual de interfaces, direcciones y VRF (6.2, 7.2). Los otros seis binarios no se restauraron
 
 ### Redes
 
@@ -878,7 +1078,7 @@ El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 tiene 
 
 ### Seguridad
 
-- [x] Hardening aplicado (F1, 5.1; SSH temporalmente deshabilitado)
+- [x] Hardening aplicado (F1, 5.1; al 09/10 SSH quedó deshabilitado y desde el 14/10 está restringido a la red de gestión, 5.2)
 - [ ] OSPF MD5 funcionando
 - [ ] BGP TCP-MD5 funcionando
 - [ ] VRRP auth funcionando
@@ -897,5 +1097,5 @@ El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 tiene 
 - [ ] Memoria completa
 - [ ] Repo git con estructura correcta y commits por rol
 - [ ] `backlog.md` con todas las tareas en done
-- [ ] Capturas organizadas (F1 organizadas en 7.1; faltan las de F2–F4)
+- [ ] Capturas organizadas (F1 en 7.1 y SSH-MGMT en 7.2; faltan las de F2–F4)
 - [ ] Cada integrante puede defender su parte y una parte ajena
