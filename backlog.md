@@ -6,7 +6,7 @@
 
 - `[ ]` pendiente · `[~]` en curso · `[x]` hecho
 - Cada tarea lleva **dueño** (rol): `[R1]` … `[R5]`.
-- **"Hecho" requiere satisfacer el criterio de aceptación de esa fase y registrar evidencia revisable.** En F0, `[x]` acredita el diseño documentado en `docs/memoria.md` e integrado a `main` (PR #1 a #4); la cátedra aprobó F0 con 100/100. En F1–F5, `[x]` requiere ejecución y evidencia posteriores a F0.
+- **"Hecho" requiere satisfacer el criterio de aceptación de esa fase y registrar evidencia revisable.** En F0, `[x]` acredita el diseño documentado en `docs/memoria.md` e integrado a `main` (PR #1 a #4); la cátedra aprobó F0 con 100/100. F1 también fue aprobado con 100/100. En F1–F5, `[x]` requiere ejecución y evidencia posteriores a F0.
 
 ---
 
@@ -68,10 +68,10 @@ Nota: R1 creó los snapshots GNS3 `F1_BASE_2026-10-08_sin-configurar` y `F1_FINA
 - [ ] [R5] obtener y revisar un `/export` sanitizado de cada uno de los 7 routers antes de configurar; publicar solo esos `.rsc` y metadatos no sensibles. No se generó antes de configurar (memoria 6.2); ajuste de la tarea propuesto a R1
 - [x] [R5] guardar los backups binarios completos cifrados fuera del repositorio público, en almacenamiento privado con acceso controlado; indicar solo un localizador privado no secreto y registrar metadatos, checksum y resultado en 6.1/6.2. Ejecutó R1 (siete `.backup` con `aes-sha256`, verificados por R1); R5 verificó la documentación, sin acceso a los binarios (memoria 6.2). No se informaron exports sensibles
 - [x] [R5] probar en F1 el restore del backup privado en un router de la misma versión de RouterOS, con evidencia redactada en 6.2. Ejecutó R1: ISP-1, RouterOS 7.16, proyecto aislado, satisfactorio; los otros seis binarios no se restauraron (memoria 6.2). Capturas y comparación con el export en memoria 6.2 y 7.1
-- [ ] [R5] documentar el protocolo privado para inyectar las claves de laboratorio y provisionar usuarios de gestión (memoria 6.2)
+- [ ] [R5] documentar el protocolo privado para inyectar las claves de laboratorio y provisionar usuarios de gestión (memoria 6.2). Debe incluir la revisión de interfaces, direcciones y VRF tras un restore en otra VM, según el restore del 16/10
 
 ### Hardening (los 7 routers)
-Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir el origen de gestión autorizado (memoria 5.1).
+Nota: al cierre de F1 (09/10), SSH quedó temporalmente deshabilitado en los siete routers hasta definir el origen de gestión autorizado (memoria 5.1). Se habilitó restringido el 14/10, después de F1 (ver "Red de gestión SSH-MGMT").
 
 - [x] [R1] hardening de EDGE (memoria 5.1)
 - [x] [R2] hardening de ISP-1/ISP-2. Ejecutó R1 (memoria 5.1)
@@ -83,6 +83,31 @@ Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir e
 - [x] [R2] backup `/export` de ISP-1/ISP-2: PR #12 (merge `83119f5`)
 - [x] [R3] backup `/export` de CORE-1/CORE-2: PR #10 (merge `6beba24`)
 - [x] [R4] backup `/export` de DIST: PR #13 (merge `703c5b9`)
+
+### Devolución de F1
+
+Nota: la cátedra aprobó F1 con 100/100 (nivel 4 en los cuatro criterios), sin correcciones bloqueantes (memoria 10). Las observaciones de continuidad no generan tareas nuevas:
+
+- Pendiente de SSH tras F1: resuelto el 14/10 con la red SSH-MGMT (sección siguiente).
+- README con afirmaciones desactualizadas ("F1 sin aprobación" y "SSH pendiente"): corregido y con el estado posterior a F1.
+- Verificación de interfaces pedida en la devolución de F0: atendida en `341c938` (memoria 1.2 y 2.2).
+- Commit `2309460` con autor Git "Claude": observación de trazabilidad, no bloqueante. No se reescribe el historial; los commits nuevos se hacen con la identidad Git real de cada integrante.
+- Backups independientes por hito en F2, F3 y F4: quedan en las tareas de backup de cada epic, pendientes hasta que existan los archivos.
+
+### Red de gestión SSH-MGMT (posterior a F1, 14 a 16/10)
+
+Nota: R1 configuró y probó la red de gestión en GNS3; R2, R3 y R4 publicaron los exports de sus routers y R5 documentó y verificó la evidencia.
+
+- [x] [R1] agregar SW-MGMT y MGMT-CLIENT y conectar los siete routers a la red `172.31.250.0/28` (memoria 2.4)
+- [x] [R1] configurar VRF `MGMT`, dirección de gestión, tres reglas de firewall de entrada y SSH restringido a `172.31.250.10/32` con `strong-crypto` en los siete routers (memoria 3.9 y 5.2)
+- [x] [R1] verificar SSH desde `172.31.250.10`, rechazo desde `172.31.250.11` y conectividad de los enlaces de producción en los siete routers (memoria 4.1; sin capturas publicadas)
+- [x] [R2] export SSH-MGMT de ISP-1/ISP-2: PR #18 (merge `b38ee30`)
+- [x] [R4] export SSH-MGMT de DIST-1/DIST-2: PR #19 (merge `dc57333`)
+- [x] [R3] export SSH-MGMT de CORE-1/CORE-2: PR #20 (merge `e5ed9e8`)
+- [x] [R1] export SSH-MGMT de EDGE: PR #21 (merge `102f1a1`)
+- [x] [R5] coordinar el backup binario SSH-MGMT de los siete routers y registrar sus metadatos en 6.1 y 6.2. Ejecutó R1 el 15/10 (`aes-sha256`, tamaños y SHA-256 verificados por R1); R5 no tuvo acceso a los binarios
+- [x] [R5] probar el restore de un backup SSH-MGMT en un router aislado. Ejecutó R1 el 16/10 con ISP-1: exitoso con ajuste manual de interfaces, direcciones y VRF; los otros seis no se restauraron (memoria 6.2 y 7.2)
+- [x] [R5] documentar SSH-MGMT, backups y restore en la memoria y el README, e incorporar las capturas (memoria 2.4, 3.9, 4.1, 5.2, 6.2 y 7.2)
 
 ---
 
@@ -103,7 +128,7 @@ Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir e
 ### Verificación L3 (ping intra-LAN + gateway virtual)
 - [ ] [R5] ping de PC-USER a `192.168.10.1` y de SRV a `192.168.20.1` (gateway virtual)
 - [ ] [R5] ping entre PC-USER y SRV a través de distribución
-- [ ] [R5] coordinar el backup post-F2 de los 7 routers y registrarlo en 6.1 y 6.2
+- [ ] [R5] coordinar el backup post-F2 de los 7 routers (export sanitizado y binario cifrado, juego independiente del de F1 y SSH-MGMT) y registrarlo en 6.1 y 6.2
 
 ---
 
@@ -122,11 +147,11 @@ Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir e
 ### Salida a "Internet" (host → loopback ISP)
 - [ ] [R1] propagar por OSPF hacia CORE y DIST el default activo de los ISP; redistribuir con control/filtro las loopbacks ISP `/32` para que cada destino use su proveedor conectado
 - [ ] [R5] ping y traceroute desde PC-USER y SRV a las loopbacks de ISP-1 e ISP-2 con cada proveedor disponible
-- [ ] [R5] coordinar el backup post-F3 de los 7 routers y registrarlo en 6.1 y 6.2
+- [ ] [R5] coordinar el backup post-F3 de los 7 routers (export sanitizado y binario cifrado, juego independiente) y registrarlo en 6.1 y 6.2
 
 ### Firewall edge (filtro + plano de gestión)
 - [ ] [R1] reglas de filtro en EDGE según 1.3: separar input/forward; BGP TCP/179 solo ISP peers, OSPF IP/89 solo CORE neighbors, SSH solo gestión; established/related y rechazo de entrada no solicitado; permitir USERS/SERVERS a loopbacks ISP y retorno
-- [ ] [R1] restringir SSH de EDGE al allowlist de gestión relevado en F1; Winbox permanece deshabilitado
+- [ ] [R1] restringir SSH de EDGE al allowlist de gestión relevado en F1; Winbox permanece deshabilitado. Avance: desde el 14/10, SSH de EDGE solo acepta `172.31.250.10/32` en la VRF `MGMT` (memoria 3.9); falta integrarlo con las reglas de entrada de F3
 - [ ] [R5] verificar que la salida a Internet sigue funcionando y que la gestión de EDGE no responde desde los ISP
 
 ---
@@ -135,7 +160,7 @@ Nota: en los siete routers SSH queda temporalmente deshabilitado hasta definir e
 
 ### Los 5 drills (runbook + post-mortem + tiempo)
 - [ ] [R5] runbook de cada drill en `runbooks/` (objetivo, pasos, resultado esperado y vuelta atrás)
-- [ ] [R5] ejecutar los 5 drills con backup antes y después, midiendo el tiempo de reconvergencia
+- [ ] [R5] ejecutar los 5 drills con backup antes y después (`pre-drillN` / `post-drillN`, registrados en 6.1 y 6.2), midiendo el tiempo de reconvergencia
 - [ ] [R5] post-mortem de cada drill y post-mortem global
 
 ### Monitoreo (SNMP/chequeos)
