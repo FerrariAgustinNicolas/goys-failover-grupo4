@@ -31,15 +31,15 @@ capaz de mantener conectividad frente a fallas de enlaces y dispositivos.
 | F4 | Drills y monitoreo | 20/10/2026 | Pendiente de ejecución. |
 | F5 | Memoria y defensa | 23/10/2026 | Pendiente de finalización. |
 
-## Estado actual del laboratorio
+## Estado posterior a SSH-MGMT, previo a la implementación de F2 (14–16/10/2026)
 
-La topología corre en GNS3 con siete routers MikroTik CHR (RouterOS 7.16): ISP-1, ISP-2, EDGE, CORE-1, CORE-2, DIST-1 y DIST-2, más dos switches y dos hosts (PC-USER y SRV). Tienen aplicados el direccionamiento del IPAM, las loopbacks y el hardening de F1. VRRP, OSPF, BGP y el firewall de EDGE todavía no están configurados.
+En ese momento, la topología de GNS3 tenía 13 nodos y 23 enlaces: siete routers MikroTik CHR (RouterOS 7.16), ISP-1, ISP-2, EDGE, CORE-1, CORE-2, DIST-1 y DIST-2; tres switches, SW-USERS, SW-SERVERS y SW-MGMT; y tres hosts, PC-USER, SRV y MGMT-CLIENT. La topología de F1 tenía 11 nodos y 15 enlaces; SW-MGMT, MGMT-CLIENT y los ocho enlaces de gestión se agregaron con SSH-MGMT. Los routers tenían aplicados el direccionamiento del IPAM, las loopbacks, el hardening de F1 y la gestión SSH-MGMT. VRRP, OSPF, BGP y el firewall de EDGE todavía no estaban configurados: VRRP y OSPF correspondían a la etapa siguiente, F2.
 
 - **Cierre de F1 (09/10):** SSH quedó deshabilitado en los siete routers y la administración se hacía solo por la consola de GNS3. Exports en [`backups/2026-10-09/`](backups/2026-10-09/).
 - **Red de gestión SSH-MGMT (14/10, posterior a F1):** cada router tiene una interfaz en la red aislada `172.31.250.0/28`, dentro de una VRF `MGMT`. SSH solo acepta conexiones desde `172.31.250.10/32`; R1 comprobó el acceso autorizado y el rechazo desde otra dirección en los siete routers. Exports en [`backups/2026-10-14/`](backups/2026-10-14/) (PR #18 a #21).
 - **Backups binarios:** hay dos juegos cifrados de los siete routers, uno de F1 (10 y 13/10) y otro posterior a SSH-MGMT (15/10). Se guardan fuera del repositorio. En cada juego se restauró ISP-1 en un proyecto aislado; el restore del 16/10 requirió corregir a mano las referencias de interfaces. Los otros seis binarios de cada juego no se restauraron.
 
-Quedan pendientes F2 a F5, sus backups por hito y el procedimiento privado de recuperación de credenciales. El detalle está en la memoria y en el backlog.
+A esa fecha quedaban pendientes F2 a F5, sus backups por hito y el procedimiento privado de recuperación de credenciales. El detalle está en la memoria y en el backlog.
 
 ## Índice de documentación
 
