@@ -26,7 +26,7 @@ capaz de mantener conectividad frente a fallas de enlaces y dispositivos.
 |---|---|---|---|
 | F0 | Diseño y gestión de cambio | 02/10/2026 | Aprobado por la cátedra: **100/100**. |
 | F1 | Topología, hardening y backup | 09/10/2026 | Aprobado por la cátedra: **100/100**, sin correcciones bloqueantes. |
-| F2 | VRRP y OSPF | 16/10/2026 | Pendiente de ejecución. |
+| F2 | VRRP y OSPF | 16/10/2026 | Ejecutada el 16 y 17/10; evidencias y exports en el repositorio. Pendiente de la devolución de la cátedra. |
 | F3 | BGP y firewall | 16/10/2026 | Pendiente de ejecución. |
 | F4 | Drills y monitoreo | 20/10/2026 | Pendiente de ejecución. |
 | F5 | Memoria y defensa | 23/10/2026 | Pendiente de finalización. |
@@ -41,13 +41,26 @@ En ese momento, la topología de GNS3 tenía 13 nodos y 23 enlaces: siete router
 
 A esa fecha quedaban pendientes F2 a F5, sus backups por hito y el procedimiento privado de recuperación de credenciales. El detalle está en la memoria y en el backlog.
 
+## Estado al cierre de F2 (16 y 17/10/2026)
+
+R1 configuró y probó F2 en el proyecto GNS3 `topologia_failover_F1_SSH_MGMT`, sin cambiar la topología. R2, R3 y R4 revisaron y publicaron los exports de sus routers.
+
+- **VRRP:** dos grupos con load-sharing. USERS (VRID 10, `192.168.10.1`) tiene a DIST-1 como master preferido, y SERVERS (VRID 20, `192.168.20.1`) a DIST-2. Los dos grupos usan autenticación `simple`. Se comprobaron los estados MASTER/BACKUP y un failover reversible; no se midieron tiempos.
+- **OSPF:** OSPFv2 en el área 0 con MD5 en EDGE, CORE-1, CORE-2, DIST-1 y DIST-2. Las siete adyacencias, incluida la core–core, están en `Full`. EDGE aprende las LAN y las loopbacks de DIST por ECMP. Los ISP no tienen OSPF ni BGP.
+- **Conectividad:** los dos hosts alcanzan su gateway virtual. PC-USER (`192.168.10.100`) y SRV (`192.168.20.100`) se alcanzan en ambos sentidos, y las dos LAN alcanzan la loopback de EDGE (`10.255.255.3`); todo con 5/5. Después de una parada y un arranque del proyecto, PC-USER volvió a alcanzar a SRV.
+- **Respaldos:** los siete exports saneados están en [`backups/2026-10-16/`](backups/2026-10-16/) (PR #23 a #26). R1 guardó fuera del repositorio siete exports originales y siete backups binarios, con el cifrado `aes-sha256` solicitado al generarlos, y verificó los 14 archivos por SHA-512. También creó los snapshots `PRE_F2_2026-10-16` y `F2_FINAL_VRRP_OSPF_2026-10-16`. **No se restauró ningún backup de F2 ni el snapshot final.** El export vigente de ISP-1 es el corregido del 19/10, porque el original tenía referencias de interfaz inválidas.
+- **Incidencia abierta:** al reiniciarse EDGE el 17/10, su log registró `kernel failure in previous boot` y `router was rebooted without proper shutdown`. La causa no se determinó.
+
+Las pruebas de failover de F2 no son los drills cronometrados de F4. Siguen pendientes F3 (BGP y firewall), F4 (cinco drills y monitoreo) y F5.
+
 ## Índice de documentación
 
 - [Memoria del laboratorio](docs/memoria.md)
 - [Backlog y seguimiento](backlog.md)
 - [Diagrama de diseño F0](docs/diagramas/f0-diseno.md)
 - [Evidencias F1 y SSH-MGMT](capturas/F1/)
-- [Exports sanitizados de F1](backups/2026-10-09/) y [posteriores a SSH-MGMT](backups/2026-10-14/)
+- [Evidencias F2](capturas/F2/) (índice de figuras en la memoria, sección 7.3)
+- [Exports sanitizados de F1](backups/2026-10-09/), [posteriores a SSH-MGMT](backups/2026-10-14/) y [de F2](backups/2026-10-16/)
 
 ## Estructura del repositorio
 
@@ -65,5 +78,5 @@ Los exports públicos están sanitizados. Los backups privados, discos de
 dispositivos y credenciales no deben publicarse en GitHub.
 
 Cada hito conserva su propio juego de respaldos, sin sobrescribir los
-anteriores: F1, SSH-MGMT y, cuando se ejecuten, F2, F3 y antes y después
+anteriores: F1, SSH-MGMT, F2 y, cuando se ejecuten, F3 y antes y después
 de cada drill de F4.
