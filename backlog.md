@@ -113,22 +113,29 @@ Nota: R1 configuró y probó la red de gestión en GNS3; R2, R3 y R4 publicaron 
 
 ## Epic F2 — VRRP + OSPF · *vence vie 16/10*
 
+Nota: F2 se ejecutó el 16/10 y en la madrugada del 17/10. R1 configuró y probó los routers en la única instancia GNS3 operativa (proyecto `topologia_failover_F1_SSH_MGMT`). R2, R3 y R4 revisaron y publicaron los exports de sus routers, y R1 el de EDGE (PR #23 a #26). R5 revisó las 17 capturas y los exports y documentó la evidencia (memoria 3.10, 4.1, 4.3, 6.2 y 7.3). Cada `[x]` conserva su dueño original. Las pruebas de failover de F2 no reemplazan los drills cronometrados de F4.
+
 ### VRRP (2 grupos, load-sharing, auth)
-- [ ] [R4] configurar VRRP vrid 10 en DIST-1 (master)
-- [ ] [R4] configurar VRRP vrid 20 en DIST-2 (master)
-- [ ] [R4] activar auth simple en ambos grupos
-- [ ] [R5] verificar master/backup con `/interface vrrp print`
+- [x] [R4] configurar VRRP vrid 10 en DIST-1 (master). Ejecutó R1: prioridad 150 en DIST-1 y 100 en DIST-2, IP virtual `192.168.10.1` (memoria 3.10; Figura 1; export de DIST-1, PR #25)
+- [x] [R4] configurar VRRP vrid 20 en DIST-2 (master). Ejecutó R1: prioridad 150 en DIST-2 y 100 en DIST-1, IP virtual `192.168.20.1` (memoria 3.10; Figuras 2 y 3; export de DIST-2, PR #25)
+- [x] [R4] activar auth simple en ambos grupos. Ejecutó R1: `authentication=simple` en los dos grupos de ambos DIST, según los exports. R1 confirmó que las contraseñas se configuraron durante F2 y se ocultaron al preparar los exports públicos; el export saneado no permite comprobar que coincidan entre DIST-1 y DIST-2 (memoria 3.10)
+- [x] [R5] verificar master/backup con `/interface vrrp print`. Ejecutó R1, incluidos el failover y la recuperación de los dos grupos; R5 revisó las Figuras 1 a 5. No se midieron tiempos (memoria 4.3)
 
 ### OSPF área 0 (con MD5, incluido core–core)
-- [ ] [R3] OSPF con MD5 en CORE-1/CORE-2, incluida la adyacencia core–core
-- [ ] [R1] OSPF con MD5 en EDGE hacia CORE-1/CORE-2
-- [ ] [R4] OSPF con MD5 en DIST
-- [ ] [R3] verificar todas las adyacencias en `Full` con `/routing ospf neighbor print`
+- [x] [R3] OSPF con MD5 en CORE-1/CORE-2, incluida la adyacencia core–core. Ejecutó R1 (memoria 3.10; exports de CORE, PR #24)
+- [x] [R1] OSPF con MD5 en EDGE hacia CORE-1/CORE-2 (memoria 3.10; export de EDGE, PR #23)
+- [x] [R4] OSPF con MD5 en DIST. Ejecutó R1; LAN y loopback como interfaces pasivas (memoria 3.10; exports de DIST, PR #25)
+- [x] [R3] verificar todas las adyacencias en `Full` con `/routing ospf neighbor print`. Ejecutó R1: siete adyacencias en `Full`, vistas desde EDGE, CORE-1 y CORE-2 (memoria 4.3; Figuras 6 a 8). Rutas a las LAN y loopbacks con ECMP en EDGE (Figuras 9 y 10)
 
 ### Verificación L3 (ping intra-LAN + gateway virtual)
-- [ ] [R5] ping de PC-USER a `192.168.10.1` y de SRV a `192.168.20.1` (gateway virtual)
-- [ ] [R5] ping entre PC-USER y SRV a través de distribución
-- [ ] [R5] coordinar el backup post-F2 de los 7 routers (export sanitizado y binario cifrado, juego independiente del de F1 y SSH-MGMT) y registrarlo en 6.1 y 6.2
+- [x] [R5] ping de PC-USER a `192.168.10.1` y de SRV a `192.168.20.1` (gateway virtual). Ejecutó R1: 5/5 (memoria 4.1; Figuras 4 y 5)
+- [x] [R5] ping entre PC-USER y SRV a través de distribución. Ejecutó R1: 5/5 en ambos sentidos; también 5/5 desde ambas LAN a la loopback de EDGE (memoria 4.1; Figuras 11 a 14). Tras la parada y el arranque, PC-USER → SRV 5/5 (Figura 16)
+- [x] [R5] coordinar el backup post-F2 de los 7 routers (export sanitizado y binario cifrado, juego independiente del de F1 y SSH-MGMT) y registrarlo en 6.1 y 6.2. Exports en `backups/2026-10-16/` (PR #23 a #26); R1 generó los siete binarios con `aes-sha256` solicitado y preservó los 14 archivos privados con verificación SHA-512. El export de ISP-1 vigente es el corregido del 19/10, por referencias inválidas en el original. No se restauró ningún backup de F2 (memoria 6.2)
+
+Pendientes que deja F2:
+
+- [ ] [R5] probar el restore de al menos un backup de F2 o del snapshot `F2_FINAL_VRRP_OSPF_2026-10-16`; no se realizó
+- [ ] [R1] registrar la causa de los mensajes `kernel failure in previous boot` y `router was rebooted without proper shutdown` de EDGE (17/10), si se llega a determinar con evidencia (memoria 4.3)
 
 ---
 
