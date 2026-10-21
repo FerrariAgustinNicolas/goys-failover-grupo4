@@ -464,6 +464,8 @@ En los ISP la gestión usa `ether2`, la primera interfaz libre; en los demás ro
 > **Estado F1 (08 y 09/10/2026):** R1 aplicó identidad, direcciones IP, loopbacks y hardening en los siete routers, y configuró los dos hosts. OSPF, BGP, VRRP y el firewall de EDGE no están configurados: corresponden a F2 y F3. F0 fue devuelto por la cátedra como aprobado, 100/100; F1 se inició antes de recibirse esa devolución. F1 también fue aprobado, 100/100 (10).
 >
 > **Posterior a F1 (14/10/2026):** R1 agregó la red de gestión SSH-MGMT en los siete routers (2.4 y 3.9). Las secciones 3.0 a 3.8 describen el estado al 09/10 y no se reescribieron.
+>
+> **F2 (16/10/2026):** R1 configuró VRRP en DIST-1 y DIST-2 y OSPF en los cinco routers internos (3.10). Las menciones "pendiente de F2" de 3.3 a 3.7 corresponden al estado anterior y se conservan.
 
 ### 3.0 Base común F1
 
@@ -557,6 +559,49 @@ R1 aplicó la misma configuración en los siete routers; solo cambian la interfa
 
 La VRF separa la red de gestión de la tabla principal, donde F2 y F3 configurarán OSPF y BGP. El firewall solo filtra lo que entra por `MGMT`; las reglas de entrada de EDGE por las demás interfaces siguen pendientes para F3. Se conservan las direcciones de producción, las loopbacks y el hardening de F1. No hay clientes DHCP ni configuración de OSPF, BGP o VRRP.
 
+### 3.10 VRRP y OSPF (F2, 16/10/2026)
+
+R1 configuró y probó VRRP y OSPF en la topología SSH-MGMT de GNS3 (proyecto `topologia_failover_F1_SSH_MGMT`). R2, R3 y R4 revisaron y publicaron por PR los exports de sus routers, y R1 el de EDGE. R5 no operó la instancia: revisó las capturas y los exports y los documenta.
+
+| Actividad | Ejecución en GNS3 | Revisión y publicación | Evidencia |
+| --- | --- | --- | --- |
+| VRRP en DIST-1 y DIST-2 | R1 | R4: exports de DIST, PR #25 | 3.10, 4.3 |
+| OSPF en EDGE | R1 | R1: export de EDGE, PR #23 | 3.10, 4.3 |
+| OSPF en CORE-1 y CORE-2 | R1 | R3: exports de CORE, PR #24 | 3.10, 4.3 |
+| OSPF en DIST-1 y DIST-2 | R1 | R4: exports de DIST, PR #25 | 3.10, 4.3 |
+| ISP-1 e ISP-2 (sin cambios de F2) | — | R2: exports de ISP, PR #26 | 6.2 |
+| Pruebas de failover VRRP, conectividad, parada y arranque | R1 | R5: revisó las 17 capturas | 4.1, 4.3, 7.3 |
+| Snapshots, exports y backups binarios de F2 | R1 | R5: registró los metadatos informados por R1 | 6.2 |
+
+Frente a los exports SSH-MGMT del 14/10, los exports de F2 de los routers internos solo agregan líneas: no se modificó ni se quitó ninguna configuración anterior. Los exports de ISP-1 e ISP-2 son iguales a los del 14/10: los ISP no tienen OSPF ni BGP en F2.
+
+#### VRRP
+
+| Grupo | Interfaz VRRP | Interfaz física | IP virtual | DIST-1 | DIST-2 |
+| --- | --- | --- | --- | --- | --- |
+| USERS, VRID 10 | `vrrp-users-10` | `ether3` | `192.168.10.1/32` | Prioridad 150, master preferido | Prioridad 100 (valor por defecto), backup |
+| SERVERS, VRID 20 | `vrrp-servers-20` | `ether4` | `192.168.20.1/32` | Prioridad 100 (valor por defecto), backup | Prioridad 150, master preferido |
+
+En los cuatro casos, `version=2` y `authentication=simple`. El intervalo de anuncios es de 1 s, como se ve en las capturas de `/interface vrrp print` (4.3). La IP virtual de cada grupo está asignada en la interfaz VRRP de ambos DIST. Las direcciones y prioridades coinciden con el diseño de 1.2.
+
+El preempt no figura en el export porque usa el valor por defecto de RouterOS. En la prueba de la Figura 3, DIST-2 recuperó el rol de master de SERVERS al rehabilitar su interfaz VRRP (4.3).
+
+**Autenticación VRRP:** R1 confirmó que configuró las contraseñas de los dos grupos durante F2 y que quedaron ocultas al preparar los exports públicos. El export saneado acredita `authentication=simple` en los dos grupos de ambos DIST, pero no muestra la contraseña ni permite comprobar que coincida entre DIST-1 y DIST-2. La coincidencia se apoya en la confirmación de R1 y en los roles master/backup estables que se observaron (4.3). La prueba con clave incorrecta corresponde a F4.
+
+#### OSPF
+
+| Router | Router-ID | Interfaces con adyacencia (`type=ptp`, MD5, `auth-id=1`) | Interfaces pasivas |
+| --- | --- | --- | --- |
+| EDGE | `10.255.255.3` | `ether3` (CORE-1), `ether4` (CORE-2) | `lo` |
+| CORE-1 | `10.255.255.4` | `ether1` (EDGE), `ether2` (CORE-2), `ether3` (DIST-1), `ether4` (DIST-2) | `lo` |
+| CORE-2 | `10.255.255.5` | `ether1` (EDGE), `ether2` (CORE-1), `ether3` (DIST-1), `ether4` (DIST-2) | `lo` |
+| DIST-1 | `10.255.255.6` | `ether1` (CORE-1), `ether2` (CORE-2) | `ether3` (USERS), `ether4` (SERVERS), `lo` |
+| DIST-2 | `10.255.255.7` | `ether1` (CORE-1), `ether2` (CORE-2) | `ether3` (USERS), `ether4` (SERVERS), `lo` |
+
+Los cinco routers usan la instancia `ospf-v2` (OSPFv2) y el área `backbone-v2`, con el `area-id` por defecto de RouterOS, `0.0.0.0`, que por eso no figura en el export. El router-id de cada uno es su loopback (1.2). Las siete adyacencias, incluida la core–core, usan autenticación MD5. En los exports públicos, la clave figura reemplazada por `REDACTED_F2_DO_NOT_USE`. Las interfaces LAN y las loopbacks se anuncian como pasivas: no forman adyacencias. No se configuraron costos: se usan los valores por defecto y no se analizó por separado la preferencia del enlace core–core que quedó abierta en 1.1.
+
+En la interfaz de gestión `MGMT` no hay OSPF. ISP-1 e ISP-2 no participan de OSPF: la conectividad con los ISP y la salida a "Internet" corresponden a F3.
+
 ---
 
 ## 4. Verificación
@@ -604,9 +649,91 @@ R1 ejecutó estas pruebas en la topología SSH-MGMT (2.4) sobre los siete router
 
 Estas pruebas no se repitieron en el restore aislado de ISP-1 (6.2), que no tiene enlaces con ningún otro nodo.
 
+#### F2: gateways virtuales, tráfico entre LAN y loopback de EDGE (16 y 17/10)
+
+R1 ejecutó estas pruebas con OSPF y VRRP configurados; R5 revisó cada captura. Todas usan el `ping` de VPCS, con 5 solicitudes. La hora es la del nombre del archivo original de cada captura (7.3).
+
+| Origen → destino | Resultado | Hora | Evidencia |
+| --- | --- | --- | --- |
+| PC-USER → gateway virtual `192.168.10.1` | 5/5 en dos pings seguidos | 16/10 17:28 | Figura 4 |
+| SRV → gateway virtual `192.168.20.1` | 5/5 en dos pings seguidos | 16/10 17:20 | Figura 5 |
+| PC-USER `192.168.10.100` → SRV `192.168.20.100` | 5/5, TTL 63 | 16/10 22:51 | Figura 11 (repetido en la 13) |
+| SRV `192.168.20.100` → PC-USER `192.168.10.100` | 5/5, TTL 63 | 16/10 22:52 | Figura 12 (repetido en la 14) |
+| PC-USER → loopback de EDGE `10.255.255.3` | 5/5, TTL 62 | 16/10 22:55 | Figura 13 |
+| SRV → loopback de EDGE `10.255.255.3` | 5/5, TTL 62 | 16/10 22:57 | Figura 14 |
+| PC-USER → SRV, después de la parada y el arranque | 5/5 | 17/10 01:44 | Figura 16 |
+
+El TTL 63 entre las LAN indica un salto de router, el DIST que hace de gateway. El TTL 62 hacia EDGE indica dos saltos, DIST y CORE. Después del arranque solo se capturó el sentido PC-USER → SRV.
+
 ### 4.2 Los 5 drills de failover
 
-Pendiente de F4.
+Pendiente de F4. Las pruebas de failover VRRP de F2 (4.3) no son drills de F4: no siguieron un runbook ni midieron el tiempo de reconvergencia.
+
+### 4.3 VRRP y OSPF (F2)
+
+R1 ejecutó las pruebas en GNS3 el 16/10 y en la madrugada del 17/10. R5 revisó las 17 capturas (7.3) y las contrastó con los exports del 16/10 (6.2). La hora de cada captura es la del nombre del archivo original. La hora de los exports es la del encabezado de RouterOS.
+
+#### VRRP: roles, failover y recuperación
+
+| Prueba | Lo que muestra la captura | Hora | Evidencia |
+| --- | --- | --- | --- |
+| Roles en DIST-1 | USERS en MASTER con prioridad 150; SERVERS en BACKUP con prioridad 100. En el mismo historial, `vrrp-servers-20` aparece una vez como MASTER y luego vuelve a BACKUP. Termina con `/interface vrrp disable` sobre `vrrp-users-10` | 16/10 17:27 | Figura 1 |
+| Roles en DIST-2 | SERVERS en MASTER con prioridad 150; USERS en BACKUP con prioridad 100 | 17/10 00:18 | Figura 2 |
+| Failover y recuperación de SERVERS en DIST-2 | Se deshabilita y se rehabilita `vrrp-servers-20`. Al rehabilitarlo queda en BACKUP y, en la consulta siguiente, vuelve a MASTER | 16/10 17:23 | Figura 3 |
+| Gateway de USERS desde PC-USER | Dos pings 5/5 a `192.168.10.1`. La captura no muestra el estado VRRP. Por la hora, es posterior a la deshabilitación de `vrrp-users-10` de la Figura 1 | 16/10 17:28 | Figura 4 |
+| Gateway de SERVERS desde SRV | Dos pings 5/5 a `192.168.20.1`. La captura no muestra el estado VRRP. Por la hora, es anterior a la recuperación de la Figura 3 | 16/10 17:20 | Figura 5 |
+
+Las Figuras 4 y 5 muestran que el gateway virtual respondió. Por sí solas no permiten fijar en qué instante del failover se tomaron. R1 informó que verificó los estados MASTER/BACKUP, el failover y la recuperación en los dos grupos. Que el failover es reversible se apoya en la Figura 3 para SERVERS. Para USERS se apoya en la Figura 2, donde DIST-2 vuelve a figurar como BACKUP de USERS, y en el export de DIST-1, donde `vrrp-users-10` está habilitada. No se midió el tiempo de conmutación.
+
+#### OSPF: adyacencias y rutas
+
+| Router | Vecinos en `Full` | Hora | Evidencia |
+| --- | --- | --- | --- |
+| EDGE | CORE-1 (`10.255.255.4`) y CORE-2 (`10.255.255.5`) | 17/10 00:10 | Figura 6 |
+| CORE-1 | EDGE, CORE-2, DIST-1 y DIST-2 | 17/10 00:12 | Figura 7 |
+| CORE-2 | CORE-1, EDGE, DIST-2 y DIST-1 | 17/10 00:13 | Figura 8 |
+
+Las Figuras 6 a 8 muestran las siete adyacencias del área 0, todas en `Full`: EDGE–CORE-1, EDGE–CORE-2, CORE-1–CORE-2, CORE-1–DIST-1, CORE-1–DIST-2, CORE-2–DIST-1 y CORE-2–DIST-2. No hay capturas tomadas en DIST-1 y DIST-2; sus adyacencias se ven desde ambos CORE. Las adyacencias tenían entre 13 s y 3 min, porque las capturas son posteriores al arranque que siguió a la Figura 15 (más abajo).
+
+En la tabla de rutas de EDGE se observó lo siguiente:
+
+- `192.168.10.0/24` y `192.168.20.0/24` se aprenden por OSPF con dos nexthops ECMP: `10.255.0.10` (CORE-1) y `10.255.0.14` (CORE-2), con distancia 110 (Figura 9, 17/10 00:15).
+- La loopback de CORE-1 se aprende por CORE-1, y la de CORE-2 por CORE-2. Las de DIST-1 (`10.255.255.6`) y DIST-2 (`10.255.255.7`) se aprenden por ECMP a través de los dos CORE (Figura 10, 16/10 22:35).
+
+Desde ambas LAN se alcanzó la loopback de EDGE (4.1, Figuras 13 y 14).
+
+#### Parada, arranque y estabilidad
+
+| Hora | Observación | Evidencia |
+| --- | --- | --- |
+| 17/10 00:06 | En GNS3, los nodos del proyecto figuran detenidos | Figura 15 |
+| 17/10 00:10 a 00:18 | Con los nodos ya arrancados, las adyacencias OSPF están en `Full` (entre 13 s y 3 min de antigüedad) y DIST-2 conserva sus roles VRRP | Figuras 2, 6 a 8 |
+| 17/10 01:40:58 | EDGE registra en el log `system,error,critical` dos mensajes: `router was rebooted without proper shutdown` y `kernel failure in previous boot` | Figura 17 |
+| 17/10 01:44 | PC-USER alcanza a SRV: 5/5 | Figura 16 |
+| 17/10 02:03 | EDGE tiene 22m16s de uptime, carga de CPU del 1 % y 300,4 MiB de memoria libre sobre 512 MiB | Figura 17 |
+
+R1 informó una parada y un arranque controlados del proyecto, después de los cuales verificó la conectividad. Las capturas muestran además que EDGE se reinició cerca de las 01:41: el uptime de la Figura 17 coincide con la hora de los dos mensajes críticos. **La causa de esos mensajes no se determinó** y no se diagnostica en esta memoria. Queda registrada como incidencia abierta.
+
+#### Matriz de aceptación de F2
+
+| Criterio | Resultado | Evidencia |
+| --- | --- | --- |
+| VRRP USERS (VRID 10), master preferido DIST-1 | Cumplido | Figura 1; export de DIST-1 (3.10) |
+| VRRP SERVERS (VRID 20), master preferido DIST-2 | Cumplido | Figuras 2 y 3; export de DIST-2 (3.10) |
+| Load-sharing: cada DIST es master de un grupo y backup del otro | Cumplido | Figuras 1 y 2 |
+| Failover y recuperación VRRP | Cumplido según la verificación de R1; recuperación de SERVERS visible en la Figura 3. Sin medición de tiempos | Figuras 1, 3, 4 y 5 |
+| Autenticación simple de VRRP en los dos grupos | Cumplido: configurada en ambos DIST según el export; contraseñas confirmadas por R1, sin publicarse | 3.10 |
+| Gateways virtuales accesibles desde los hosts | Cumplido: 5/5 | Figuras 4 y 5 |
+| OSPFv2 área 0 en los cinco routers internos, con MD5 | Cumplido | Exports (3.10) |
+| Siete adyacencias en `Full`, incluida la core–core | Cumplido | Figuras 6 a 8 |
+| Rutas a las LAN y loopbacks en EDGE, con ECMP | Cumplido | Figuras 9 y 10 |
+| PC-USER ↔ SRV en ambos sentidos | Cumplido: 5/5 | Figuras 11 y 12 |
+| Ambas LAN → loopback de EDGE | Cumplido: 5/5 | Figuras 13 y 14 |
+| Conectividad después de la parada y el arranque | Cumplido en el sentido PC-USER → SRV | Figura 16 |
+| Exports de F2 de los siete routers | Cumplido | 6.2 |
+| Backups binarios de F2 de los siete routers | Generados y preservados por R1 (SHA-512); restore no probado | 6.2 |
+| Prueba con clave incorrecta (OSPF y VRRP) | Pendiente de F4 | — |
+| Drills cronometrados | Pendiente de F4 | 4.2 |
 
 ---
 
@@ -792,12 +919,50 @@ Todos son de RouterOS 7.16. Los nombres usan la fecha del hito (14/10) y los enc
 
 **Revisión R5 de los siete exports SSH-MGMT:** frente al export F1 de cada router, la única línea eliminada es `set ssh disabled=yes`; el resto son las altas de 3.9. Direcciones de producción y loopbacks sin cambios, hardening de 5.1 conservado, sin `/ip dhcp-client` y sin usuarios, contraseñas, claves ni salida `show-sensitive`. Las revisiones de R2, R3 y R4 en sus PR llegaron al mismo resultado.
 
+#### Exports F2 (`/export`, 16/10)
+
+R1 generó los exports después de configurar VRRP y OSPF, y los saneó: en los cinco routers internos reemplazó cada `auth-key` de OSPF por `REDACTED_F2_DO_NOT_USE`. Las contraseñas VRRP no figuran en el export. Cada rol revisó y publicó los suyos por PR en `backups/2026-10-16/`, sin reemplazar los juegos anteriores.
+
+| Router | Archivo | Encabezado del export | Bytes | Publicado por | Commit · PR | SHA-256 |
+| --- | --- | --- | ---: | --- | --- | --- |
+| EDGE | [`EDGE_2026-10-16_f2.rsc`](../backups/2026-10-16/EDGE_2026-10-16_f2.rsc) | 2026-10-16 23:01:31 | 2799 | R1 | `6c385d0` · PR #23 (merge `9597b95`) | `9bdc5df3…695499d5` |
+| ISP-1 | [`ISP-1_2026-10-16_f2.rsc`](../backups/2026-10-16/ISP-1_2026-10-16_f2.rsc) | 2026-10-19 15:59:52 | 1870 | R2 | `091b727` · PR #26 (merge `07323a5`) | `2eec5c1b…c3d5e3ad` |
+| ISP-2 | [`ISP-2_2026-10-16_f2.rsc`](../backups/2026-10-16/ISP-2_2026-10-16_f2.rsc) | 2026-10-17 02:49:16 | 1870 | R2 | `091b727` · PR #26 (merge `07323a5`) | `084cae03…d0aeea9c` |
+| CORE-1 | [`CORE-1_2026-10-16_f2.rsc`](../backups/2026-10-16/CORE-1_2026-10-16_f2.rsc) | 2026-10-16 23:36:01 | 3136 | R3 | `7ccac77` · PR #24 (merge `188ee20`) | `db1424a3…e04339bb` |
+| CORE-2 | [`CORE-2_2026-10-16_f2.rsc`](../backups/2026-10-16/CORE-2_2026-10-16_f2.rsc) | 2026-10-16 23:41:40 | 3137 | R3 | `7ccac77` · PR #24 (merge `188ee20`) | `0888d2ff…aa234ad5` |
+| DIST-1 | [`DIST-1_2026-10-16_f2.rsc`](../backups/2026-10-16/DIST-1_2026-10-16_f2.rsc) | 2026-10-16 23:48:03 | 3602 | R4 | `7dbe505` · PR #25 (merge `ffdab1c`) | `db0af045…7d806c5d` |
+| DIST-2 | [`DIST-2_2026-10-16_f2.rsc`](../backups/2026-10-16/DIST-2_2026-10-16_f2.rsc) | 2026-10-16 23:53:12 | 3602 | R4 | `7dbe505` · PR #25 (merge `ffdab1c`) | `bb96bd4e…85941cb7` |
+
+Todos son de RouterOS 7.16. Los SHA-256 corresponden a los archivos de `main`. Los de EDGE, ISP-2, CORE y DIST coinciden con el inventario de exports saneados que entregó R1.
+
+**Export de ISP-1 (antecedente):** el primer export de F2 de ISP-1 tenía referencias de interfaz inválidas (`*2` y `*3`). Ese export medía 1601 bytes y tenía SHA-256 `062d1842…3484dfd4`; no se publica y queda como antecedente de la incidencia. El 19/10, R1 revisó el router en operación: comprobó sus interfaces, sus direcciones y la conectividad, y generó un export corregido. R2 lo publicó en la PR #26 con el nombre del hito F2. Es el archivo vigente y no se vuelve al anterior. Su contenido es igual al del export SSH-MGMT del 14/10, salvo la línea en blanco final, igual que el de ISP-2.
+
+**Revisión R5 de los siete exports F2:**
+
+- `/system identity` coincide con el nombre del archivo.
+- Frente al export SSH-MGMT de cada router, los cinco routers internos solo agregan VRRP, OSPF y las IP virtuales (3.10). En los ISP no hay cambios.
+- Direcciones, loopbacks, hardening de 5.1 y gestión de 5.2 se conservan.
+- Ninguno contiene usuarios, contraseñas, claves visibles, contenido Base64 ni salida `show-sensitive`.
+
+#### Snapshots GNS3 de F2
+
+R1 creó y confirmó estos snapshots en el proyecto `topologia_failover_F1_SSH_MGMT`. Los dos figuran en la lista de snapshots de la Figura 15.
+
+| Snapshot | Registro en GNS3 | Momento |
+| --- | --- | --- |
+| `PRE_F2_2026-10-16` | 2026-10-16 13:33:02 | Antes de configurar F2 |
+| `F2_FINAL_VRRP_OSPF_2026-10-16` | 2026-10-16 21:06:24 | Cierre de F2 |
+
+La hora de registro la muestra GNS3. Las capturas (por el nombre del archivo) y los exports (por el encabezado de RouterOS) usan otro reloj. En la Figura 17 ese reloj coincide con el de RouterOS. La Figura 15 se tomó a las 00:06:34 del 17/10, 3 horas y 10 segundos después de la hora que GNS3 muestra para `F2_FINAL`. Esa diferencia sugiere relojes en husos distintos, pero no se verificó. Por eso no se afirma que todas las pruebas y los exports sean anteriores o posteriores al snapshot. Las horas se registran con su fuente.
+
+El restore de los snapshots de F2 no se probó.
+
 #### Tipos de respaldo
 
 | Tipo | Contenido | Dónde está | ¿Se publica? |
 | --- | --- | --- | --- |
 | Export `.rsc` sanitizado | Configuración en texto, sin usuarios ni secretos | `backups/` del repositorio (tabla anterior) | Sí |
-| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1: un juego F1 y un juego SSH-MGMT (subsecciones siguientes) | No |
+| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1: un juego F1, uno SSH-MGMT y uno F2 (subsecciones siguientes) | No |
 | Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | En poder de R1, fuera del repositorio (2.3) | No |
 
 #### Backups binarios F1 (privados)
@@ -924,6 +1089,47 @@ R1 restauró el backup `ISP-1_2026-10-15_SSH_MGMT.backup` en un proyecto GNS3 nu
 
 **Lección para el procedimiento de restore:** el binario conserva la configuración, pero en otra máquina virtual las interfaces no quedan asociadas automáticamente. Después de un `backup load` en otra VM hay que revisar `/interface print`, `/ip address print detail` y `/ip vrf print detail` antes de dar el restore por bueno. Este paso tiene que formar parte del procedimiento privado de recuperación, que sigue pendiente.
 
+#### Respaldos privados de F2 (16/10)
+
+Al cerrar F2, R1 generó dos tipos de respaldo privado de cada router: el export original sin sanear y el backup binario. Son 14 archivos en total. Para los binarios usó `/system backup save` y pidió explícitamente el cifrado `aes-sha256` con una contraseña privada. R1 preservó los 14 archivos fuera del repositorio y verificó que el SHA-512 de cada copia coincidiera con el del archivo generado. R5 registra los metadatos informados por R1: no tuvo acceso a los archivos, no recalculó los hashes y no verificó su contenido. Los hashes acreditan la integridad de las copias; no prueban el cifrado ni la posibilidad de restaurarlas.
+
+**Exports originales (privados):**
+
+| Router | Archivo | Bytes | SHA-512 |
+| --- | --- | ---: | --- |
+| EDGE | `F2_EDGE_20261016_exact.rsc` | 2771 | `70e7f63e30a27094a35f0db8f5d53db03ece51b2bc7c285479af069b20a335d34a431c9159059b018544420c6c76cb175e980c81a521f4d84f10e5164e1d16b5` |
+| CORE-1 | `F2_CORE1_20261016.rsc` | 3080 | `04c9a02845c50730a464acd1d6026f087f6867dcf620eb0d66f502581d185e9dadf73d0fb0b485318167099ede890c80a23bfa5189da979ec88b9da1064d52cf` |
+| CORE-2 | `F2_CORE2_20261016.rsc` | 3081 | `9fa8f878e996d03ab127c69482463216283595592fd250cd1a347cca6dbdb46d4bff287ad336fd68866c1edca15b2e28eeb742f6967321dd441ecba0f4bc6065` |
+| DIST-1 | `F2_DIST1_20261016.rsc` | 3574 | `dcec39452cacd7cdc1c496aceea3ce1c36100fc525123469df765bd40d54b48f2f82b333264f66d019930963ca208f842bf781b674fa521ce94f49343b11d3fb` |
+| DIST-2 | `F2_DIST2_20261016.rsc` | 3574 | `67023a15f87ca627b628d31b59ee7f5f8b0e3429cb038417668bedfd21213eca219773bc336edc4100890ce27e8033368b4bee559ce4dc3f400a298b0759b3b2` |
+| ISP-1 | `F2_ISP1_20261016.rsc` | 1601 | `a2e47c7a640246445f0a46fb9d380b33bf86022af7056173b830b3b2f4012446d1b045a3979a5c877ed6de1af7d385241e5ffa80a5854ec763581b45ab414143` |
+| ISP-2 | `F2_ISP2_20261016.rsc` | 1870 | `89b9b8cbb27d28db4893b267417a03fd5349f059514dd24a448fcd70d21693e411b3fcbb65f5c0d74591d05be876c7283bbfbeb59922f529969af75b6a23d07c` |
+
+El export original de ISP-1 tiene el antecedente de las referencias inválidas `*2` y `*3` descrito en "Exports F2". El vigente es el corregido del 19/10.
+
+**Backups binarios (privados):**
+
+| Router | Archivo | Bytes | SHA-512 |
+| --- | --- | ---: | --- |
+| EDGE | `F2_EDGE_20261016.backup` | 24769 | `309cafb5b9470231ddcff648733ad1677ec3ce5be6882bd68da65f5eff57546847324566829c33735ce56cb8a0b59a6f823259277969a7eda2db0d3296f0ff91` |
+| CORE-1 | `F2_CORE1_20261016.backup` | 25144 | `42ef66beff1b3a7352ae3ff5639d328a7571c3c1b9909fe6ce83bb08f7d0e930c540b31000ddd966aa49bebb5ff17fd934c0f25ae637956d8007cf6d50ba7c93` |
+| CORE-2 | `F2_CORE2_20261016.backup` | 25142 | `3264390341e445d5470a3e6ed34738953a87faa13f7c7cbbd807043930e4e9b5efb39f5617c3496d05d177ea5d23587d5ebad7567c3deb7783625732544d9240` |
+| DIST-1 | `F2_DIST1_20261016.backup` | 25788 | `43de9029123ca52c256d0789de0089f703204fe50d8fc407df3a4487d347dcff0f5136ccfd0ce5efa91eb93eaca323f8de2df237f3d9031c45e91c9929d2b957` |
+| DIST-2 | `F2_DIST2_20261016.backup` | 25789 | `e1e6c008e0e0b7baa471921ce74c65d7d3a61a9c1442195ea315fc4c5526d2a18878c80a0bd11d91dc93e1b19236170db6e140ff926baf866e29a250208bf991` |
+| ISP-1 | `F2_ISP1_20261016.backup` | 23667 | `281e099f2d7d887a94db41638fa3f703ffe4d5137e0718dc707209ae99780e88250dc4c92163c4342109669662b63f198b41b8d80c4de3c3108441d932530713` |
+| ISP-2 | `F2_ISP2_20261016.backup` | 23666 | `19b0166d9229185f137c4161ce9cced4127f06c3b6cb6af3848c5f552dd307d817d2ec5b65ec4eeb1743983065e63a64d34079e2c895bb23915ac77b63d9753b` |
+
+| Dato | Valor |
+| --- | --- |
+| Hito | `F2`, 2026-10-16 (fecha del nombre de archivo; R1 no informó la hora) |
+| RouterOS | 7.16 |
+| Cifrado | `aes-sha256`, solicitado explícitamente al generar cada binario. Los hashes no lo prueban |
+| Ejecución y custodia | R1, fuera del repositorio. La contraseña se gestiona por un canal privado |
+| Comprobación | SHA-512 de los 14 archivos preservados, verificado por R1 |
+| Restore probado | **No.** No se restauró ninguno de los backups de F2 ni el snapshot `F2_FINAL_VRRP_OSPF_2026-10-16` |
+
+No se publican los archivos, las contraseñas ni contenido Base64.
+
 #### Política interna de backup: procedimientos adicionales
 
 Estado de los procedimientos de 1.4:
@@ -933,9 +1139,9 @@ Estado de los procedimientos de 1.4:
 | Snapshot BASE | Registrado en GNS3 (2.3). No es un backup de RouterOS y no se probó su restore |
 | Snapshot `F1_FINAL_2026-10-09` y copia portable del proyecto GNS3 | Realizados por R1. Recuperación del proyecto validada en una copia aislada (2.3). El restore de snapshots individuales de GNS3 no se probó |
 | Export `base` de cada router antes de configurar | No se generó |
-| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers en dos hitos: F1 (10 y 13/10) y SSH-MGMT (15/10); archivos verificados por R1 |
-| Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba para los dos juegos: localizador privado, tamaño, SHA-256, RouterOS 7.16 y fecha |
-| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1** en los dos juegos, con capturas y comparación contra el export (arriba). F1: satisfactorio. SSH-MGMT: exitoso con ajuste manual de interfaces, direcciones y VRF. En cada juego, seis binarios sin restaurar |
+| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers en tres hitos: F1 (10 y 13/10), SSH-MGMT (15/10) y F2 (16/10); archivos verificados por R1 |
+| Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba para los tres juegos: tamaño, hash, RouterOS 7.16 y fecha. En F1 y SSH-MGMT también el localizador privado; en F2, R1 informó la custodia fuera del repositorio sin indicar un localizador |
+| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1** en los juegos F1 y SSH-MGMT, con capturas y comparación contra el export (arriba). F1: satisfactorio. SSH-MGMT: exitoso con ajuste manual de interfaces, direcciones y VRF. En cada uno de esos juegos, seis binarios sin restaurar. **F2: ningún backup restaurado** |
 | Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: los dos restores de ISP-1 recuperaron el acceso administrativo, pero el procedimiento escrito no existe. Debe incluir la revisión de interfaces tras un restore en otra VM |
 
 Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. En ISP-1, el binario cifrado sí las recuperó (acceso administrativo funcional tras el restore, informado por R1). El procedimiento privado por escrito sigue pendiente. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
@@ -948,7 +1154,7 @@ En la devolución de F1, la cátedra pidió sostener un juego de backups indepen
 | --- | --- | --- | --- | --- |
 | F1 | `2026-10-09/` (y EDGE `2026-10-08/`) | 7, del 10 y 13/10 | ISP-1, 13/10 | Realizado |
 | SSH-MGMT | `2026-10-14/` | 7, del 15/10 | ISP-1, 16/10, con ajuste manual | Realizado |
-| F2 (VRRP y OSPF) | — | — | — | Planificado: al cerrar F2 |
+| F2 (VRRP y OSPF) | `2026-10-16/` | 7, del 16/10 | No | Realizado, sin restore probado |
 | F3 (BGP y firewall) | — | — | — | Planificado: al cerrar F3 |
 | F4 (5 drills) | — | — | — | Planificado: `pre-drillN` y `post-drillN` en cada drill |
 
@@ -1004,6 +1210,34 @@ R1 tomó estas siete capturas en la prueba de restore de 6.2 y R5 las incorporó
 | `05_ipam_corregido.png` | Direcciones reasignadas a `ether1` y `ether2`, y loopback válida | 6.2 |
 | `06_firewall_ssh_monitor_restaurado.png` | Tres reglas de firewall de `MGMT`, `strong-crypto=yes`, grupo y usuario `monitor` | 5.2, 6.2 |
 | `07_hardening_restore.png` | Servicios IP, SSH solo desde `.10` en `MGMT`, Neighbor Discovery, administración MAC, Bandwidth Server, RoMON y ausencia de cliente DHCP | 5.2, 6.2 |
+
+### 7.3 F2: VRRP y OSPF (16 y 17/10)
+
+R1 tomó estas 17 capturas en su Mac durante las pruebas de F2 y las entregó a R5 sin editar. R5 las incorporó en [`capturas/F2/`](../capturas/F2/) con sus nombres originales y sin modificaciones. Las copias del repositorio son idénticas a las del paquete recibido: los SHA-256 de la tabla coinciden con el manifiesto entregado por R1.
+
+Las revisamos una por una. Son legibles y no muestran contraseñas, claves VRRP, OSPF ni BGP, ni contenido Base64. R1 entregó aparte las capturas que mostraban claves y no se incorporaron. En las barras de título se ven el usuario `agustin` (Figuras 4, 5 y 11 a 16) y el nombre del equipo de R1 (Figura 15); R1 autorizó publicarlas así. Los títulos `telnet localhost <puerto>` son la consola de GNS3 (5.1).
+
+La hora es la del nombre del archivo original. En la Figura 17 coincide con el reloj de RouterOS (6.2, "Snapshots GNS3 de F2").
+
+| Figura | Archivo (`capturas/F2/…`) | Hora | Qué muestra | Sección | SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| Figura 1 | `01_VRRP/01_VRRP_DIST1.png` | 16/10 17:27 | Roles VRRP en DIST-1 y deshabilitación de `vrrp-users-10` | 4.3 | `758274e477b71abe3c2fc0ac5fdbe3a093f36d312eef10438e27d77033fe7137` |
+| Figura 2 | `01_VRRP/02_VRRP_DIST2.png` | 17/10 00:18 | DIST-2: MASTER en SERVERS y BACKUP en USERS | 4.3 | `56befa2da034a89ac7afffa01dbfe1aa05dd64cf1e757fcba9dee1cc27594c77` |
+| Figura 3 | `01_VRRP/03_VRRP_RECUPERACION_SERVERS.png` | 16/10 17:23 | DIST-2: deshabilitación y rehabilitación de SERVERS; vuelve de BACKUP a MASTER | 4.3 | `0723c9778883f769c18c7c74691c1003aa6671d399f198efed9873fc681a62f8` |
+| Figura 4 | `01_VRRP/04_VRRP_FAILOVER_USERS_PING.png` | 16/10 17:28 | PC-USER: dos pings 5/5 al gateway virtual `192.168.10.1`; no muestra el estado VRRP | 4.1, 4.3 | `c681d509631f601d84be7f827d8f45e1f532386f318411c54801a7065193ff30` |
+| Figura 5 | `01_VRRP/05_VRRP_FAILOVER_SERVERS_PING.png` | 16/10 17:20 | SRV: configuración y dos pings 5/5 al gateway virtual `192.168.20.1`; no muestra el estado VRRP | 4.1, 4.3 | `166fe1b299d847e82591fc45301c14c23baf41112324b95b7a0b8813f7e4c339` |
+| Figura 6 | `02_OSPF/06_OSPF_EDGE_VECINOS.png` | 17/10 00:10 | EDGE: dos vecinos OSPF en `Full` (CORE-1 y CORE-2) | 4.3 | `7604c0faf1c77103a7b01e6fe8b8abdb26e5aa251de16d5254b5e6a4fae0b470` |
+| Figura 7 | `02_OSPF/07_OSPF_CORE1_VECINOS.png` | 17/10 00:12 | CORE-1: cuatro vecinos OSPF en `Full` | 4.3 | `86db5ab6227324b7d9d3492bda4a72c5c1057b9d484df24f8ee9b021fe7cc5af` |
+| Figura 8 | `02_OSPF/08_OSPF_CORE2_VECINOS.png` | 17/10 00:13 | CORE-2: cuatro vecinos OSPF en `Full` | 4.3 | `1df72a8c060947cf9b7ffe9f92172648ffee6074b1276a1322b0d4405e922dc5` |
+| Figura 9 | `02_OSPF/09_OSPF_RUTAS_LAN_ECMP.png` | 17/10 00:15 | EDGE: rutas OSPF a las dos LAN con dos nexthops ECMP | 4.3 | `9bacf8d7d1f2e98caf1b44fb69854af3409e158d35c3aa44aa74422eda16d233` |
+| Figura 10 | `02_OSPF/10_OSPF_LOOPBACKS_DIST.png` | 16/10 22:35 | EDGE: rutas a las loopbacks de CORE y DIST; las de DIST, por ECMP | 4.3 | `5f8e8ca5f68a67347e12cea26a218dc661c9798ce9a283b7bf33031e2ade11ff` |
+| Figura 11 | `03_Conectividad/11_PING_USERS_SERVERS.png` | 16/10 22:51 | PC-USER → SRV: 5/5 | 4.1 | `711a227421fc504d9e45d8e04c59073bc45cb5195433f27ba16a289008600685` |
+| Figura 12 | `03_Conectividad/12_PING_SERVERS_USERS.png` | 16/10 22:52 | SRV → PC-USER: 5/5 | 4.1 | `8d7c83273fce67ab3405b9b0eb3e0c928fa4948c5b615de84bc112bc5c61f7aa` |
+| Figura 13 | `03_Conectividad/13_PING_USERS_EDGE.png` | 16/10 22:55 | PC-USER → loopback de EDGE `10.255.255.3`: 5/5 | 4.1 | `db89448a7de9b4688e888a928198b3a1cafea5564675d080f213cd4c9fe56565` |
+| Figura 14 | `03_Conectividad/14_PING_SERVERS_EDGE.png` | 16/10 22:57 | SRV → loopback de EDGE `10.255.255.3`: 5/5 | 4.1 | `4b7cf4d0c5b7a69049635fc2790275d23de13364e4a39175dc9143505f09a5a6` |
+| Figura 15 | `04_Respaldo/15_SNAPSHOT_FINAL.png` | 17/10 00:06 | GNS3: snapshots `PRE_F2_2026-10-16` y `F2_FINAL_VRRP_OSPF_2026-10-16`; nodos detenidos | 4.3, 6.2 | `42347d2012f3c0d70032e191595d19e05e966cbf809836b442b28d1ab3c01bd0` |
+| Figura 16 | `05_Recuperacion/16_PING_POST_ARRANQUE.png` | 17/10 01:44 | PC-USER → SRV después del arranque: 5/5 | 4.1, 4.3 | `4242c920927eb4bcdae999e49913a2dc25a726c78ee4bf891e4b2ed1f2d900d3` |
+| Figura 17 | `06_Estabilidad/17_ESTABILIDAD_EDGE.png` | 17/10 02:03 | EDGE: uptime de 22m16s, recursos y dos mensajes críticos del arranque | 4.3 | `7e2eef4562a0bd59efbcb3a2837232467c96c668afb6fd0248693ced127f6f71` |
 
 ---
 
@@ -1085,20 +1319,36 @@ El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 y SSH-
 - [x] Siete backups binarios cifrados del 15/10, fuera del repositorio, con metadatos en 6.2. Ejecutó R1
 - [x] Restore aislado de ISP-1 el 16/10: exitoso con ajuste manual de interfaces, direcciones y VRF (6.2, 7.2). Los otros seis binarios no se restauraron
 
+### VRRP y OSPF (F2)
+
+F2 se ejecutó el 16/10 y en la madrugada del 17/10. R1 configuró y probó los routers; R2, R3 y R4 publicaron sus exports (PR #23 a #26); R5 revisó y documentó la evidencia. Pendiente de la devolución de la cátedra. Detalle en la matriz de aceptación de 4.3.
+
+- [x] VRRP USERS (VRID 10, master DIST-1) y SERVERS (VRID 20, master DIST-2), con load-sharing (3.10, 4.3)
+- [x] Failover y recuperación VRRP verificados por R1; sin medición de tiempos (4.3)
+- [x] Autenticación simple de VRRP en los dos grupos: configurada según los exports y confirmada por R1; las contraseñas no se publican (3.10)
+- [x] OSPFv2 área 0 con MD5 en EDGE, CORE-1, CORE-2, DIST-1 y DIST-2; siete adyacencias en `Full`, incluida la core–core (3.10, 4.3)
+- [x] Rutas a las LAN y loopbacks en EDGE, con ECMP (4.3)
+- [x] Gateways virtuales, PC-USER ↔ SRV y ambas LAN → loopback de EDGE: 5/5 (4.1)
+- [x] Exports F2 de los siete routers en `backups/2026-10-16/` (6.2)
+- [x] Backups binarios F2 de los siete routers y exports originales, preservados por R1 con verificación SHA-512 (6.2)
+- [x] Snapshots `PRE_F2_2026-10-16` y `F2_FINAL_VRRP_OSPF_2026-10-16` creados por R1 (6.2)
+- [ ] Restore de algún backup de F2 o del snapshot `F2_FINAL_VRRP_OSPF_2026-10-16`: no se realizó
+- [ ] Causa de los mensajes críticos de EDGE tras el reinicio del 17/10: no determinada (4.3)
+
 ### Redes
 
 - [x] 7 CHR + 2 switches + 2 hosts levantados y cableados (F1, 2.1)
-- [ ] VRRP operativo (2 grupos, load-sharing)
-- [ ] OSPF área 0 con adyacencias (incluido core-core)
+- [x] VRRP operativo (2 grupos, load-sharing) (F2, 4.3)
+- [x] OSPF área 0 con adyacencias (incluido core-core) (F2, 4.3)
 - [ ] BGP eBGP ×2 establecido (multi-homing)
 - [ ] Los 5 drills ejecutados y documentados
 
 ### Seguridad
 
 - [x] Hardening aplicado (F1, 5.1; al 09/10 SSH quedó deshabilitado y desde el 14/10 está restringido a la red de gestión, 5.2)
-- [ ] OSPF MD5 funcionando
+- [x] OSPF MD5 funcionando (F2: siete adyacencias en `Full` con MD5, 3.10 y 4.3; la prueba con clave incorrecta es de F4)
 - [ ] BGP TCP-MD5 funcionando
-- [ ] VRRP auth funcionando
+- [x] VRRP auth funcionando (F2: `simple` en los dos grupos, confirmada por R1; el export saneado no muestra las contraseñas, 3.10)
 - [ ] Firewall edge aplicado
 - [ ] Prueba con clave incorrecta documentada
 
@@ -1114,5 +1364,5 @@ El ítem "Backups con restore probado" de Operación sigue sin marcar: F1 y SSH-
 - [ ] Memoria completa
 - [ ] Repo git con estructura correcta y commits por rol
 - [ ] `backlog.md` con todas las tareas en done
-- [ ] Capturas organizadas (F1 en 7.1 y SSH-MGMT en 7.2; faltan las de F2–F4)
+- [ ] Capturas organizadas (F1 en 7.1, SSH-MGMT en 7.2 y F2 en 7.3; faltan las de F3 y F4)
 - [ ] Cada integrante puede defender su parte y una parte ajena
