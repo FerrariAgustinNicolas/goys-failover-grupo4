@@ -1,0 +1,66 @@
+Fri Oct 23 09:10:53 PM UTC 2026
+ 21:10:53 up 57 min,  1 user,  load average: 13.22, 11.22, 10.36
+##APPLY
+
+[admin@EDGE] > /interface list add name=FW-WAN comment="F3 FW: enlaces ISP"[admin@EDGE] > /interface list add name=FW-WAN comment="F3 FW: enlaces ISP"
+[admin@EDGE] > /interface list add name=FW-LAN comment="F3 FW: enlaces CORE"[admin@EDGE] > /interface list add name=FW-LAN comment="F3 FW: enlaces CORE"
+[admin@EDGE] > /interface list member add list=FW-WAN interface=ether1 comment="F3 FW: ISP-1"[admin@EDGE] > /interface list member add list=FW-WAN interface=ether1 comment="F3 FW: ISP-1"
+[admin@EDGE] > /interface list member add list=FW-WAN interface=ether2 comment="F3 FW: ISP-2"[admin@EDGE] > /interface list member add list=FW-WAN interface=ether2 comment="F3 FW: ISP-2"
+[admin@EDGE] > /interface list member add list=FW-LAN interface=ether3 comment="F3 FW: CORE-1"[admin@EDGE] > /interface list member add list=FW-LAN interface=ether3 comment="F3 FW: CORE-1"
+[admin@EDGE] > /interface list member add list=FW-LAN interface=ether4 comment="F3 FW: CORE-2"[admin@EDGE] > /interface list member add list=FW-LAN interface=ether4 comment="F3 FW: CORE-2"
+[admin@EDGE] > /ip firewall address-list add list=FW-ISP-PEERS address=10.255.0.1 comment="F3 FW: peer ISP-1"[admin@EDGE] > /ip firewall address-list add list=FW-ISP-PEERS address=10.255.0.1 comment="F3 FW: peer ISP-1"
+[admin@EDGE] > /ip firewall address-list add list=FW-ISP-PEERS address=10.255.0.5 comment="F3 FW: peer ISP-2"[admin@EDGE] > /ip firewall address-list add list=FW-ISP-PEERS address=10.255.0.5 comment="F3 FW: peer ISP-2"
+[admin@EDGE] > /ip firewall address-list add list=FW-CORE-PEERS address=10.255.0.10 comment="F3 FW: CORE-1"[admin@EDGE] > /ip firewall address-list add list=FW-CORE-PEERS address=10.255.0.10 comment="F3 FW: CORE-1"
+[admin@EDGE] > /ip firewall address-list add list=FW-CORE-PEERS address=10.255.0.14 comment="F3 FW: CORE-2"[admin@EDGE] > /ip firewall address-list add list=FW-CORE-PEERS address=10.255.0.14 comment="F3 FW: CORE-2"
+[admin@EDGE] > /ip firewall address-list add list=FW-LAN-INTERNAS address=192.168.10.0/24 comment="F3 FW: USERS"[admin@EDGE] > /ip firewall address-list add list=FW-LAN-INTERNAS address=192.168.10.0/24 comment="F3 FW: USERS"
+[admin@EDGE] > /ip firewall address-list add list=FW-LAN-INTERNAS address=192.168.20.0/24 comment="F3 FW: SERVERS"[admin@EDGE] > /ip firewall address-list add list=FW-LAN-INTERNAS address=192.168.20.0/24 comment="F3 FW: SERVERS"
+[admin@EDGE] > 
+##VERIFY
+
+[admin@EDGE] > /interface list print without-paging where name~"FW-"[admin@EDGE] > /interface list print without-paging where name~"FW-"
+Columns: NAME
+# NAME  
+;;; F3 FW: enlaces ISP
+4 FW-WAN
+;;; F3 FW: enlaces CORE
+5 FW-LAN
+
+[admin@EDGE] > /interface list member print without-paging[admin@EDGE] > /interface list member print without-paging
+Columns: LIST, INTERFACE
+# LIST    INTERFACE
+;;; F3 FW: ISP-1
+0 FW-WAN  ether1   
+;;; F3 FW: ISP-2
+1 FW-WAN  ether2   
+;;; F3 FW: CORE-1
+2 FW-LAN  ether3   
+;;; F3 FW: CORE-2
+3 FW-LAN  ether4   
+
+[admin@EDGE] > /ip firewall address-list print without-paging[admin@EDGE] > /ip firewall address-list print without-paging
+Columns: LIST, ADDRESS, CREATION-TIME
+# LIST             ADDRESS          CREATION-TIME      
+;;; F3 - EDGE anuncia LAN USERS
+0 bgp-lan-out      192.168.10.0/24  2026-10-23 00:12:16
+;;; F3 - EDGE anuncia LAN SERVERS
+1 bgp-lan-out      192.168.20.0/24  2026-10-23 00:12:20
+;;; F3 FW: peer ISP-1
+2 FW-ISP-PEERS     10.255.0.1       2026-10-23 21:11:22
+;;; F3 FW: peer ISP-2
+3 FW-ISP-PEERS     10.255.0.5       2026-10-23 21:11:27
+;;; F3 FW: CORE-1
+4 FW-CORE-PEERS    10.255.0.10      2026-10-23 21:11:31
+;;; F3 FW: CORE-2
+5 FW-CORE-PEERS    10.255.0.14      2026-10-23 21:11:35
+;;; F3 FW: USERS
+6 FW-LAN-INTERNAS  192.168.10.0/24  2026-10-23 21:11:40
+;;; F3 FW: SERVERS
+7 FW-LAN-INTERNAS  192.168.20.0/24  2026-10-23 21:11:44
+
+[admin@EDGE] > /ip firewall filter print count-only[admin@EDGE] > /ip firewall filter print count-only
+3
+[admin@EDGE] > /routing bgp session print count-only[admin@EDGE] > /routing bgp session print count-only
+2
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > 

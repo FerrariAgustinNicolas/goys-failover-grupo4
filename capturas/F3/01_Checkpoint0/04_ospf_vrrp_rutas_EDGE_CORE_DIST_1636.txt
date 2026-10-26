@@ -1,0 +1,379 @@
+Mon Oct 19 04:36:20 PM UTC 2026
+==================== 5013
+
+[admin@EDGE] > /system identity print[admin@EDGE] > /system identity print
+  name: EDGE
+[admin@EDGE] > /system resource print[admin@EDGE] > /system resource print
+                   uptime: 20m8s
+                  version: 7.16 (stable)
+               build-time: 2024-09-20 13:00:27
+         factory-software: 7.1
+              free-memory: 306.9MiB
+             total-memory: 512.0MiB
+                      cpu: QEMU
+                cpu-count: 1
+            cpu-frequency: 2495MHz
+                 cpu-load: 63%
+           free-hdd-space: 70.1MiB
+          total-hdd-space: 89.2MiB
+  write-sect-since-reboot: 288
+         write-sect-total: 288
+        architecture-name: x86_64
+               board-name: CHR QEMU Ubuntu 26.04 PC (i440FX + PIIX, 1996)
+                 platform: MikroTik
+[admin@EDGE] > /ip address print without-paging[admin@EDGE] > /ip address print without-paging
+Columns: ADDRESS, NETWORK, INTERFACE
+# ADDRESS          NETWORK       INTERFACE
+;;; ISP-1
+0 10.255.0.2/30    10.255.0.0    ether1   
+;;; ISP-2
+1 10.255.0.6/30    10.255.0.4    ether2   
+;;; CORE-1
+2 10.255.0.9/30    10.255.0.8    ether3   
+;;; CORE-2
+3 10.255.0.13/30   10.255.0.12   ether4   
+;;; Loopback EDGE
+4 10.255.255.3/32  10.255.255.3  lo       
+;;; Red de gestion aislada
+5 172.31.250.1/28  172.31.250.0  ether5   
+
+[admin@EDGE] > /routing ospf neighbor print terse without-paging[admin@EDGE] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.14 router-id=10.255.255.5 state=Full state-changes=6 adjacency=17m20s timeout=30s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.10 router-id=10.255.255.4 state=Full state-changes=6 adjacency=18m55s timeout=36s
+
+[admin@EDGE] > /interface vrrp print without-paging[admin@EDGE] > /interface vrrp print without-paging
+
+[admin@EDGE] > /ip route print without-paging[admin@EDGE] > /ip route print without-paging
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAc  10.255.0.0/30    ether1                     0
+DAc  10.255.0.4/30    ether2                     0
+DAc  10.255.0.8/30    ether3                     0
+DAc  10.255.0.12/30   ether4                     0
+DAo+ 10.255.0.16/30   10.255.0.10%ether3       110
+DAo+ 10.255.0.16/30   10.255.0.14%ether4       110
+DAo  10.255.0.20/30   10.255.0.10%ether3       110
+DAo  10.255.0.24/30   10.255.0.10%ether3       110
+DAo  10.255.0.28/30   10.255.0.14%ether4       110
+DAo  10.255.0.32/30   10.255.0.14%ether4       110
+DAc  10.255.255.3/32  lo                         0
+DAo  10.255.255.4/32  10.255.0.10%ether3       110
+DAo  10.255.255.5/32  10.255.0.14%ether4       110
+DAo+ 10.255.255.6/32  10.255.0.10%ether3       110
+DAo+ 10.255.255.6/32  10.255.0.14%ether4       110
+DAo+ 10.255.255.7/32  10.255.0.10%ether3       110
+DAo+ 10.255.255.7/32  10.255.0.14%ether4       110
+DAo+ 192.168.10.0/24  10.255.0.10%ether3       110
+DAo+ 192.168.10.0/24  10.255.0.14%ether4       110
+DAo+ 192.168.20.0/24  10.255.0.10%ether3       110
+DAo+ 192.168.20.0/24  10.255.0.14%ether4       110
+DAc  172.31.250.0/28  ether5@MGMT                0
+
+[admin@EDGE] > 
+==================== 5015
+
+[admin@CORE-1] > /system identity print[admin@CORE-1] > /system identity print
+  name: CORE-1
+[admin@CORE-1] > /system resource print[admin@CORE-1] > /system resource print
+                   uptime: 19m36s
+                  version: 7.16 (stable)
+               build-time: 2024-09-20 13:00:27
+         factory-software: 7.1
+              free-memory: 307.1MiB
+             total-memory: 512.0MiB
+                      cpu: QEMU
+                cpu-count: 1
+            cpu-frequency: 2493MHz
+                 cpu-load: 19%
+           free-hdd-space: 70.2MiB
+          total-hdd-space: 89.2MiB
+  write-sect-since-reboot: 328
+         write-sect-total: 328
+        architecture-name: x86_64
+               board-name: CHR QEMU Ubuntu 26.04 PC (i440FX + PIIX, 1996)
+                 platform: MikroTik
+[admin@CORE-1] > /ip address print without-paging[admin@CORE-1] > /ip address print without-paging
+Columns: ADDRESS, NETWORK, INTERFACE
+# ADDRESS          NETWORK       INTERFACE
+;;; EDGE
+0 10.255.0.10/30   10.255.0.8    ether1   
+;;; CORE-2
+1 10.255.0.17/30   10.255.0.16   ether2   
+;;; DIST-1
+2 10.255.0.21/30   10.255.0.20   ether3   
+;;; DIST-2
+3 10.255.0.25/30   10.255.0.24   ether4   
+;;; Loopback CORE-1
+4 10.255.255.4/32  10.255.255.4  lo       
+;;; Red de gestion aislada
+5 172.31.250.4/28  172.31.250.0  ether5   
+
+[admin@CORE-1] > /routing ospf neighbor print terse without-paging[admin@CORE-1] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.9 router-id=10.255.255.3 state=Full state-changes=5 adjacency=19m18s timeout=34s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.18 router-id=10.255.255.5 state=Full state-changes=6 adjacency=17m49s timeout=38s
+2 D instance=ospf-v2 area=backbone-v2 address=10.255.0.26 router-id=10.255.255.7 state=Full state-changes=5 adjacency=12m28s timeout=37s
+3 D instance=ospf-v2 area=backbone-v2 address=10.255.0.22 router-id=10.255.255.6 state=Full state-changes=6 adjacency=14m38s timeout=33s
+
+[admin@CORE-1] > /interface vrrp print without-paging[admin@CORE-1] > /interface vrrp print without-paging
+
+[admin@CORE-1] > /ip route print without-paging[admin@CORE-1] > /ip route print without-paging
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAc  10.255.0.8/30    ether1                     0
+DAo+ 10.255.0.12/30   10.255.0.18%ether2       110
+DAo+ 10.255.0.12/30   10.255.0.9%ether1        110
+DAc  10.255.0.16/30   ether2                     0
+DAc  10.255.0.20/30   ether3                     0
+DAc  10.255.0.24/30   ether4                     0
+DAo+ 10.255.0.28/30   10.255.0.18%ether2       110
+DAo+ 10.255.0.28/30   10.255.0.22%ether3       110
+DAo+ 10.255.0.32/30   10.255.0.18%ether2       110
+DAo+ 10.255.0.32/30   10.255.0.26%ether4       110
+DAo  10.255.255.3/32  10.255.0.9%ether1        110
+DAc  10.255.255.4/32  lo                         0
+DAo  10.255.255.5/32  10.255.0.18%ether2       110
+DAo  10.255.255.6/32  10.255.0.22%ether3       110
+DAo  10.255.255.7/32  10.255.0.26%ether4       110
+DAo+ 192.168.10.0/24  10.255.0.26%ether4       110
+DAo+ 192.168.10.0/24  10.255.0.22%ether3       110
+DAo+ 192.168.20.0/24  10.255.0.26%ether4       110
+DAo+ 192.168.20.0/24  10.255.0.22%ether3       110
+DAc  172.31.250.0/28  ether5@MGMT                0
+
+[admin@CORE-1] > 
+==================== 5017
+
+[admin@CORE-2] > /system identity print[admin@CORE-2] > /system identity print
+  name: CORE-2
+[admin@CORE-2] > /system resource print[admin@CORE-2] > /system resource print
+                   uptime: 18m57s
+                  version: 7.16 (stable)
+               build-time: 2024-09-20 13:00:27
+         factory-software: 7.1
+              free-memory: 307.1MiB
+             total-memory: 512.0MiB
+                      cpu: QEMU
+                cpu-count: 1
+            cpu-frequency: 2493MHz
+                 cpu-load: 21%
+           free-hdd-space: 70.2MiB
+          total-hdd-space: 89.2MiB
+  write-sect-since-reboot: 288
+         write-sect-total: 288
+        architecture-name: x86_64
+               board-name: CHR QEMU Ubuntu 26.04 PC (i440FX + PIIX, 1996)
+                 platform: MikroTik
+[admin@CORE-2] > /ip address print without-paging[admin@CORE-2] > /ip address print without-paging
+Columns: ADDRESS, NETWORK, INTERFACE
+# ADDRESS          NETWORK       INTERFACE
+;;; EDGE
+0 10.255.0.14/30   10.255.0.12   ether1   
+;;; CORE-1
+1 10.255.0.18/30   10.255.0.16   ether2   
+;;; DIST-1
+2 10.255.0.29/30   10.255.0.28   ether3   
+;;; DIST-2
+3 10.255.0.33/30   10.255.0.32   ether4   
+;;; Loopback CORE-2
+4 10.255.255.5/32  10.255.255.5  lo       
+;;; Red de gestion aislada
+5 172.31.250.5/28  172.31.250.0  ether5   
+
+[admin@CORE-2] > /routing ospf neighbor print terse without-paging[admin@CORE-2] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.13 router-id=10.255.255.3 state=Full state-changes=5 adjacency=18m7s timeout=31s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.17 router-id=10.255.255.4 state=Full state-changes=5 adjacency=18m13s timeout=39s
+2 D instance=ospf-v2 area=backbone-v2 address=10.255.0.30 router-id=10.255.255.6 state=Full state-changes=5 adjacency=14m58s timeout=39s
+3 D instance=ospf-v2 area=backbone-v2 address=10.255.0.34 router-id=10.255.255.7 state=Full state-changes=6 adjacency=12m58s timeout=33s
+
+[admin@CORE-2] > /interface vrrp print without-paging[admin@CORE-2] > /interface vrrp print without-paging
+
+[admin@CORE-2] > /ip route print without-paging[admin@CORE-2] > /ip route print without-paging
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.0.8/30    10.255.0.13%ether1       110
+DAo+ 10.255.0.8/30    10.255.0.17%ether2       110
+DAc  10.255.0.12/30   ether1                     0
+DAc  10.255.0.16/30   ether2                     0
+DAo+ 10.255.0.20/30   10.255.0.30%ether3       110
+DAo+ 10.255.0.20/30   10.255.0.17%ether2       110
+DAo+ 10.255.0.24/30   10.255.0.17%ether2       110
+DAo+ 10.255.0.24/30   10.255.0.34%ether4       110
+DAc  10.255.0.28/30   ether3                     0
+DAc  10.255.0.32/30   ether4                     0
+DAo  10.255.255.3/32  10.255.0.13%ether1       110
+DAo  10.255.255.4/32  10.255.0.17%ether2       110
+DAc  10.255.255.5/32  lo                         0
+DAo  10.255.255.6/32  10.255.0.30%ether3       110
+DAo  10.255.255.7/32  10.255.0.34%ether4       110
+DAo+ 192.168.10.0/24  10.255.0.30%ether3       110
+DAo+ 192.168.10.0/24  10.255.0.34%ether4       110
+DAo+ 192.168.20.0/24  10.255.0.30%ether3       110
+DAo+ 192.168.20.0/24  10.255.0.34%ether4       110
+DAc  172.31.250.0/28  ether5@MGMT                0
+
+[admin@CORE-2] > 
+==================== 5019
+
+[admin@DIST-1] > /system identity print[admin@DIST-1] > /system identity print
+  name: DIST-1
+[admin@DIST-1] > /system resource print[admin@DIST-1] > /system resource print
+                   uptime: 17m57s
+                  version: 7.16 (stable)
+               build-time: 2024-09-20 13:00:27
+         factory-software: 7.1
+              free-memory: 304.7MiB
+             total-memory: 512.0MiB
+                      cpu: QEMU
+                cpu-count: 1
+            cpu-frequency: 2494MHz
+                 cpu-load: 20%
+           free-hdd-space: 70.1MiB
+          total-hdd-space: 89.2MiB
+  write-sect-since-reboot: 568
+         write-sect-total: 568
+        architecture-name: x86_64
+               board-name: CHR QEMU Ubuntu 26.04 PC (i440FX + PIIX, 1996)
+                 platform: MikroTik
+[admin@DIST-1] > /ip address print without-paging[admin@DIST-1] > /ip address print without-paging
+Flags: I - INVALID
+Columns: ADDRESS, NETWORK, INTERFACE
+#   ADDRESS          NETWORK       INTERFACE      
+;;; CORE-1
+0   10.255.0.22/30   10.255.0.20   ether1         
+;;; CORE-2
+1   10.255.0.30/30   10.255.0.28   ether2         
+;;; LAN USERS
+2   192.168.10.2/24  192.168.10.0  ether3         
+;;; LAN SERVERS
+3   192.168.20.2/24  192.168.20.0  ether4         
+;;; Loopback DIST-1
+4   10.255.255.6/32  10.255.255.6  lo             
+;;; Red de gestion aislada
+5   172.31.250.6/28  172.31.250.0  ether5         
+;;; F2 - VIP USERS VRID 10
+6   192.168.10.1/32  192.168.10.1  vrrp-users-10  
+;;; F2 - VIP SERVERS VRID 20
+7 I 192.168.20.1/32  192.168.20.1  vrrp-servers-20
+
+[admin@DIST-1] > /routing ospf neighbor print terse without-paging[admin@DIST-1] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.21 router-id=10.255.255.4 state=Full state-changes=5 adjacency=15m25s timeout=37s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.29 router-id=10.255.255.5 state=Full state-changes=5 adjacency=15m21s timeout=31s
+
+[admin@DIST-1] > /interface vrrp print without-paging[admin@DIST-1] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRI  IN  V  V3-P  SY
+;;; F2 - SERVERS - DIST-1 backup preferido
+0  B vrrp-servers-20  ether4     00:00:5E:00:01:14    20  100  1s  2  ipv4  no
+;;; F2 - USERS - DIST-1 master preferido
+1 RM vrrp-users-10    ether3     00:00:5E:00:01:0A    10  150  1s  2  ipv4  no
+
+[admin@DIST-1] > /ip route print without-paging[admin@DIST-1] > /ip route print without-paging
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo  10.255.0.8/30    10.255.0.21%ether1       110
+DAo  10.255.0.12/30   10.255.0.29%ether2       110
+DAo+ 10.255.0.16/30   10.255.0.21%ether1       110
+DAo+ 10.255.0.16/30   10.255.0.29%ether2       110
+DAc  10.255.0.20/30   ether1                     0
+DAo  10.255.0.24/30   10.255.0.21%ether1       110
+DAc  10.255.0.28/30   ether2                     0
+DAo  10.255.0.32/30   10.255.0.29%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.29%ether2       110
+DAo  10.255.255.4/32  10.255.0.21%ether1       110
+DAo  10.255.255.5/32  10.255.0.29%ether2       110
+DAc  10.255.255.6/32  lo                         0
+DAo+ 10.255.255.7/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.7/32  10.255.0.29%ether2       110
+DAc  192.168.10.0/24  ether3                     0
+DAc  192.168.10.1/32  vrrp-users-10              0
+DAc  192.168.20.0/24  ether4                     0
+DAc  172.31.250.0/28  ether5@MGMT                0
+
+[admin@DIST-1] > 
+==================== 5021
+
+[admin@DIST-2] > /system identity print[admin@DIST-2] > /system identity print
+  name: DIST-2
+[admin@DIST-2] > /system resource print[admin@DIST-2] > /system resource print
+                   uptime: 16m42s
+                  version: 7.16 (stable)
+               build-time: 2024-09-20 13:00:27
+         factory-software: 7.1
+              free-memory: 305.0MiB
+             total-memory: 512.0MiB
+                      cpu: QEMU
+                cpu-count: 1
+            cpu-frequency: 2495MHz
+                 cpu-load: 21%
+           free-hdd-space: 70.1MiB
+          total-hdd-space: 89.2MiB
+  write-sect-since-reboot: 776
+         write-sect-total: 776
+        architecture-name: x86_64
+               board-name: CHR QEMU Ubuntu 26.04 PC (i440FX + PIIX, 1996)
+                 platform: MikroTik
+[admin@DIST-2] > /ip address print without-paging[admin@DIST-2] > /ip address print without-paging
+Flags: I - INVALID
+Columns: ADDRESS, NETWORK, INTERFACE
+#   ADDRESS          NETWORK       INTERFACE      
+;;; CORE-1
+0   10.255.0.26/30   10.255.0.24   ether1         
+;;; CORE-2
+1   10.255.0.34/30   10.255.0.32   ether2         
+;;; LAN USERS
+2   192.168.10.3/24  192.168.10.0  ether3         
+;;; LAN SERVERS
+3   192.168.20.3/24  192.168.20.0  ether4         
+;;; Loopback DIST-2
+4   10.255.255.7/32  10.255.255.7  lo             
+;;; Red de gestion aislada
+5   172.31.250.7/28  172.31.250.0  ether5         
+;;; F2 - VIP USERS VRID 10
+6 I 192.168.10.1/32  192.168.10.1  vrrp-users-10  
+;;; F2 - VIP SERVERS VRID 20
+7   192.168.20.1/32  192.168.20.1  vrrp-servers-20
+
+[admin@DIST-2] > /routing ospf neighbor print terse without-paging[admin@DIST-2] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.25 router-id=10.255.255.4 state=Full state-changes=4 adjacency=13m38s timeout=33s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.33 router-id=10.255.255.5 state=Full state-changes=5 adjacency=13m43s timeout=38s
+
+[admin@DIST-2] > /interface vrrp print without-paging[admin@DIST-2] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRI  IN  V  V3-P  SY
+;;; F2 - SERVERS - DIST-2 master preferido
+0 RM vrrp-servers-20  ether4     00:00:5E:00:01:14    20  150  1s  2  ipv4  no
+;;; F2 - USERS - DIST-2 backup preferido
+1  B vrrp-users-10    ether3     00:00:5E:00:01:0A    10  100  1s  2  ipv4  no
+
+[admin@DIST-2] > /ip route print without-paging[admin@DIST-2] > /ip route print without-paging
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo  10.255.0.8/30    10.255.0.25%ether1       110
+DAo  10.255.0.12/30   10.255.0.33%ether2       110
+DAo+ 10.255.0.16/30   10.255.0.25%ether1       110
+DAo+ 10.255.0.16/30   10.255.0.33%ether2       110
+DAo  10.255.0.20/30   10.255.0.25%ether1       110
+DAc  10.255.0.24/30   ether1                     0
+DAo  10.255.0.28/30   10.255.0.33%ether2       110
+DAc  10.255.0.32/30   ether2                     0
+DAo+ 10.255.255.3/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.33%ether2       110
+DAo  10.255.255.4/32  10.255.0.25%ether1       110
+DAo  10.255.255.5/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.6/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.6/32  10.255.0.33%ether2       110
+DAc  10.255.255.7/32  lo                         0
+DAc  192.168.10.0/24  ether3                     0
+DAc  192.168.20.0/24  ether4                     0
+DAc  192.168.20.1/32  vrrp-servers-20            0
+DAc  172.31.250.0/28  ether5@MGMT                0
+
+[admin@DIST-2] > 

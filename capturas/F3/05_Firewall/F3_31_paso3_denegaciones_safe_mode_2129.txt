@@ -1,0 +1,21 @@
+Fri Oct 23 09:29:55 PM UTC 2026
+ 21:29:55 up  1:16,  1 user,  load average: 12.43, 10.80, 10.27
+SAFE MODE ACTIVO
+CHEQUEO bgp=2 ospf=2
+COMMIT: salida de Safe Mode conservando cambios; SAFE en prompt final: False
+
+[admin@EDGE] > 
+[Safe Mode taken]
+[admin@EDGE] <SAFE> /ip firewall filter add chain=input connection-state=invalid action=drop comment="F3 FW deny in: invalid"[admin@EDGE] <SAFE> /ip firewall filter add chain=input connection-state=invalid action=drop comment="F3 FW deny in: invalid"
+[admin@EDGE] <SAFE> /ip firewall filter add chain=input in-interface-list=FW-WAN action=drop comment="F3 FW deny in: WAN no solicitado"[admin@EDGE] <SAFE> /ip firewall filter add chain=input in-interface-list=FW-WAN action=drop comment="F3 FW deny in: WAN no solicitado"
+[admin@EDGE] <SAFE> /ip firewall filter add chain=input action=drop comment="F3 FW deny in: resto"[admin@EDGE] <SAFE> /ip firewall filter add chain=input action=drop comment="F3 FW deny in: resto"
+[admin@EDGE] <SAFE> /ip firewall filter add chain=forward connection-state=invalid action=drop comment="F3 FW deny fwd: invalid"[admin@EDGE] <SAFE> /ip firewall filter add chain=forward connection-state=invalid action=drop comment="F3 FW deny fwd: invalid"
+[admin@EDGE] <SAFE> /ip firewall filter add chain=forward in-interface-list=FW-WAN connection-state=new action=drop comment="F3 FW deny fwd: nuevo desde WAN"[admin@EDGE] <SAFE> /ip firewall filter add chain=forward in-interface-list=FW-WAN connection-state=new action=drop comment="F3 FW deny fwd: nuevo desde WAN"
+[admin@EDGE] <SAFE> /routing bgp session print count-only[admin@EDGE] <SAFE> /routing bgp session print count-only
+2
+[admin@EDGE] <SAFE> /routing ospf neighbor print count-only[admin@EDGE] <SAFE> /routing ospf neighbor print count-only
+2
+[admin@EDGE] <SAFE> 
+[Safe Mode released]
+
+Fri Oct 23 09:31:50 PM UTC 2026

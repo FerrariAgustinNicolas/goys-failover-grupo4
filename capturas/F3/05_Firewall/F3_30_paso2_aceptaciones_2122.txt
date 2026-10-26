@@ -1,0 +1,194 @@
+Fri Oct 23 09:22:34 PM UTC 2026
+ 21:22:34 up  1:08,  1 user,  load average: 14.03, 10.56, 10.12
+##APPLY
+
+[admin@EDGE] > /ip firewall filter add chain=input connection-state=established,related,untracked action=accept comment="F3 FW in: established/related"[admin@EDGE] > /ip firewall filter add chain=input connection-state=established,related,untracked action=accept comment="F3 FW in: established/related"
+[admin@EDGE] > /ip firewall filter add chain=input protocol=tcp dst-port=179 src-address-list=FW-ISP-PEERS in-interface-list=FW-WAN action=accept comment="F3 FW in: BGP desde ISP"[admin@EDGE] > /ip firewall filter add chain=input protocol=tcp dst-port=179 src-address-list=FW-ISP-PEERS in-interface-list=FW-WAN action=accept comment="F3 FW in: BGP desde ISP"
+[admin@EDGE] > /ip firewall filter add chain=input protocol=ospf src-address-list=FW-CORE-PEERS in-interface-list=FW-LAN action=accept comment="F3 FW in: OSPF desde CORE"[admin@EDGE] > /ip firewall filter add chain=input protocol=ospf src-address-list=FW-CORE-PEERS in-interface-list=FW-LAN action=accept comment="F3 FW in: OSPF desde CORE"
+[admin@EDGE] > /ip firewall filter add chain=input protocol=icmp in-interface-list=FW-LAN action=accept comment="F3 FW in: ICMP interno"[admin@EDGE] > /ip firewall filter add chain=input protocol=icmp in-interface-list=FW-LAN action=accept comment="F3 FW in: ICMP interno"
+[admin@EDGE] > /ip firewall filter add chain=input protocol=icmp src-address-list=FW-ISP-PEERS in-interface-list=FW-WAN action=accept comment="F3 FW in: ICMP desde peers ISP"[admin@EDGE] > /ip firewall filter add chain=input protocol=icmp src-address-list=FW-ISP-PEERS in-interface-list=FW-WAN action=accept comment="F3 FW in: ICMP desde peers ISP"
+[admin@EDGE] > /ip firewall filter add chain=forward connection-state=established,related,untracked action=accept comment="F3 FW fwd: established/related"[admin@EDGE] > /ip firewall filter add chain=forward connection-state=established,related,untracked action=accept comment="F3 FW fwd: established/related"
+[admin@EDGE] > /ip firewall filter add chain=forward src-address-list=FW-LAN-INTERNAS out-interface-list=FW-WAN connection-state=new action=accept comment="F3 FW fwd: LAN hacia ISP"[admin@EDGE] > /ip firewall filter add chain=forward src-address-list=FW-LAN-INTERNAS out-interface-list=FW-WAN connection-state=new action=accept comment="F3 FW fwd: LAN hacia ISP"
+[admin@EDGE] > 
+##VPCS
+==================== 5025
+
+Welcome to Virtual PC Simulator, version 0.8.5
+Dedicated to Daling.
+Build time: Oct 12 2026 12:54:00
+Copyright (c) 2007-2015, Paul Meng (mirnshi@gmail.com)
+All rights reserved.
+
+VPCS is free software, distributed under the terms of the "BSD" licence.
+Source code and license can be found at vpcs.sf.net.
+For more information, please visit wiki.freecode.com.cn.
+
+Press '?' to get help.
+
+Executing the startup file
+
+
+Checking for duplicate address...
+PC-USER : 192.168.10.100 255.255.255.0 gateway 192.168.10.1
+
+PC-USER> ping 10.255.255.1 -c 5
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=637.256 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=223.745 ms
+
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=234.376 ms
+84 bytes from 10.255.255.1 icmp_seq=4 ttl=61 time=168.673 ms
+84 bytes from 10.255.255.1 icmp_seq=5 ttl=61 time=195.023 ms
+
+
+PC-USER> 
+PC-USER> ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=418.576 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=192.853 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=220.227 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=290.423 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=318.188 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> ping 192.168.20.100 -c 5
+
+84 bytes from 192.168.20.100 icmp_seq=1 ttl=63 time=336.974 ms
+84 bytes from 192.168.20.100 icmp_seq=2 ttl=63 time=124.146 ms
+84 bytes from 192.168.20.100 icmp_seq=3 ttl=63 time=111.609 ms
+
+84 bytes from 192.168.20.100 icmp_seq=4 ttl=63 time=125.961 ms
+84 bytes from 192.168.20.100 icmp_seq=5 ttl=63 time=127.365 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+==================== 5027
+
+Welcome to Virtual PC Simulator, version 0.8.5
+Dedicated to Daling.
+Build time: Oct 12 2026 12:54:00
+Copyright (c) 2007-2015, Paul Meng (mirnshi@gmail.com)
+All rights reserved.
+
+VPCS is free software, distributed under the terms of the "BSD" licence.
+Source code and license can be found at vpcs.sf.net.
+For more information, please visit wiki.freecode.com.cn.
+
+Press '?' to get help.
+
+Executing the startup file
+
+
+Checking for duplicate address...
+SRV : 192.168.20.100 255.255.255.0 gateway 192.168.20.1
+
+SRV> ping 10.255.255.1 -c 5
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=211.070 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=221.850 ms
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=177.949 ms
+
+84 bytes from 10.255.255.1 icmp_seq=4 ttl=61 time=243.297 ms
+84 bytes from 10.255.255.1 icmp_seq=5 ttl=61 time=278.302 ms
+
+SRV> 
+SRV> 
+SRV> ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=321.229 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=301.015 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=241.076 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=276.085 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=246.659 ms
+
+SRV> 
+SRV> 
+SRV> 
+##EDGE
+
+[admin@EDGE] > /ip firewall filter print stats without-paging[admin@EDGE] > /ip firewall filter print stats without-paging
+Columns: CHAIN, ACTION, BYTES, PACKETS
+# CHAIN    ACTION  BYTES  PACKETS
+;;; MGMT permitir ICMP autorizado
+0 input    accept      0        0
+;;; MGMT permitir SSH autorizado
+1 input    accept      0        0
+;;; MGMT bloquear accesos no autorizados
+2 input    drop        0        0
+;;; F3 FW in: established/related
+3 input    accept    556        8
+;;; F3 FW in: BGP desde ISP
+4 input    accept      0        0
+;;; F3 FW in: OSPF desde CORE
+5 input    accept  1 848       22
+;;; F3 FW in: ICMP interno
+6 input    accept      0        0
+;;; F3 FW in: ICMP desde peers ISP
+7 input    accept      0        0
+;;; F3 FW fwd: established/related
+8 forward  accept  1 680       20
+;;; F3 FW fwd: LAN hacia ISP
+9 forward  accept  1 680       20
+
+[admin@EDGE] > /ip firewall filter print count-only where invalid[admin@EDGE] > /ip firewall filter print count-only where invalid
+0
+[admin@EDGE] > /routing bgp session print count-only[admin@EDGE] > /routing bgp session print count-only
+2
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > 
+##CORE1
+
+[admin@CORE-1] > /routing ospf neighbor print terse without-paging[admin@CORE-1] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.9 router-id=10.255.255.3 state=Full state-changes=5 adjacency=1h2m1s timeout=38s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.22 router-id=10.255.255.6 state=Full state-changes=6 adjacency=57m34s timeout=33s
+2 D instance=ospf-v2 area=backbone-v2 address=10.255.0.18 router-id=10.255.255.5 state=Full state-changes=5 adjacency=1h15s timeout=34s
+3 D instance=ospf-v2 area=backbone-v2 address=10.255.0.26 router-id=10.255.255.7 state=Full state-changes=6 adjacency=53m24s timeout=33s
+
+[admin@CORE-1] > 
+##CORE2
+
+[admin@CORE-2] > /routing ospf neighbor print terse without-paging[admin@CORE-2] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.17 router-id=10.255.255.4 state=Full state-changes=4 adjacency=1h24s timeout=34s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.13 router-id=10.255.255.3 state=Full state-changes=5 adjacency=1h29s timeout=39s
+2 D instance=ospf-v2 area=backbone-v2 address=10.255.0.30 router-id=10.255.255.6 state=Full state-changes=5 adjacency=57m42s timeout=34s
+3 D instance=ospf-v2 area=backbone-v2 address=10.255.0.34 router-id=10.255.255.7 state=Full state-changes=5 adjacency=53m27s timeout=34s
+
+[admin@CORE-2] > 
+##DIST1
+
+[admin@DIST-1] > /routing ospf neighbor print terse without-paging[admin@DIST-1] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.21 router-id=10.255.255.4 state=Full state-changes=5 adjacency=57m53s timeout=34s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.29 router-id=10.255.255.5 state=Full state-changes=5 adjacency=57m48s timeout=35s
+
+[admin@DIST-1] > /interface vrrp print without-paging[admin@DIST-1] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-1 backup preferido
+0  B vrrp-servers-20  ether4     00:00:5E:00:01:14    20       100  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-1 master preferido
+1 RM vrrp-users-10    ether3     00:00:5E:00:01:0A    10       150  1s              2  ipv4         no                      
+
+[admin@DIST-1] > 
+##DIST2
+
+[admin@DIST-2] > /routing ospf neighbor print terse without-paging[admin@DIST-2] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.33 router-id=10.255.255.5 state=Full state-changes=6 adjacency=53m50s timeout=32s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.25 router-id=10.255.255.4 state=Full state-changes=5 adjacency=53m55s timeout=32s
+
+[admin@DIST-2] > /interface vrrp print without-paging[admin@DIST-2] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-2 master preferido
+0 RM vrrp-servers-20  ether4     00:00:5E:00:01:14    20       150  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-2 backup preferido
+1  B vrrp-users-10    ether3     00:00:5E:00:01:0A    10       100  1s              2  ipv4         no                      
+
+[admin@DIST-2] > 
+ 21:25:36 up  1:11,  1 user,  load average: 8.72, 9.80, 9.92

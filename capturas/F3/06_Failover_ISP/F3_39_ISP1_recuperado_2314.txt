@@ -1,0 +1,258 @@
+Fri Oct 23 11:14:41 PM UTC 2026
+ 23:14:42 up  3:00,  1 user,  load average: 13.41, 10.68, 9.82
+APPLY
+
+[admin@ISP-1] > /interface enable ether1[admin@ISP-1] > /interface enable ether1
+
+[admin@ISP-1] > 
+[admin@ISP-1] > /interface print without-paging where name=ether1[admin@ISP-1] > /interface print without-paging where name=ether1
+Flags: R - RUNNING
+Columns: NAME, TYPE, ACTUAL-MTU, MAC-ADDRESS
+#   NAME    TYPE   ACTUAL-MTU  MAC-ADDRESS      
+0 R ether1  ether        1500  0C:81:3E:29:00:00
+
+[admin@ISP-1] > /routing bgp session print without-paging[admin@ISP-1] > /routing bgp session print without-paging
+Flags: E - established 
+ 0   name="ebgp-edge-1" 
+     remote.address=10.255.0.2 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip 
+     local.address=10.255.0.1 .as=65001 .id=10.255.255.1 .cluster-id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip 
+     output.filter-chain=isp1-out-edge .network=bgp-isp1-out .default-originate=always .last-notification=ffffffffffffffffffffffffffffffff0015030400 
+     input.filter=isp1-in-edge ebgp 
+     keepalive-time=1m last-started=2026-10-23 22:39:11 last-stopped=2026-10-23 23:08:13 prefix-count=0 
+
+[admin@ISP-1] > 
+Fri Oct 23 11:17:06 PM UTC 2026
+EDGE
+
+[admin@EDGE] > /routing bgp session print without-paging[admin@EDGE] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-isp1-1" 
+     remote.address=10.255.0.1 .as=65001 .id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip .messages=4 .bytes=107 .eor="" 
+     local.address=10.255.0.2 .as=65000 .id=10.255.255.3 .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=4 .bytes=109 .eor="" 
+     output.procid=20 .filter-chain=edge-out-isp .network=bgp-lan-out .last-notification=ffffffffffffffffffffffffffffffff0015030400 
+     input.procid=20 .filter=edge-in-isp1 ebgp 
+     hold-time=3m keepalive-time=1m uptime=2m7s850ms last-started=2026-10-23 23:15:01 last-stopped=2026-10-23 23:08:12 prefix-count=0 
+
+ 1 E name="ebgp-isp2-1" 
+     remote.address=10.255.0.5 .as=65002 .id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=39 .bytes=772 .eor="" 
+     local.address=10.255.0.6 .as=65000 .id=10.255.255.3 .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=39 .bytes=774 .eor="" 
+     output.procid=21 .filter-chain=edge-out-isp .network=bgp-lan-out 
+     input.procid=21 .filter=edge-in-isp2 ebgp 
+     hold-time=3m keepalive-time=1m uptime=37m58s350ms last-started=2026-10-23 22:39:10 prefix-count=2 
+
+[admin@EDGE] > /ip route print without-paging where bgp[admin@EDGE] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+D b 0.0.0.0/0        10.255.0.5        20
+DAb 0.0.0.0/0        10.255.0.1        20
+DAb 10.255.255.1/32  10.255.0.1        20
+DAb 10.255.255.2/32  10.255.0.5        20
+
+[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY     DISTANCE
+D b 0.0.0.0/0    10.255.0.5        20
+DAb 0.0.0.0/0    10.255.0.1        20
+
+[admin@EDGE] > /routing ospf lsa print without-paging where type=external[admin@EDGE] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000002 age=476 checksum=0xFA49 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 2 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.1 sequence=0x80000001 age=132 checksum=0x70C9 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000002 age=514 checksum=0x64D3 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > /log print without-paging where topics~"bgp"[admin@EDGE] > /log print without-paging where topics~"bgp"
+ 22:39:10 route,bgp,info ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1} Established
+ 22:39:10 route,bgp,info ebgp-isp2-1 {l_addr: 10.255.0.6, r_addr: 10.255.0.5} Established
+ 23:08:12 route,bgp,error HoldTimer expired ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1}
+ 23:15:01 route,bgp,info ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1} Established
+
+[admin@EDGE] > 
+ISP1
+
+[admin@ISP-1] > /routing bgp session print without-paging[admin@ISP-1] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.2 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=4 .bytes=109 .eor="" 
+     local.address=10.255.0.1 .as=65001 .id=10.255.255.1 .cluster-id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip .messages=4 .bytes=107 .eor="" 
+     output.procid=20 .filter-chain=isp1-out-edge .network=bgp-isp1-out .default-originate=always .last-notification=ffffffffffffffffffffffffffffffff0015030400 
+     input.procid=20 .filter=isp1-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=2m38s830ms last-started=2026-10-23 23:15:02 last-stopped=2026-10-23 23:08:13 prefix-count=0 
+
+[admin@ISP-1] > /ip route print without-paging where bgp[admin@ISP-1] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.2        20
+DAb 192.168.20.0/24  10.255.0.2        20
+
+[admin@ISP-1] > /ip route print without-paging where dst-address in 192.168.0.0/16[admin@ISP-1] > /ip route print without-paging where dst-address in 192.168.0.0/16
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.2        20
+DAb 192.168.20.0/24  10.255.0.2        20
+
+[admin@ISP-1] > 
+R5015
+
+[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY            DISTANCE
+DAo 0.0.0.0/0    10.255.0.9%ether1       110
+
+[admin@CORE-1] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@CORE-1] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY            DISTANCE
+DAo 10.255.255.1/32  10.255.0.9%ether1       110
+DAo 10.255.255.2/32  10.255.0.9%ether1       110
+DAo 10.255.255.3/32  10.255.0.9%ether1       110
+
+[admin@CORE-1] > /routing ospf lsa print count-only where type=external[admin@CORE-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-1] > /routing ospf neighbor print count-only[admin@CORE-1] > /routing ospf neighbor print count-only
+4
+[admin@CORE-1] > 
+R5017
+
+[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY             DISTANCE
+DAo 0.0.0.0/0    10.255.0.13%ether1       110
+
+[admin@CORE-2] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@CORE-2] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY             DISTANCE
+DAo 10.255.255.1/32  10.255.0.13%ether1       110
+DAo 10.255.255.2/32  10.255.0.13%ether1       110
+DAo 10.255.255.3/32  10.255.0.13%ether1       110
+
+[admin@CORE-2] > /routing ospf lsa print count-only where type=external[admin@CORE-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-2] > /routing ospf neighbor print count-only[admin@CORE-2] > /routing ospf neighbor print count-only
+4
+[admin@CORE-2] > 
+R5019
+
+[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.21%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.29%ether2       110
+
+[admin@DIST-1] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@DIST-1] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.255.1/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.1/32  10.255.0.29%ether2       110
+DAo+ 10.255.255.2/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.2/32  10.255.0.29%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.29%ether2       110
+
+[admin@DIST-1] > /routing ospf lsa print count-only where type=external[admin@DIST-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-1] > /routing ospf neighbor print count-only[admin@DIST-1] > /routing ospf neighbor print count-only
+2
+[admin@DIST-1] > 
+R5021
+
+[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.33%ether2       110
+DAo+ 0.0.0.0/0    10.255.0.25%ether1       110
+
+[admin@DIST-2] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@DIST-2] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.255.1/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.1/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.2/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.2/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.25%ether1       110
+
+[admin@DIST-2] > /routing ospf lsa print count-only where type=external[admin@DIST-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-2] > /routing ospf neighbor print count-only[admin@DIST-2] > /routing ospf neighbor print count-only
+2
+[admin@DIST-2] > 
+VPCS
+==================== 5025
+ping 10.255.255.1 -c 5
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=182.323 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=189.183 ms
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=215.325 ms
+
+84 bytes from 10.255.255.1 icmp_seq=4 ttl=61 time=285.190 ms
+84 bytes from 10.255.255.1 icmp_seq=5 ttl=61 time=234.159 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=271.085 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=183.462 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=263.393 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=264.038 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=283.434 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+==================== 5027
+ping 10.255.255.1 -c 5
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=175.583 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=158.295 ms
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=194.853 ms
+
+84 bytes from 10.255.255.1 icmp_seq=4 ttl=61 time=193.991 ms
+84 bytes from 10.255.255.1 icmp_seq=5 ttl=61 time=199.741 ms
+
+SRV> 
+SRV> 
+SRV> ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=197.669 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=260.574 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=254.339 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=259.729 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=259.630 ms
+
+SRV> 
+SRV> 
+SRV> 
+ 23:20:01 up  3:06,  1 user,  load average: 8.92, 9.44, 9.57

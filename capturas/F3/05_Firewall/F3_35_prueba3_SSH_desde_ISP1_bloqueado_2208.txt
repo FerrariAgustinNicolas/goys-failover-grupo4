@@ -1,0 +1,78 @@
+Fri Oct 23 10:08:24 PM UTC 2026
+
+[admin@ISP-1] > /system ssh address=10.255.0.2 user=admin[admin@ISP-1] > /system ssh address=10.255.0.2 user=admin
+78^C
+Welcome back!
+[admin@ISP-1] > 
+[admin@ISP-1] > 
+EDGE
+
+[admin@EDGE] > /ip firewall filter print stats without-paging where chain=input[admin@EDGE] > /ip firewall filter print stats without-paging where chain=input
+Columns: CHAIN, ACTION, BYTES, PACKETS
+ # CHAIN  ACTION   BYTES  PACKETS
+;;; MGMT permitir ICMP autorizado
+ 0 input  accept       0        0
+;;; MGMT permitir SSH autorizado
+ 1 input  accept   1 716       17
+;;; MGMT bloquear accesos no autorizados
+ 2 input  drop     2 627       18
+;;; F3 FW in: established/related
+ 3 input  accept  13 575      195
+;;; F3 FW in: BGP desde ISP
+ 4 input  accept       0        0
+;;; F3 FW in: OSPF desde CORE
+ 5 input  accept  50 184      580
+;;; F3 FW in: ICMP interno
+ 6 input  accept     252        3
+;;; F3 FW in: ICMP desde peers ISP
+ 7 input  accept     112        2
+;;; F3 FW deny in: invalid
+10 input  drop         0        0
+;;; F3 FW deny in: WAN no solicitado
+11 input  drop       300        5
+;;; F3 FW deny in: resto
+12 input  drop         0        0
+
+[admin@EDGE] > 
+
+[admin@EDGE] > /ip firewall filter print stats without-paging[admin@EDGE] > /ip firewall filter print stats without-paging
+Columns: CHAIN, ACTION, BYTES, PACKETS
+ # CHAIN    ACTION   BYTES  PACKETS
+;;; MGMT permitir ICMP autorizado
+ 0 input    accept       0        0
+;;; MGMT permitir SSH autorizado
+ 1 input    accept   1 716       17
+;;; MGMT bloquear accesos no autorizados
+ 2 input    drop     2 627       18
+;;; F3 FW in: established/related
+ 3 input    accept  13 575      195
+;;; F3 FW in: BGP desde ISP
+ 4 input    accept       0        0
+;;; F3 FW in: OSPF desde CORE
+ 5 input    accept  50 352      582
+;;; F3 FW in: ICMP interno
+ 6 input    accept     252        3
+;;; F3 FW in: ICMP desde peers ISP
+ 7 input    accept     112        2
+;;; F3 FW fwd: established/related
+ 8 forward  accept   3 360       40
+;;; F3 FW fwd: LAN hacia ISP
+ 9 forward  accept   3 360       40
+;;; F3 FW deny in: invalid
+10 input    drop         0        0
+;;; F3 FW deny in: WAN no solicitado
+11 input    drop       300        5
+;;; F3 FW deny in: resto
+12 input    drop         0        0
+;;; F3 FW deny fwd: invalid
+13 forward  drop         0        0
+;;; F3 FW deny fwd: nuevo desde WAN
+14 forward  drop         0        0
+
+[admin@EDGE] > /ip firewall filter print count-only where invalid[admin@EDGE] > /ip firewall filter print count-only where invalid
+0
+[admin@EDGE] > /routing bgp session print count-only[admin@EDGE] > /routing bgp session print count-only
+2
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > 

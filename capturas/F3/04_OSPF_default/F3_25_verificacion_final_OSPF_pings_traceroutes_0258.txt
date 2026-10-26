@@ -1,0 +1,301 @@
+Fri Oct 23 02:58:39 AM UTC 2026
+ 02:58:39 up  1:55,  1 user,  load average: 12.25, 10.21, 9.90
+               total        used        free      shared  buff/cache   available
+Mem:            4793        3750         129          78        1229        1043
+Swap:           4095           0        4095
+##EDGE
+
+[admin@EDGE] > /routing ospf neighbor print terse without-paging[admin@EDGE] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.10 router-id=10.255.255.4 state=Full state-changes=6 adjacency=1h39m17s timeout=39s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.14 router-id=10.255.255.5 state=Full state-changes=6 adjacency=1h35m57s timeout=32s
+
+[admin@EDGE] > /routing bgp session print without-paging[admin@EDGE] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-isp2-1" 
+     remote.address=10.255.0.5 .as=65002 .id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=97 .bytes=1874 .eor="" 
+     local.address=10.255.0.6 .as=65000 .id=10.255.255.3 .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=97 .bytes=1876 .eor="" 
+     output.procid=20 .filter-chain=edge-out-isp .network=bgp-lan-out 
+     input.procid=20 .filter=edge-in-isp2 ebgp 
+     hold-time=3m keepalive-time=1m uptime=1h35m34s210ms last-started=2026-10-23 01:23:12 prefix-count=2 
+
+ 1 E name="ebgp-isp1-1" 
+     remote.address=10.255.0.1 .as=65001 .id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip .messages=97 .bytes=1874 .eor="" 
+     local.address=10.255.0.2 .as=65000 .id=10.255.255.3 .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=97 .bytes=1876 .eor="" 
+     output.procid=21 .filter-chain=edge-out-isp .network=bgp-lan-out 
+     input.procid=21 .filter=edge-in-isp1 ebgp 
+     hold-time=3m keepalive-time=1m uptime=1h35m31s380ms last-started=2026-10-23 01:23:16 prefix-count=2 
+
+[admin@EDGE] > /ip route print without-paging where bgp[admin@EDGE] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+D b 0.0.0.0/0        10.255.0.5        20
+DAb 0.0.0.0/0        10.255.0.1        20
+DAb 10.255.255.1/32  10.255.0.1        20
+DAb 10.255.255.2/32  10.255.0.5        20
+
+[admin@EDGE] > /routing ospf lsa print count-only where type=external[admin@EDGE] > /routing ospf lsa print count-only where type=external
+3
+[admin@EDGE] > /routing ospf instance print detail without-paging[admin@EDGE] > /routing ospf instance print detail without-paging
+Flags: X - disabled, I - inactive 
+ 0   ;;; F2 - OSPFv2 area 0
+     name="ospf-v2" version=2 vrf=main router-id=10.255.255.3 out-filter-chain=edge-ospf-out originate-default=if-installed 
+
+[admin@EDGE] > 
+##ISP1
+
+[admin@ISP-1] > /routing bgp session print without-paging[admin@ISP-1] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.2 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=97 .bytes=1876 .eor="" 
+     local.address=10.255.0.1 .as=65001 .id=10.255.255.1 .cluster-id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip .messages=97 .bytes=1874 .eor="" 
+     output.procid=20 .filter-chain=isp1-out-edge .network=bgp-isp1-out .default-originate=always 
+     input.procid=20 .filter=isp1-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=1h35m54s280ms last-started=2026-10-23 01:23:15 prefix-count=0 
+
+[admin@ISP-1] > /ip route print without-paging where bgp[admin@ISP-1] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.2        20
+DAb 192.168.20.0/24  10.255.0.2        20
+
+[admin@ISP-1] > /ip route print without-paging where dst-address in 192.168.0.0/16[admin@ISP-1] > /ip route print without-paging where dst-address in 192.168.0.0/16
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.2        20
+DAb 192.168.20.0/24  10.255.0.2        20
+
+[admin@ISP-1] > 
+##ISP2
+
+[admin@ISP-2] > /routing bgp session print without-paging[admin@ISP-2] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.6 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=98 .bytes=1895 .eor="" 
+     local.address=10.255.0.5 .as=65002 .id=10.255.255.2 .cluster-id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=98 .bytes=1893 .eor="" 
+     output.procid=20 .filter-chain=isp2-out-edge .network=bgp-isp2-out .default-originate=always 
+     input.procid=20 .filter=isp2-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=1h36m14s860ms last-started=2026-10-23 01:23:12 prefix-count=0 
+
+[admin@ISP-2] > /ip route print without-paging where bgp[admin@ISP-2] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.6        20
+DAb 192.168.20.0/24  10.255.0.6        20
+
+[admin@ISP-2] > /ip route print without-paging where dst-address in 192.168.0.0/16[admin@ISP-2] > /ip route print without-paging where dst-address in 192.168.0.0/16
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.6        20
+DAb 192.168.20.0/24  10.255.0.6        20
+
+[admin@ISP-2] > 
+##CORE1
+
+[admin@CORE-1] > /routing ospf neighbor print count-only[admin@CORE-1] > /routing ospf neighbor print count-only
+4
+[admin@CORE-1] > /routing ospf lsa print count-only where type=external[admin@CORE-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-1] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12[admin@CORE-1] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12
+0
+[admin@CORE-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@CORE-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY            DISTANCE
+DAo 0.0.0.0/0    10.255.0.9%ether1       110
+
+[admin@CORE-1] > 
+##CORE2
+
+[admin@CORE-2] > /routing ospf neighbor print count-only[admin@CORE-2] > /routing ospf neighbor print count-only
+4
+[admin@CORE-2] > /routing ospf lsa print count-only where type=external[admin@CORE-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-2] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12[admin@CORE-2] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12
+0
+[admin@CORE-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@CORE-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY             DISTANCE
+DAo 0.0.0.0/0    10.255.0.13%ether1       110
+
+[admin@CORE-2] > 
+##DIST1
+
+[admin@DIST-1] > /routing ospf neighbor print count-only[admin@DIST-1] > /routing ospf neighbor print count-only
+2
+[admin@DIST-1] > /interface vrrp print without-paging[admin@DIST-1] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-1 backup preferido
+0  B vrrp-servers-20  ether4     00:00:5E:00:01:14    20       100  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-1 master preferido
+1 RM vrrp-users-10    ether3     00:00:5E:00:01:0A    10       150  1s              2  ipv4         no                      
+
+[admin@DIST-1] > /routing ospf lsa print count-only where type=external[admin@DIST-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-1] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12[admin@DIST-1] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12
+0
+[admin@DIST-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@DIST-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.21%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.29%ether2       110
+
+[admin@DIST-1] > 
+##DIST2
+
+[admin@DIST-2] > /routing ospf neighbor print count-only[admin@DIST-2] > /routing ospf neighbor print count-only
+2
+[admin@DIST-2] > /interface vrrp print without-paging[admin@DIST-2] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-2 master preferido
+0 RM vrrp-servers-20  ether4     00:00:5E:00:01:14    20       150  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-2 backup preferido
+1  B vrrp-users-10    ether3     00:00:5E:00:01:0A    10       100  1s              2  ipv4         no                      
+
+[admin@DIST-2] > /routing ospf lsa print count-only where type=external[admin@DIST-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-2] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12[admin@DIST-2] > /ip route print count-only where ospf and dst-address in 172.16.0.0/12
+0
+[admin@DIST-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@DIST-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.25%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.33%ether2       110
+
+[admin@DIST-2] > 
+##PCUSER
+==================== 5025
+ping 10.255.255.1 -c 5
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=546.573 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=237.910 ms
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=308.174 ms
+
+84 bytes from 10.255.255.1 icmp_seq=4 ttl=61 time=246.679 ms
+84 bytes from 10.255.255.1 icmp_seq=5 ttl=61 time=275.745 ms
+
+
+PC-USER> 
+PC-USER> ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=464.321 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=382.967 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=212.157 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=328.251 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=176.273 ms
+
+
+PC-USER> 
+PC-USER> trace 10.255.255.1
+trace to 10.255.255.1, 8 hops max, press Ctrl+C to stop
+ 1   192.168.10.2   244.172 ms  112.860 ms  74.343 ms
+ 2   10.255.0.25   163.241 ms  107.172 ms  87.543 ms
+ 3   10.255.0.9   263.746 ms  163.332 ms  183.030 ms
+ 4   *10.255.255.1   284.721 ms (ICMP type:3, code:3, Destination port unreachable)
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+PC-USER> 
+PC-USER> trace 10.255.255.2
+trace to 10.255.255.2, 8 hops max, press Ctrl+C to stop
+ 1   192.168.10.2   45.488 ms  34.824 ms  59.355 ms
+ 2   10.255.0.21   80.381 ms  64.289 ms  87.376 ms
+ 3   10.255.0.9   164.885 ms  221.057 ms  259.532 ms
+ 4   *10.255.255.2   276.516 ms (ICMP type:3, code:3, Destination port unreachable)
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+PC-USER> 
+PC-USER> ping 192.168.20.100 -c 5
+
+84 bytes from 192.168.20.100 icmp_seq=1 ttl=63 time=330.457 ms
+84 bytes from 192.168.20.100 icmp_seq=2 ttl=63 time=151.089 ms
+84 bytes from 192.168.20.100 icmp_seq=3 ttl=63 time=117.847 ms
+
+84 bytes from 192.168.20.100 icmp_seq=4 ttl=63 time=144.886 ms
+84 bytes from 192.168.20.100 icmp_seq=5 ttl=63 time=131.874 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+##SRV
+==================== 5027
+
+Welcome to Virtual PC Simulator, version 0.8.5
+Dedicated to Daling.
+Build time: Oct 12 2026 12:54:00
+Copyright (c) 2007-2015, Paul Meng (mirnshi@gmail.com)
+All rights reserved.
+
+VPCS is free software, distributed under the terms of the "BSD" licence.
+Source code and license can be found at vpcs.sf.net.
+For more information, please visit wiki.freecode.com.cn.
+
+Press '?' to get help.
+
+Executing the startup file
+
+
+Checking for duplicate address...
+SRV : 192.168.20.100 255.255.255.0 gateway 192.168.20.1
+
+SRV> ping 10.255.255.1 -c 5
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=346.239 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=227.004 ms
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=201.049 ms
+
+84 bytes from 10.255.255.1 icmp_seq=4 ttl=61 time=199.543 ms
+84 bytes from 10.255.255.1 icmp_seq=5 ttl=61 time=233.596 ms
+
+SRV> 
+SRV> 
+SRV> ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=428.192 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=238.234 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=188.235 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=164.280 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=205.108 ms
+
+SRV> 
+SRV> 
+SRV> trace 10.255.255.1
+trace to 10.255.255.1, 8 hops max, press Ctrl+C to stop
+ 1   192.168.20.3   381.907 ms  70.648 ms  82.303 ms
+ 2   10.255.0.33   114.583 ms  89.500 ms  110.908 ms
+ 3   10.255.0.13   163.127 ms  174.793 ms  131.246 ms
+ 4   *10.255.255.1   225.783 ms (ICMP type:3, code:3, Destination port unreachable)
+
+SRV> 
+SRV> 
+SRV> 
+SRV> 
+SRV> trace 10.255.255.2
+trace to 10.255.255.2, 8 hops max, press Ctrl+C to stop
+ 1   192.168.20.3   29.227 ms  22.009 ms  57.844 ms
+ 2   10.255.0.33   96.901 ms  111.280 ms  118.682 ms
+ 3   10.255.0.9   212.323 ms  153.505 ms  133.753 ms
+ 4   *10.255.255.2   174.151 ms (ICMP type:3, code:3, Destination port unreachable)
+
+SRV> 
+SRV> 
+SRV> 
+SRV> 
+SRV> 
+ 03:03:07 up  2:00,  1 user,  load average: 8.16, 9.48, 9.71

@@ -1,0 +1,187 @@
+Fri Oct 23 02:55:13 AM UTC 2026
+##5015
+
+[admin@CORE-1] > /ip route print without-paging where dst-address in 10.255.255.0/24[admin@CORE-1] > /ip route print without-paging where dst-address in 10.255.255.0/24
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY             DISTANCE
+DAo 10.255.255.1/32  10.255.0.9%ether1        110
+DAo 10.255.255.2/32  10.255.0.9%ether1        110
+DAo 10.255.255.3/32  10.255.0.9%ether1        110
+DAc 10.255.255.4/32  lo                         0
+DAo 10.255.255.5/32  10.255.0.18%ether2       110
+DAo 10.255.255.6/32  10.255.0.22%ether3       110
+DAo 10.255.255.7/32  10.255.0.26%ether4       110
+
+[admin@CORE-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@CORE-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY            DISTANCE
+DAo 0.0.0.0/0    10.255.0.9%ether1       110
+
+[admin@CORE-1] > /routing ospf lsa print without-paging where type=external[admin@CORE-1] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0  D instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000001 age=632 checksum=0xFC48 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.1 sequence=0x80000001 age=176 checksum=0x70C9 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 2  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000001 age=176 checksum=0x66D2 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@CORE-1] > 
+##5017
+
+[admin@CORE-2] > /ip route print without-paging where dst-address in 10.255.255.0/24[admin@CORE-2] > /ip route print without-paging where dst-address in 10.255.255.0/24
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY             DISTANCE
+DAo 10.255.255.1/32  10.255.0.13%ether1       110
+DAo 10.255.255.2/32  10.255.0.13%ether1       110
+DAo 10.255.255.3/32  10.255.0.13%ether1       110
+DAo 10.255.255.4/32  10.255.0.17%ether2       110
+DAc 10.255.255.5/32  lo                         0
+DAo 10.255.255.6/32  10.255.0.30%ether3       110
+DAo 10.255.255.7/32  10.255.0.34%ether4       110
+
+[admin@CORE-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@CORE-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY             DISTANCE
+DAo 0.0.0.0/0    10.255.0.13%ether1       110
+
+[admin@CORE-2] > /routing ospf lsa print without-paging where type=external[admin@CORE-2] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0  D instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000001 age=649 checksum=0xFC48 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.1 sequence=0x80000001 age=193 checksum=0x70C9 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 2  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000001 age=193 checksum=0x66D2 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@CORE-2] > 
+##5019
+
+[admin@DIST-1] > /ip route print without-paging where dst-address in 10.255.255.0/24[admin@DIST-1] > /ip route print without-paging where dst-address in 10.255.255.0/24
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.255.1/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.1/32  10.255.0.29%ether2       110
+DAo+ 10.255.255.2/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.2/32  10.255.0.29%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.29%ether2       110
+DAo  10.255.255.4/32  10.255.0.21%ether1       110
+DAo  10.255.255.5/32  10.255.0.29%ether2       110
+DAc  10.255.255.6/32  lo                         0
+DAo+ 10.255.255.7/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.7/32  10.255.0.29%ether2       110
+
+[admin@DIST-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@DIST-1] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.21%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.29%ether2       110
+
+[admin@DIST-1] > /routing ospf lsa print without-paging where type=external[admin@DIST-1] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0  D instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000001 age=667 checksum=0xFC48 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.1 sequence=0x80000001 age=212 checksum=0x70C9 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 2  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000001 age=212 checksum=0x66D2 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@DIST-1] > 
+##5021
+
+[admin@DIST-2] > /ip route print without-paging where dst-address in 10.255.255.0/24[admin@DIST-2] > /ip route print without-paging where dst-address in 10.255.255.0/24
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT, o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.255.1/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.1/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.2/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.2/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.33%ether2       110
+DAo  10.255.255.4/32  10.255.0.25%ether1       110
+DAo  10.255.255.5/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.6/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.6/32  10.255.0.33%ether2       110
+DAc  10.255.255.7/32  lo                         0
+
+[admin@DIST-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)[admin@DIST-2] > /ip route print without-paging where ospf and !(dst-address in 10.255.0.0/16) and !(dst-address in 192.168.0.0/16)
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.25%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.33%ether2       110
+
+[admin@DIST-2] > /routing ospf lsa print without-paging where type=external[admin@DIST-2] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0  D instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000001 age=686 checksum=0xFC48 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.1 sequence=0x80000001 age=230 checksum=0x70C9 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 2  D instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000001 age=230 checksum=0x66D2 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@DIST-2] > 

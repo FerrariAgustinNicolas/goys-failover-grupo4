@@ -1,0 +1,58 @@
+######## ISP1: archivos F3 en el router
+
+[admin@ISP-1] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@ISP-1] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 F3_ISP1_20261025.rsc                                                                                                                                                                    script           2800 2026-10-25 14:45:43 
+ 1 F3_ISP1_20261025.backup                                                                                                                                                                 backup        24.0KiB 2026-10-25 16:18:36 
+
+[admin@ISP-1] > 
+######## ISP2: archivos F3 en el router
+
+[admin@ISP-2] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@ISP-2] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 F3_ISP2_20261025.rsc                                                                                                                                                                    script           2800 2026-10-25 14:49:06 
+ 1 F3_ISP2_20261025.backup                                                                                                                                                                 backup        24.0KiB 2026-10-25 16:19:32 
+
+[admin@ISP-2] > 
+######## EDGE: archivos F3 en el router
+
+[admin@EDGE] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@EDGE] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 EDGE_preFW_F3_20261023.rsc                                                                                                                                                              script           4757 2026-10-23 20:47:16 
+ 1 EDGE_preFW_F3_20261023.backup                                                                                                                                                           backup        26.2KiB 2026-10-23 21:00:09 
+ 2 F3_EDGE_20261025.rsc                                                                                                                                                                    script         6.8KiB 2026-10-25 14:50:40 
+ 3 F3_EDGE_20261025.backup                                                                                                                                                                 backup        29.0KiB 2026-10-25 16:20:20 
+
+[admin@EDGE] > 
+######## CORE1: archivos F3 en el router
+
+[admin@CORE-1] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@CORE-1] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 F3_CORE1_20261025.rsc                                                                                                                                                                   script           3080 2026-10-25 14:52:55 
+ 1 F3_CORE1_20261025.backup                                                                                                                                                                backup        24.5KiB 2026-10-25 16:23:09 
+
+[admin@CORE-1] > 
+######## CORE2: archivos F3 en el router
+
+[admin@CORE-2] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@CORE-2] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 F3_CORE2_20261025.rsc                                                                                                                                                                   script           3081 2026-10-25 14:54:47 
+ 1 F3_CORE2_20261025.backup                                                                                                                                                                backup        24.5KiB 2026-10-25 16:21:46 
+
+[admin@CORE-2] > 
+######## DIST1: archivos F3 en el router
+
+[admin@DIST-1] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@DIST-1] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 F3_DIST1_20261025.rsc                                                                                                                                                                   script           3574 2026-10-25 14:56:43 
+ 1 F3_DIST1_20261025.backup                                                                                                                                                                backup        25.2KiB 2026-10-25 16:22:24 
+
+[admin@DIST-1] > 
+######## DIST2: archivos F3 en el router
+
+[admin@DIST-2] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"[admin@DIST-2] > /file print without-paging proplist=name,type,size,last-modified where name~"F3_"
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 F3_DIST2_20261025.rsc                                                                                                                                                                   script           3574 2026-10-25 14:59:19 
+ 1 F3_DIST2_20261025.backup                                                                                                                                                                backup        25.2KiB 2026-10-25 16:21:05 
+
+[admin@DIST-2] > 

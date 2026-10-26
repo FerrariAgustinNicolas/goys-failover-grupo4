@@ -1,0 +1,205 @@
+Fri Oct 23 11:05:27 PM UTC 2026
+ 23:05:27 up  2:51,  1 user,  load average: 13.12, 10.16, 9.46
+APPLY
+
+[admin@ISP-1] > /interface disable ether1[admin@ISP-1] > /interface disable ether1
+[admin@ISP-1] > 
+
+[admin@ISP-1] > /interface print without-paging where name=ether1[admin@ISP-1] > /interface print without-paging where name=ether1
+Flags: X - DISABLED
+Columns: NAME, TYPE, ACTUAL-MTU, MAC-ADDRESS
+#   NAME    TYPE   ACTUAL-MTU  MAC-ADDRESS      
+0 X ether1  ether        1500  0C:81:3E:29:00:00
+
+[admin@ISP-1] > /routing bgp session print without-paging[admin@ISP-1] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.2 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=28 .bytes=565 .eor="" 
+     local.address=10.255.0.1 .as=65001 .id=10.255.255.1 .cluster-id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip .messages=28 .bytes=563 .eor="" 
+     output.procid=20 .filter-chain=isp1-out-edge .network=bgp-isp1-out .default-originate=always 
+     input.procid=20 .filter=isp1-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=26m34s100ms last-started=2026-10-23 22:39:11 prefix-count=2 
+
+[admin@ISP-1] > 
+Fri Oct 23 11:09:50 PM UTC 2026
+EDGE
+
+[admin@EDGE] > /routing bgp session print without-paging[admin@EDGE] > /routing bgp session print without-paging
+Flags: E - established 
+ 0   name="ebgp-isp1-1" 
+     remote.address=10.255.0.1 .as=65001 .id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip 
+     local.address=10.255.0.2 .as=65000 .id=10.255.255.3 .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip 
+     output.filter-chain=edge-out-isp .network=bgp-lan-out .last-notification=ffffffffffffffffffffffffffffffff0015030400 
+     input.filter=edge-in-isp1 ebgp 
+     keepalive-time=1m last-started=2026-10-23 22:39:10 last-stopped=2026-10-23 23:08:12 prefix-count=0 
+
+ 1 E name="ebgp-isp2-1" 
+     remote.address=10.255.0.5 .as=65002 .id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=32 .bytes=639 .eor="" 
+     local.address=10.255.0.6 .as=65000 .id=10.255.255.3 .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=32 .bytes=641 .eor="" 
+     output.procid=21 .filter-chain=edge-out-isp .network=bgp-lan-out 
+     input.procid=21 .filter=edge-in-isp2 ebgp 
+     hold-time=3m keepalive-time=1m uptime=30m44s350ms last-started=2026-10-23 22:39:10 prefix-count=2 
+
+[admin@EDGE] > /ip route print without-paging where bgp[admin@EDGE] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 0.0.0.0/0        10.255.0.5        20
+DAb 10.255.255.2/32  10.255.0.5        20
+
+[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY     DISTANCE
+DAb 0.0.0.0/0    10.255.0.5        20
+
+[admin@EDGE] > /routing ospf lsa print without-paging where type=external[admin@EDGE] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000002 age=41 checksum=0xFA49 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000002 age=79 checksum=0x64D3 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > /log print without-paging where topics~"bgp"[admin@EDGE] > /log print without-paging where topics~"bgp"
+ 22:39:10 route,bgp,info ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1} Established
+ 22:39:10 route,bgp,info ebgp-isp2-1 {l_addr: 10.255.0.6, r_addr: 10.255.0.5} Established
+ 23:08:12 route,bgp,error HoldTimer expired ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1}
+
+[admin@EDGE] > 
+ISP2
+
+[admin@ISP-2] > /routing bgp session print without-paging[admin@ISP-2] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.6 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=33 .bytes=660 .eor="" 
+     local.address=10.255.0.5 .as=65002 .id=10.255.255.2 .cluster-id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=33 .bytes=658 .eor="" 
+     output.procid=20 .filter-chain=isp2-out-edge .network=bgp-isp2-out .default-originate=always 
+     input.procid=20 .filter=isp2-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=31m14s160ms last-started=2026-10-23 22:39:11 prefix-count=2 
+
+[admin@ISP-2] > /ip route print without-paging where bgp[admin@ISP-2] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.6        20
+DAb 192.168.20.0/24  10.255.0.6        20
+
+[admin@ISP-2] > /ip route print without-paging where dst-address in 192.168.0.0/16[admin@ISP-2] > /ip route print without-paging where dst-address in 192.168.0.0/16
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.6        20
+DAb 192.168.20.0/24  10.255.0.6        20
+
+[admin@ISP-2] > 
+CORE 5015
+Traceback (most recent call last):
+  File "/tmp/runf.py", line 5, in <module>
+    cmds = [l.strip() for l in open(sys.argv[2]) if l.strip()]
+                               ~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/v2c.rsc'
+CORE 5017
+Traceback (most recent call last):
+  File "/tmp/runf.py", line 5, in <module>
+    cmds = [l.strip() for l in open(sys.argv[2]) if l.strip()]
+                               ~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/v2c.rsc'
+DIST 5019
+
+[admin@DIST-1] > /routing ospf neighbor print terse without-paging[admin@DIST-1] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.21 router-id=10.255.255.4 state=Full state-changes=5 adjacency=24m8s timeout=34s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.29 router-id=10.255.255.5 state=Full state-changes=4 adjacency=23m59s timeout=34s
+
+[admin@DIST-1] > /interface vrrp print without-paging[admin@DIST-1] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-1 backup preferido
+0  B vrrp-servers-20  ether4     00:00:5E:00:01:14    20       100  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-1 master preferido
+1 RM vrrp-users-10    ether3     00:00:5E:00:01:0A    10       150  1s              2  ipv4         no                      
+
+[admin@DIST-1] > 
+Traceback (most recent call last):
+  File "/tmp/runf.py", line 5, in <module>
+    cmds = [l.strip() for l in open(sys.argv[2]) if l.strip()]
+                               ~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/v2c.rsc'
+DIST 5021
+
+[admin@DIST-2] > /routing ospf neighbor print terse without-paging[admin@DIST-2] > /routing ospf neighbor print terse without-paging
+0 D instance=ospf-v2 area=backbone-v2 address=10.255.0.33 router-id=10.255.255.5 state=Full state-changes=5 adjacency=21m37s timeout=39s
+1 D instance=ospf-v2 area=backbone-v2 address=10.255.0.25 router-id=10.255.255.4 state=Full state-changes=5 adjacency=21m37s timeout=39s
+
+[admin@DIST-2] > /interface vrrp print without-paging[admin@DIST-2] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-2 master preferido
+0 RM vrrp-servers-20  ether4     00:00:5E:00:01:14    20       150  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-2 backup preferido
+1  B vrrp-users-10    ether3     00:00:5E:00:01:0A    10       100  1s              2  ipv4         no                      
+
+[admin@DIST-2] > 
+Traceback (most recent call last):
+  File "/tmp/runf.py", line 5, in <module>
+    cmds = [l.strip() for l in open(sys.argv[2]) if l.strip()]
+                               ~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/v2c.rsc'
+VPCS
+==================== 5025
+ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=316.041 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=256.084 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=200.021 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=315.068 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=310.743 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> ping 10.255.255.1 -c 3
+
+*10.255.0.5 icmp_seq=1 ttl=61 time=293.061 ms (ICMP type:3, code:0, Destination network unreachable)
+*10.255.0.5 icmp_seq=2 ttl=61 time=270.240 ms (ICMP type:3, code:0, Destination network unreachable)
+*10.255.0.5 icmp_seq=3 ttl=61 time=205.958 ms (ICMP type:3, code:0, Destination network unreachable)
+
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+==================== 5027
+ping 10.255.255.2 -c 5
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=246.415 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=184.836 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=241.381 ms
+
+84 bytes from 10.255.255.2 icmp_seq=4 ttl=61 time=223.763 ms
+84 bytes from 10.255.255.2 icmp_seq=5 ttl=61 time=366.393 ms
+
+SRV> 
+SRV> 
+SRV> ping 10.255.255.1 -c 3
+
+*10.255.0.5 icmp_seq=1 ttl=61 time=234.282 ms (ICMP type:3, code:0, Destination network unreachable)
+*10.255.0.5 icmp_seq=2 ttl=61 time=156.229 ms (ICMP type:3, code:0, Destination network unreachable)
+*10.255.0.5 icmp_seq=3 ttl=61 time=138.882 ms (ICMP type:3, code:0, Destination network unreachable)
+
+
+SRV> 
+SRV> 
+SRV> 
+ 23:11:53 up  2:58,  1 user,  load average: 8.21, 9.15, 9.28

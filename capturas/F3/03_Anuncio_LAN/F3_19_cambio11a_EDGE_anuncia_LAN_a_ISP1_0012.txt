@@ -1,0 +1,109 @@
+Fri Oct 23 12:12:13 AM UTC 2026
+##APPLY
+
+[admin@EDGE] > /ip firewall address-list add list=bgp-lan-out address=192.168.10
+.0/24 comment="F3 - EDGE anuncia LAN USERS"[admin@EDGE] > /ip firewall address-list add list=bgp-lan-out address=192.168.10.0/24 comment="F3 - EDGE anuncia LAN USERS"
+[admin@EDGE] > /ip firewall address-list add list=bgp-lan-out address=192.168.20
+.0/24 comment="F3 - EDGE anuncia LAN SERVERS"[admin@EDGE] > /ip firewall address-list add list=bgp-lan-out address=192.168.20.0/24 comment="F3 - EDGE anuncia LAN SERVERS"
+[admin@EDGE] > /routing bgp connection set [find name=ebgp-isp1] output.network=
+bgp-lan-out] > /routing bgp connection set [find name=ebgp-isp1] output.network=bgp-lan-out
+[admin@EDGE] > 
+Fri Oct 23 12:13:11 AM UTC 2026
+##EDGE
+
+[admin@EDGE] > /ip firewall address-list print without-paging where list=bgp-lan
+-outin@EDGE] > /ip firewall address-list print without-paging where list=bgp-lan-out
+Columns: LIST, ADDRESS, CREATION-TIME
+# LIST         ADDRESS          CREATION-TIME      
+;;; F3 - EDGE anuncia LAN USERS
+0 bgp-lan-out  192.168.10.0/24  2026-10-23 00:12:16
+;;; F3 - EDGE anuncia LAN SERVERS
+1 bgp-lan-out  192.168.20.0/24  2026-10-23 00:12:20
+
+[admin@EDGE] > /routing bgp connection print count-only where output.network=bgp
+-lan-outDGE] > /routing bgp connection print count-only where output.network=bgp-lan-out
+1
+[admin@EDGE] > /routing bgp connection print count-only where name=ebgp-isp1 and
+ output.network=bgp-lan-out/routing bgp connection print count-only where name=ebgp-isp1 and output.network=bgp-lan-out
+1
+[admin@EDGE] > /routing bgp connection print count-only where name=ebgp-isp2 and
+ output.network=bgp-lan-out/routing bgp connection print count-only where name=ebgp-isp2 and output.network=bgp-lan-out
+0
+[admin@EDGE] > /routing bgp session print without-paging[admin@EDGE] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-isp2-1" 
+     remote.address=10.255.0.5 .as=65002 .id=10.255.255.2 
+     .capabilities=mp,rr,gr,as4 .afi=ip .messages=101 .bytes=1950 .eor="" 
+     local.address=10.255.0.6 .as=65000 .id=10.255.255.3 
+     .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip 
+     .messages=100 .bytes=1900 .eor="" 
+     output.procid=20 .filter-chain=edge-out-isp 
+     input.procid=20 .filter=edge-in-isp2 ebgp 
+     hold-time=3m keepalive-time=1m uptime=1h39m20s290ms 
+     last-started=2026-10-22 22:34:16 prefix-count=2 
+
+ 1 E name="ebgp-isp1-1" 
+     remote.address=10.255.0.1 .as=65001 .id=10.255.255.1 
+     .capabilities=mp,rr,gr,as4 .afi=ip .messages=39 .bytes=772 .eor="" 
+     local.address=10.255.0.2 .as=65000 .id=10.255.255.3 
+     .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=39 
+     .bytes=774 .eor="" 
+     output.procid=21 .filter-chain=edge-out-isp .network=bgp-lan-out 
+     .last-notification=ffffffffffffffffffffffffffffffff0015030400 
+     input.procid=21 .filter=edge-in-isp1 ebgp 
+     hold-time=3m keepalive-time=1m uptime=37m42s290ms 
+     last-started=2026-10-22 23:35:48 last-stopped=2026-10-22 23:34:11 
+     prefix-count=2 
+
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > /log print without-paging where topics~"bgp"[admin@EDGE] > /log print without-paging where topics~"bgp"
+ 10-22 22:34:16 route,bgp,info ebgp-isp2-1 {l_addr: 10.255.0.6, r_addr: 10.255.0.5} Established
+ 10-22 23:24:10 route,bgp,info ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1} Established
+ 10-22 23:34:11 route,bgp,error HoldTimer expired ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1}
+ 10-22 23:35:48 route,bgp,info ebgp-isp1-1 {l_addr: 10.255.0.2, r_addr: 10.255.0.1} Established
+
+[admin@EDGE] > 
+##ISP1
+
+[admin@ISP-1] > /routing bgp session print without-paging[admin@ISP-1] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.2 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=39 .bytes=774 .eor="" 
+     local.address=10.255.0.1 .as=65001 .id=10.255.255.1 .cluster-id=10.255.255.1 .capabilities=mp,rr,gr,as4 .afi=ip .messages=39 .bytes=772 .eor="" 
+     output.procid=20 .filter-chain=isp1-out-edge .network=bgp-isp1-out .default-originate=always 
+     input.procid=20 .filter=isp1-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=37m59s950ms last-started=2026-10-22 23:35:50 prefix-count=0 
+
+[admin@ISP-1] > /ip route print without-paging where bgp[admin@ISP-1] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.2        20
+DAb 192.168.20.0/24  10.255.0.2        20
+
+[admin@ISP-1] > /ip route print without-paging where dst-address in 192.168.0.0/16[admin@ISP-1] > /ip route print without-paging where dst-address in 192.168.0.0/16
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 192.168.10.0/24  10.255.0.2        20
+DAb 192.168.20.0/24  10.255.0.2        20
+
+[admin@ISP-1] > 
+##ISP2
+
+[admin@ISP-2] > /routing bgp session print without-paging[admin@ISP-2] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.6 .as=65000 .id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=100 .bytes=1900 .eor="" 
+     local.address=10.255.0.5 .as=65002 .id=10.255.255.2 .cluster-id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=101 .bytes=1950 .eor="" 
+     output.procid=20 .filter-chain=isp2-out-edge .network=bgp-isp2-out .default-originate=always 
+     input.procid=20 .filter=isp2-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=1h39m48s660ms last-started=2026-10-22 22:34:14 prefix-count=0 
+
+[admin@ISP-2] > /ip route print without-paging where bgp[admin@ISP-2] > /ip route print without-paging where bgp
+
+[admin@ISP-2] > /ip route print without-paging where dst-address in 192.168.0.0/16[admin@ISP-2] > /ip route print without-paging where dst-address in 192.168.0.0/16
+
+[admin@ISP-2] > 
+ 00:14:21 up  2:07,  1 user,  load average: 11.94, 11.64, 10.64

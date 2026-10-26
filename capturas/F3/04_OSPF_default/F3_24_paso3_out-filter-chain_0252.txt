@@ -1,0 +1,107 @@
+Fri Oct 23 02:52:25 AM UTC 2026
+ 02:52:26 up  1:49,  1 user,  load average: 11.40, 9.80, 9.77
+               total        used        free      shared  buff/cache   available
+Mem:            4793        3757         122          78        1228        1035
+Swap:           4095           0        4095
+##APPLY
+
+[admin@EDGE] > /routing ospf instance set ospf-v2 out-filter-chain=edge-ospf-out[admin@EDGE] > /routing ospf instance set ospf-v2 out-filter-chain=edge-ospf-out
+[admin@EDGE] > 
+Fri Oct 23 02:53:05 AM UTC 2026
+##EDGE
+
+[admin@EDGE] > /routing ospf instance print detail without-paging[admin@EDGE] > /routing ospf instance print detail without-paging
+Flags: X - disabled, I - inactive 
+ 0   ;;; F2 - OSPFv2 area 0
+     name="ospf-v2" version=2 vrf=main router-id=10.255.255.3 out-filter-chain=edge-ospf-out originate-default=if-installed 
+
+[admin@EDGE] > /routing ospf lsa print without-paging where type=external[admin@EDGE] > /routing ospf lsa print without-paging where type=external
+Flags: S - self-originated, F - flushing, W - wraparound; D - dynamic 
+ 0 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=0.0.0.0 sequence=0x80000001 age=493 checksum=0xFC48 body=
+        options=E
+        netmask=0.0.0.0
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 1 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.1 sequence=0x80000001 age=37 checksum=0x70C9 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+ 2 SD instance=ospf-v2 type="external" originator=10.255.255.3 id=10.255.255.2 sequence=0x80000001 age=37 checksum=0x66D2 body=
+        options=E
+        netmask=255.255.255.255
+        forwarding-address=0.0.0.0
+        metric=1 type-1
+        route-tag=0
+
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > /routing bgp session print count-only[admin@EDGE] > /routing bgp session print count-only
+2
+[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY     DISTANCE
+D b 0.0.0.0/0    10.255.0.5        20
+DAb 0.0.0.0/0    10.255.0.1        20
+
+[admin@EDGE] > 
+##5015
+
+[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY            DISTANCE
+DAo 0.0.0.0/0    10.255.0.9%ether1       110
+
+[admin@CORE-1] > /routing ospf lsa print count-only where type=external[admin@CORE-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-1] > /routing ospf neighbor print count-only[admin@CORE-1] > /routing ospf neighbor print count-only
+4
+[admin@CORE-1] > 
+##5017
+
+[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY             DISTANCE
+DAo 0.0.0.0/0    10.255.0.13%ether1       110
+
+[admin@CORE-2] > /routing ospf lsa print count-only where type=external[admin@CORE-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-2] > /routing ospf neighbor print count-only[admin@CORE-2] > /routing ospf neighbor print count-only
+4
+[admin@CORE-2] > 
+##5019
+
+[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.21%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.29%ether2       110
+
+[admin@DIST-1] > /routing ospf lsa print count-only where type=external[admin@DIST-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-1] > /routing ospf neighbor print count-only[admin@DIST-1] > /routing ospf neighbor print count-only
+2
+[admin@DIST-1] > 
+##5021
+
+[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.25%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.33%ether2       110
+
+[admin@DIST-2] > /routing ospf lsa print count-only where type=external[admin@DIST-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-2] > /routing ospf neighbor print count-only[admin@DIST-2] > /routing ospf neighbor print count-only
+2
+[admin@DIST-2] > 
+ 02:54:42 up  1:51,  1 user,  load average: 10.05, 9.82, 9.78

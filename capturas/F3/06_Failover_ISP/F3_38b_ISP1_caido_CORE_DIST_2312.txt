@@ -1,0 +1,87 @@
+Fri Oct 23 11:12:35 PM UTC 2026
+R5015
+
+[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY            DISTANCE
+DAo 0.0.0.0/0    10.255.0.9%ether1       110
+
+[admin@CORE-1] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@CORE-1] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY            DISTANCE
+DAo 10.255.255.2/32  10.255.0.9%ether1       110
+DAo 10.255.255.3/32  10.255.0.9%ether1       110
+
+[admin@CORE-1] > /routing ospf lsa print count-only where type=external[admin@CORE-1] > /routing ospf lsa print count-only where type=external
+2
+[admin@CORE-1] > /routing ospf neighbor print count-only[admin@CORE-1] > /routing ospf neighbor print count-only
+4
+[admin@CORE-1] > 
+R5017
+
+[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY             DISTANCE
+DAo 0.0.0.0/0    10.255.0.13%ether1       110
+
+[admin@CORE-2] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@CORE-2] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY             DISTANCE
+DAo 10.255.255.2/32  10.255.0.13%ether1       110
+DAo 10.255.255.3/32  10.255.0.13%ether1       110
+
+[admin@CORE-2] > /routing ospf lsa print count-only where type=external[admin@CORE-2] > /routing ospf lsa print count-only where type=external
+2
+[admin@CORE-2] > /routing ospf neighbor print count-only[admin@CORE-2] > /routing ospf neighbor print count-only
+4
+[admin@CORE-2] > 
+R5019
+
+[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.21%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.29%ether2       110
+
+[admin@DIST-1] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@DIST-1] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.255.2/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.2/32  10.255.0.29%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.21%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.29%ether2       110
+
+[admin@DIST-1] > /routing ospf lsa print count-only where type=external[admin@DIST-1] > /routing ospf lsa print count-only where type=external
+2
+[admin@DIST-1] > /routing ospf neighbor print count-only[admin@DIST-1] > /routing ospf neighbor print count-only
+2
+[admin@DIST-1] > 
+R5021
+
+[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.33%ether2       110
+DAo+ 0.0.0.0/0    10.255.0.25%ether1       110
+
+[admin@DIST-2] > /ip route print without-paging where dst-address in 10.255.255.0/30[admin@DIST-2] > /ip route print without-paging where dst-address in 10.255.255.0/30
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS      GATEWAY             DISTANCE
+DAo+ 10.255.255.2/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.2/32  10.255.0.25%ether1       110
+DAo+ 10.255.255.3/32  10.255.0.33%ether2       110
+DAo+ 10.255.255.3/32  10.255.0.25%ether1       110
+
+[admin@DIST-2] > /routing ospf lsa print count-only where type=external[admin@DIST-2] > /routing ospf lsa print count-only where type=external
+2
+[admin@DIST-2] > /routing ospf neighbor print count-only[admin@DIST-2] > /routing ospf neighbor print count-only
+2
+[admin@DIST-2] > 

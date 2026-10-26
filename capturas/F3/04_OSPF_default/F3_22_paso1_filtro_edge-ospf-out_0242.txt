@@ -1,0 +1,68 @@
+Fri Oct 23 02:42:02 AM UTC 2026
+ 02:42:02 up  1:38,  1 user,  load average: 12.02, 9.77, 9.93
+               total        used        free      shared  buff/cache   available
+Mem:            4793        3737         128          78        1238        1056
+Swap:           4095           0        4095
+##APPLY
+
+[admin@EDGE] > /routing filter rule add chain=edge-ospf-out rule="if (dst == 10.255.255.1/32 || dst == 10.255.255.2/32) { accept }" comment="F3 - OSPF out: solo loopbacks ISP"[admin@EDGE] > /routing filter rule add chain=edge-ospf-out rule="if (dst == 10.255.255.1/32 || dst == 10.255.255.2/32) { accept }" comment="F3 - OSPF out: solo loopbacks ISP"
+[admin@EDGE] > /routing filter rule add chain=edge-ospf-out rule="reject" comment="F3 - OSPF out: rechazar resto de BGP"[admin@EDGE] > /routing filter rule add chain=edge-ospf-out rule="reject" comment="F3 - OSPF out: rechazar resto de BGP"
+[admin@EDGE] > 
+##VERIFY
+
+[admin@EDGE] > /routing filter rule print without-paging[admin@EDGE] > /routing filter rule print without-paging
+Flags: X - disabled, I - inactive 
+ 0   ;;; F3 - ISP-1 in: default
+     chain=edge-in-isp1 rule="if (dst == 0.0.0.0/0) { accept }" 
+
+ 1   ;;; F3 - ISP-1 in: loopback ISP-1
+     chain=edge-in-isp1 rule="if (dst == 10.255.255.1/32) { accept }" 
+
+ 2   ;;; F3 - ISP-1 in: rechazar resto
+     chain=edge-in-isp1 rule="reject" 
+
+ 3   ;;; F3 - salida a ISP: solo LAN USERS/SERVERS
+     chain=edge-out-isp rule="if (dst == 192.168.10.0/24 || dst == 192.168.20.0/24) { accept }" 
+
+ 4   ;;; F3 - salida a ISP: rechazar resto (MGMT, /30, loopbacks)
+     chain=edge-out-isp rule="reject" 
+
+ 5   ;;; F3 - ISP-2 in: default
+     chain=edge-in-isp2 rule="if (dst == 0.0.0.0/0) { accept }" 
+
+ 6   ;;; F3 - ISP-2 in: loopback ISP-2
+     chain=edge-in-isp2 rule="if (dst == 10.255.255.2/32) { accept }" 
+
+ 7   ;;; F3 - ISP-2 in: rechazar resto
+     chain=edge-in-isp2 rule="reject" 
+
+ 8   ;;; F3 - OSPF out: solo loopbacks ISP
+     chain=edge-ospf-out rule="if (dst == 10.255.255.1/32 || dst == 10.255.255.2/32) { accept }" 
+
+ 9   ;;; F3 - OSPF out: rechazar resto de BGP
+     chain=edge-ospf-out rule="reject" 
+
+[admin@EDGE] > /routing filter rule print count-only[admin@EDGE] > /routing filter rule print count-only
+10
+[admin@EDGE] > /routing ospf instance print detail without-paging[admin@EDGE] > /routing ospf instance print detail without-paging
+Flags: X - disabled, I - inactive 
+ 0   ;;; F2 - OSPFv2 area 0
+     name="ospf-v2" version=2 vrf=main router-id=10.255.255.3 
+
+[admin@EDGE] > /routing ospf lsa print count-only where type=external[admin@EDGE] > /routing ospf lsa print count-only where type=external
+0
+[admin@EDGE] > /routing bgp session print count-only[admin@EDGE] > /routing bgp session print count-only
+2
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > 
+##HELP
+/routing ospf instance unset ospf-v2 
+domain-id     domain-tag     in-filter-chain     mpls-te-address     mpls-te-area     originate-default     out-filter-chain     out-filter-select     redistribute     routing-table     use-dn     value-name   
+[admin@EDGE] > /routing ospf instance unset ospf-v2 
+=
+[admin@EDGE] > /routing ospf instance unset ospf-v2 [admin@EDGE] > /routing ospf instance unset ospf-v2 
+[admin@EDGE] > /routing ospf instance unset ospf-v2 value-name=
+domain-id     domain-tag     in-filter-chain     mpls-te-address     mpls-te-area     originate-default     out-filter-chain     out-filter-select     redistribute     routing-table     use-dn   
+[admin@EDGE] > /routing ospf instance unset ospf-v2 value-name=[admin@EDGE] > /routing ospf instance unset ospf-v2 value-name=
+[admin@EDGE] > 
