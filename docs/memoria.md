@@ -602,6 +602,55 @@ Los cinco routers usan la instancia `ospf-v2` (OSPFv2) y el área `backbone-v2`,
 
 En la interfaz de gestión `MGMT` no hay OSPF. ISP-1 e ISP-2 no participan de OSPF: la conectividad con los ISP y la salida a "Internet" corresponden a F3.
 
+### 3.11 eBGP, anuncios, default por OSPF y firewall de EDGE (F3, 19 a 25/10/2026)
+
+R5 configuró y probó F3 en su copia del proyecto GNS3 (`failover_F2`, importada de `failover_F2.gns3project`), en una VM Ubuntu con GNS3 2.2.61 y los siete CHR RouterOS 7.16. Lo hizo con asistencia de Claude, que operó la VM desde Windows. R1 autorizó cada etapa por separado después de revisar el checkpoint anterior. El proyecto Mac de R1 no se tocó. R5 tipeó en la consola las claves TCP-MD5 y las contraseñas de los backups, que no aparecen en ninguna salida.
+
+| Etapa | Fecha (hora de la VM, UTC) | Routers modificados | Evidencia |
+| --- | --- | --- | --- |
+| Checkpoint 0: salud de F2 en la copia de R5 y snapshot `PRE_F3_R5_2026-10-18` | 19/10, 16:00 a 16:37 | Ninguno (solo `print`) | 4.4, 7.4 |
+| Filtros BGP y sesiones eBGP con TCP-MD5 (cambios 1 a 10) | 19/10, desde las 17:00 | EDGE, ISP-1, ISP-2 | 4.4, 7.4 |
+| Cambio de la clave TCP-MD5 coordinado con R1 | 19/10, 19:50 a 20:01 | EDGE, ISP-1, ISP-2 | 4.4 |
+| EDGE anuncia las dos LAN a los ISP (cambio 11) | 23/10, 00:12 a 00:23 | EDGE | 4.4 |
+| Default y loopbacks ISP hacia OSPF | 23/10, 02:42 a 02:52 | EDGE | 4.4 |
+| Firewall de EDGE | 23/10, 20:47 a 21:31 | EDGE | 4.4, 5.3 |
+| Caída y recuperación de ISP-1 y de ISP-2 | 23/10, 23:05 a 23:29 | ISP-1, ISP-2 (solo `ether1`, rehabilitada) | 4.4 |
+| Snapshot final, respaldos y exports | 25/10, 14:15 a 17:06 | Ninguno | 6.2 |
+
+Frente a los exports de F2, CORE-1, CORE-2, DIST-1 y DIST-2 no tienen cambios de configuración: reciben el default y las loopbacks ISP por OSPF, como rutas dinámicas. Ningún export de F3 quita configuración de F2 (6.2).
+
+#### eBGP
+
+| Sesión | EDGE | ISP | Conexión |
+| --- | --- | --- | --- |
+| EDGE ↔ ISP-1 | AS 65000, `10.255.0.2`, `ebgp-isp1` | AS 65001, `10.255.0.1`, `ebgp-edge` | Directa sobre el /30 (`multihop=no`), TCP-MD5, router-id = loopback |
+| EDGE ↔ ISP-2 | AS 65000, `10.255.0.6`, `ebgp-isp2` | AS 65002, `10.255.0.5`, `ebgp-edge` | Igual |
+
+Cada ISP origina el default con `default-originate=always` y anuncia su loopback desde la address-list `bgp-isp1-out` o `bgp-isp2-out`. El default de un ISP no prueba que haya "Internet" detrás: en el laboratorio, el destino externo son las loopbacks `10.255.255.1/32` y `10.255.255.2/32`.
+
+**Filtros de ruteo.** Todos aceptan solo lo explícito y terminan con `reject`.
+
+| Cadena | Router | Acepta |
+| --- | --- | --- |
+| `edge-in-isp1` / `edge-in-isp2` | EDGE, entrada | `0.0.0.0/0` y la loopback del ISP correspondiente |
+| `edge-out-isp` | EDGE, salida a los dos ISP | `192.168.10.0/24` y `192.168.20.0/24` |
+| `isp1-in-edge` / `isp2-in-edge` | ISP, entrada | Las dos LAN |
+| `isp1-out-edge` / `isp2-out-edge` | ISP, salida | El default y su propia loopback |
+
+**Anuncio de las LAN (cambio 11).** EDGE anuncia las LAN con `output.network=bgp-lan-out` en las dos conexiones. La address-list `bgp-lan-out` contiene `192.168.10.0/24` y `192.168.20.0/24`, que EDGE aprende por OSPF. No hay `redistribute` de OSPF a BGP, rutas blackhole ni estáticas. El filtro `edge-out-isp` sigue siendo la segunda barrera: aunque la lista cambiara, a los ISP solo saldrían esas dos LAN. Ni la red de gestión `172.31.250.0/28`, ni los /30, ni las loopbacks internas se anuncian.
+
+#### Default y loopbacks ISP hacia OSPF
+
+En EDGE, la instancia `ospf-v2` quedó con:
+- `originate-default=if-installed`: anuncia el default solo si EDGE tiene uno activo, que viene de BGP;
+- `out-filter-chain=edge-ospf-out`: la cadena acepta `10.255.255.1/32` y `10.255.255.2/32` y rechaza el resto.
+
+El paso previsto `redistribute=bgp` no se aplicó. Con la cadena asociada, RouterOS 7.16 ya exportaba como externas las rutas que la cadena acepta. R5 se detuvo, documentó el estado y optó por omitir ese paso (opción A); R1 validó el resultado al aprobar la implementación de F3. Resultado: EDGE origina tres LSA externos (`0.0.0.0/0` y las dos loopbacks ISP, métrica 1, tipo 1), y los cinco routers OSPF tienen esos tres y ninguno más.
+
+#### Firewall de EDGE
+
+Quince reglas en `/ip firewall filter`: las tres de gestión de 5.2 y doce reglas `F3 FW`. El detalle y el alcance de cada regla están en 5.3.
+
 ---
 
 ## 4. Verificación
@@ -665,9 +714,28 @@ R1 ejecutó estas pruebas con OSPF y VRRP configurados; R5 revisó cada captura.
 
 El TTL 63 entre las LAN indica un salto de router, el DIST que hace de gateway. El TTL 62 hacia EDGE indica dos saltos, DIST y CORE. Después del arranque solo se capturó el sentido PC-USER → SRV.
 
+#### F3: hosts hacia las loopbacks ISP (23 y 25/10)
+
+R5 ejecutó estas pruebas en su copia GNS3. Usan el `ping` y el `trace` de VPCS. La hora es la de la VM (UTC). El índice de evidencias está en 7.4.
+
+| Origen → destino | Resultado | Hora | Evidencia |
+| --- | --- | --- | --- |
+| PC-USER → `10.255.255.1` y `10.255.255.2` | 5/5 y 5/5, TTL 61 | 23/10 02:59 a 03:03 | F3-12 |
+| SRV → `10.255.255.1` y `10.255.255.2` | 5/5 y 5/5, TTL 61 | 23/10 02:59 a 03:03 | F3-12 |
+| Traceroute de PC-USER a las dos loopbacks | `192.168.10.2` → CORE → `10.255.0.9` (EDGE) → loopback ISP | 23/10 02:59 a 03:03 | F3-12 |
+| Traceroute de SRV a las dos loopbacks | `192.168.20.3` → CORE → EDGE (`10.255.0.9` o `10.255.0.13`) → loopback ISP | 23/10 02:59 a 03:03 | F3-12 |
+| Las mismas cinco pruebas de ping, con el firewall aplicado | 5/5 cada una | 23/10 21:32 a 21:34 | F3-16 |
+| PC-USER → las dos loopbacks y SRV; SRV → las dos loopbacks, después de los respaldos | 3/3 cada una | 25/10 17:05 a 17:06 | F3-29 |
+
+- **TTL 61:** tres routers intermedios (DIST, CORE y EDGE).
+- **Primer salto:** el DIST master de cada LAN según VRRP (DIST-1 en USERS, DIST-2 en SERVERS).
+- **Segundo salto:** varía entre CORE-1 y CORE-2 por ECMP.
+- **Último salto del traceroute:** responde `Destination port unreachable`, la respuesta normal de un destino a un traceroute UDP; confirma que se llegó.
+- **Ruta de retorno:** cada ISP aprende las dos LAN por eBGP (4.4).
+
 ### 4.2 Los 5 drills de failover
 
-Pendiente de F4. Las pruebas de failover VRRP de F2 (4.3) no son drills de F4: no siguieron un runbook ni midieron el tiempo de reconvergencia.
+Pendiente de F4. Las pruebas de failover VRRP de F2 (4.3) no son drills de F4: no siguieron un runbook ni midieron el tiempo de reconvergencia. Tampoco lo son las pruebas de caída y recuperación de ISP de F3 (4.4), que no midieron tiempos.
 
 ### 4.3 VRRP y OSPF (F2)
 
@@ -735,6 +803,119 @@ R1 informó una parada y un arranque controlados del proyecto, después de los c
 | Prueba con clave incorrecta (OSPF y VRRP) | Pendiente de F4 | — |
 | Drills cronometrados | Pendiente de F4 | 4.2 |
 
+### 4.4 BGP, firewall y caída de un ISP (F3)
+
+R5 ejecutó todas las pruebas en su copia GNS3. La hora es la de la VM y la de RouterOS, ambas en UTC. Las evidencias son salidas de consola en texto, saneadas, más tres capturas de la lista de snapshots (7.4).
+
+#### Checkpoint 0: F2 sana en la copia de R5 (19/10)
+
+Antes de cualquier cambio, R5 verificó en la copia:
+- los siete CHR con RouterOS 7.16;
+- 7 adyacencias OSPF en `Full`, 4 en CORE-1 y 4 en CORE-2;
+- los roles VRRP de diseño;
+- 5/5 de PC-USER y SRV hacia su gateway virtual, entre sí y hacia la loopback de EDGE.
+
+Después creó el snapshot `PRE_F3_R5_2026-10-18`. Evidencias: F3-1 y F3-2. SSH-MGMT no se probó en ese momento; se probó con el firewall (más abajo).
+
+#### Sesiones eBGP y rutas recibidas (19/10 y 23/10)
+
+| Router | Sesiones | Rutas BGP | Evidencia |
+| --- | --- | --- | --- |
+| EDGE | `ebgp-isp1-1` y `ebgp-isp2-1` en `established` | `0.0.0.0/0` vía ISP-1 (activo) y vía ISP-2 (respaldo), `10.255.255.1/32` vía ISP-1 y `10.255.255.2/32` vía ISP-2 | F3-3, F3-4, F3-5 |
+| ISP-1 | `ebgp-edge-1` en `established` | **Exactamente** `192.168.10.0/24` y `192.168.20.0/24` vía `10.255.0.2`, desde el cambio 11 | F3-6 |
+| ISP-2 | `ebgp-edge-1` en `established` | **Exactamente** las dos LAN vía `10.255.0.6` | F3-7 |
+
+- Ningún ISP recibe la red de gestión, los /30 ni las loopbacks internas.
+- Después de cada etapa, OSPF siguió con 7 adyacencias `Full` y VRRP con sus roles (F3-3, F3-4, F3-7).
+- **Cambio de clave TCP-MD5 (19/10).** La clave cargada al principio en ISP-1 no era la aprobada en 1.3. R5 la reportó a R1 (checkpoint del 19/10) y el cambio se coordinó con R1. El log de EDGE muestra el cierre y el restablecimiento de las dos sesiones: ISP-1 a las 19:50 y 19:56, ISP-2 a las 19:58 y 20:01. La verificación posterior da las dos sesiones en `established` (F3-5). Los valores no se muestran en ninguna evidencia.
+- **Exposición de una clave en la consola.** En RouterOS 7.16, `/routing bgp connection print` muestra `tcp-md5-key` en claro, aun en formato simple. Pasó una vez con la clave de ISP-1 al inicio de F3. Se sanearon las evidencias, se limpiaron las consolas y desde entonces no se imprimieron conexiones con clave: las sesiones se consultan con `/routing bgp session print`.
+
+#### Default y loopbacks ISP en la red interna (23/10)
+
+| Router | LSA externos | Rutas externas aprendidas por OSPF | Evidencia |
+| --- | --- | --- | --- |
+| EDGE | 3 propios | — | F3-10, F3-12 |
+| CORE-1 / CORE-2 | 3 | `0.0.0.0/0`, `10.255.255.1/32` y `10.255.255.2/32` vía EDGE | F3-11 |
+| DIST-1 / DIST-2 | 3 | Las mismas tres, en ECMP vía CORE-1 y CORE-2 | F3-11 |
+
+Ningún router tiene rutas OSPF en `172.16.0.0/12`. Fuera de los /30, las LAN y las loopbacks, la única ruta OSPF que no es /32 es el default. No aparecen los /30 de los ISP ni el segundo default.
+
+#### Firewall de EDGE (23/10)
+
+Las reglas se aplicaron en tres pasos (F3-13 a F3-15). Cada script se verificó por md5 antes de ejecutarlo, porque la VM perdía caracteres al tipear bajo carga. Las cinco denegaciones se aplicaron en Safe Mode, con la confirmación condicionada a BGP = 2 y OSPF = 2. El detalle de las reglas está en 5.3.
+
+| Prueba | Resultado | Evidencia |
+| --- | --- | --- |
+| BGP, OSPF y VRRP con el firewall aplicado | 2 sesiones `established`, 7 adyacencias `Full`, roles VRRP sin cambios | F3-16 |
+| Hosts hacia las loopbacks ISP y entre LAN | 5/5 en las cinco pruebas | F3-16 |
+| Drops sobre tráfico legítimo | Contadores de las reglas 10, 12, 13 y 14 en 0 | F3-16 |
+| SSH autorizado desde MGMT-CLIENT (`172.31.250.10`) a EDGE | EDGE pide `password:`. Se abortó con Ctrl+C sin ingresar credenciales. La regla 1 subió de 0 a 17 paquetes | F3-17 |
+| SSH no autorizado desde CORE-1 (`172.31.250.4`, VRF `MGMT`) | Sin respuesta en 25 s. La regla 2 subió de 9 a 16 paquetes | F3-18 |
+| SSH desde el enlace de ISP-1 a `10.255.0.2` | Sin respuesta en 25 s. La regla 11 subió de 0 a 5 paquetes | F3-19 |
+
+La regla 4 (BGP entrante) quedó con contador 0. El connection tracking muestra que las dos sesiones las inició EDGE, de modo que su tráfico entra por la regla 3 (`established`). La regla 4 cubre el caso en que el ISP inicie la sesión. No se reinició ninguna sesión para probarla, porque R1 pidió no modificar sesiones que funcionan.
+
+#### Caída y recuperación de un ISP por vez (23/10)
+
+Antes de las pruebas, R5 creó el snapshot `F3_FW_R5_2026-10-23` (F3-20) y registró una línea base igual al estado final de abajo (F3-21).
+- **Cómo se simuló cada caída:** `/interface disable ether1` en el ISP y luego `/interface enable ether1`. No se modificó EDGE, ni las sesiones, ni los filtros, ni el firewall.
+- **Detección:** en GNS3 el enlace virtual de EDGE sigue arriba, así que EDGE detecta la falla por el hold-time de BGP (3 min) y el log registra `HoldTimer expired`.
+- ISP-2 recién se tocó cuando ISP-1 estaba recuperado y verificado.
+
+| Fase | EDGE | CORE y DIST | Hosts | Evidencia |
+| --- | --- | --- | --- | --- |
+| ISP-1 caído (`disable` 23:05, `HoldTimer expired` 23:08:12) | 1 sesión. Default activo vía ISP-2 (`10.255.0.5`). Desaparece `10.255.255.1/32` | Mantienen el default. Solo `10.255.255.2/32`. 7 adyacencias `Full`. VRRP sin cambios | `10.255.255.2`: 5/5. A `10.255.255.1`, ISP-2 responde `Destination network unreachable`, como se espera según el diseño | F3-22, F3-23 |
+| ISP-1 recuperado (`enable` 23:14, `Established` 23:15:01) | 2 sesiones. Vuelve `10.255.255.1/32`. Default activo otra vez vía ISP-1 | 3 LSA externos | Ambas loopbacks: 5/5 | F3-24 |
+| ISP-2 caído (`disable` 23:20, `HoldTimer expired` 23:23:13) | 1 sesión. El default sigue vía ISP-1. Desaparece `10.255.255.2/32` | Mantienen el default. Solo `10.255.255.1/32`. 7 adyacencias `Full` | `10.255.255.1`: 5/5. A `10.255.255.2`, ISP-1 responde `Destination network unreachable` | F3-25 |
+| ISP-2 recuperado (`enable` 23:29, `Established` 23:29:49) | 2 sesiones. Vuelve `10.255.255.2/32`. Default vía ISP-1 | 3 LSA externos, 7 adyacencias `Full` | PC-USER → `.1` 5/5 y → `.2` 4/5. SRV → `.1` 4/5 y → `.2` 5/5. PC-USER → SRV 5/5 | F3-26 |
+
+Durante cada caída, el ISP que seguía en servicio recibió exactamente las dos LAN.
+
+**Estado final (23:31 a 23:36), igual a la línea base:**
+- 2 sesiones eBGP;
+- default vía ISP-1, con ISP-2 de respaldo;
+- 7 adyacencias `Full` y 3 LSA externos;
+- DIST-1 master del VRID 10 y DIST-2 master del VRID 20;
+- 15 reglas de firewall, ninguna inválida.
+
+**Limitaciones de estas pruebas** (registradas a pedido de R1):
+1. No se midieron tiempos precisos de reconvergencia. La carga de la VM osciló entre 8 y 14 y las mediciones no serían confiables. Estas pruebas no son los drills cronometrados de F4 (4.2).
+2. En la verificación final hubo dos series de ping 4/5. Ocurrieron con latencias de 500 a 860 ms y la carga en 12–14, atribuidas a la saturación de la VM y no a la red. El resto de las series dio 5/5.
+3. La elección del default vía ISP-1 no responde a una política de preferencia explícita. Con atributos BGP iguales, EDGE volvió a preferir ISP-1 al recuperarlo en lugar de mantener la ruta más antigua; lo más probable es el desempate por el router-id menor (`10.255.255.1`). No se configuró `local-pref` ni otro atributo.
+
+#### Reinicio de la VM y verificación posterior (25/10)
+
+Hacia las 15:27 del 25/10, entre los exports y los backups de cierre (6.2), la VM se saturó y quedó congelada. R5 la reinició y volvió a levantar los nodos.
+- Los siete routers registraron `kernel failure in previous boot` y `router was rebooted without proper shutdown`. Son coherentes con un apagado en frío de QEMU.
+- La configuración persistió: los backups de las 16:18 y la verificación de las 17:00 muestran el mismo estado que los exports de las 14:45.
+
+**Verificación de las 17:00 a las 17:06** (F3-29):
+- **BGP:** EDGE con 2 sesiones y cada ISP con 1. Default activo vía ISP-1, con ISP-2 de respaldo.
+- **OSPF:** EDGE con 2 vecinos `Full`, CORE-1 y CORE-2 con 4 cada uno, DIST-2 con 2. Los cinco routers OSPF consultados tienen 3 LSA externos.
+- **VRRP:** DIST-2 master del VRID 20 (prioridad 150) y backup del VRID 10.
+- **Firewall:** EDGE con 15 reglas y el resto de los routers con las 3 de gestión.
+- **Conectividad:** pings 3/3 de PC-USER y SRV a las dos loopbacks ISP, y de PC-USER a SRV.
+
+DIST-1 no se pudo consultar a las 17:00 porque su consola había cerrado la sesión. Sus dos adyacencias se ven `Full` desde CORE-1 y CORE-2, y a las 14:56 era master del VRID 10. El resultado fue satisfactorio y no hubo que modificar ninguna configuración.
+
+#### Matriz de aceptación de F3
+
+| Criterio | Resultado | Evidencia |
+| --- | --- | --- |
+| eBGP EDGE ↔ ISP-1 y EDGE ↔ ISP-2 con TCP-MD5, en `established` | Cumplido | F3-3 a F3-5, F3-29 |
+| Cada ISP anuncia su loopback /32 y el default; EDGE los acepta con filtros explícitos | Cumplido | F3-3, F3-4; exports (6.2) |
+| EDGE anuncia solo USERS y SERVERS; los ISP tienen ruta de retorno | Cumplido | F3-6, F3-7 |
+| Sin anuncio de la red de gestión ni redistribución BGP↔OSPF indiscriminada | Cumplido | F3-6 a F3-11 |
+| Default activo y loopbacks ISP propagados por OSPF a CORE y DIST | Cumplido: 3 LSA externos | F3-10 a F3-12 |
+| Hosts de USERS y SERVERS alcanzan las dos loopbacks ISP (ping y traceroute) | Cumplido | F3-12, F3-16, F3-29 |
+| Firewall de EDGE: `input` separado de `forward`, BGP solo desde los peers ISP, OSPF solo desde CORE, SSH solo desde gestión y rechazo de lo no solicitado | Cumplido | F3-13 a F3-19; 5.3 |
+| Gestión de EDGE no responde desde los enlaces ISP | Cumplido | F3-19 |
+| F2 preservada (OSPF, VRRP, conectividad entre LAN) después de cada cambio | Cumplido | F3-3 a F3-26, F3-29 |
+| Caída y recuperación controlada de cada ISP | Cumplido, sin medición de tiempos y con dos series 4/5 en la verificación final | F3-21 a F3-26 |
+| Snapshot final, exports saneados y respaldos privados post-F3 | Cumplido; restore no probado | F3-27 a F3-29; 6.2 |
+| Prueba con clave TCP-MD5 incorrecta | Pendiente de F4 | — |
+| Drills cronometrados | Pendiente de F4 | 4.2 |
+
 ---
 
 ## 5. Seguridad aplicada
@@ -764,7 +945,7 @@ Para EDGE, las capturas de administración MAC, Neighbor Discovery y RoMON está
 
 **Credenciales.** No se publican. Los exports `.rsc` no incluyen usuarios ni contraseñas: la existencia de `monitor` se acredita por captura y el cambio de contraseña de `admin`, por confirmación de R1. La recuperación de credenciales requiere el procedimiento privado de 6.2.
 
-**Pendiente de fases siguientes:** autenticación OSPF MD5 y VRRP (F2); BGP TCP-MD5 y firewall de EDGE (F3).
+**Pendiente de fases siguientes:** autenticación OSPF MD5 y VRRP (F2, resuelto en 3.10); BGP TCP-MD5 y firewall de EDGE (F3, resuelto en 5.3).
 
 ### 5.2 Plano de gestión SSH-MGMT (14/10/2026)
 
@@ -780,6 +961,42 @@ Con la red de gestión de 2.4, SSH quedó habilitado de forma restringida. Los c
 | Usuario `monitor` | Sin cambios: grupo `monitor` con `ssh,read`. No se informó una prueba de SSH específica con esta cuenta |
 
 Las reglas de firewall no reemplazan el firewall de EDGE de F3: solo protegen la interfaz de gestión. Las credenciales siguen sin publicarse.
+
+### 5.3 Firewall de EDGE y TCP-MD5 (F3, 23/10/2026)
+
+R5 aplicó el firewall en EDGE el 23/10, con la autorización de R1 y siguiendo la política de 1.3. Antes de empezar estaban solo las 3 reglas de gestión de 5.2, y NAT, mangle y raw estaban vacíos. Antes de modificar, R5 guardó un export y un backup cifrado de EDGE, que se custodian en privado (6.2).
+
+**Objetos de soporte:**
+- **Listas de interfaces:** `FW-WAN` (`ether1` y `ether2`, hacia los ISP) y `FW-LAN` (`ether3` y `ether4`, hacia CORE).
+- **Address-lists:** `FW-ISP-PEERS` (`10.255.0.1` y `10.255.0.5`), `FW-CORE-PEERS` (`10.255.0.10` y `10.255.0.14`) y `FW-LAN-INTERNAS` (`192.168.10.0/24` y `192.168.20.0/24`).
+
+| # | Cadena | Coincidencia | Acción | Comentario |
+| --- | --- | --- | --- | --- |
+| 0 | input | ICMP desde `172.31.250.10` a `172.31.250.1`, entrada por `MGMT` | accept | Gestión (5.2) |
+| 1 | input | TCP/22 desde `172.31.250.10` a `172.31.250.1`, entrada por `MGMT` | accept | Gestión (5.2) |
+| 2 | input | Entrada por `MGMT` | drop | Gestión (5.2) |
+| 3 | input | `connection-state=established,related,untracked` | accept | F3 FW in: established/related |
+| 4 | input | TCP/179 desde `FW-ISP-PEERS`, entrada por `FW-WAN` | accept | F3 FW in: BGP desde ISP |
+| 5 | input | OSPF desde `FW-CORE-PEERS`, entrada por `FW-LAN` | accept | F3 FW in: OSPF desde CORE |
+| 6 | input | ICMP, entrada por `FW-LAN` | accept | F3 FW in: ICMP interno |
+| 7 | input | ICMP desde `FW-ISP-PEERS`, entrada por `FW-WAN` | accept | F3 FW in: ICMP desde peers ISP |
+| 8 | forward | `connection-state=established,related,untracked` | accept | F3 FW fwd: established/related |
+| 9 | forward | Origen `FW-LAN-INTERNAS`, salida por `FW-WAN`, `connection-state=new` | accept | F3 FW fwd: LAN hacia ISP |
+| 10 | input | `connection-state=invalid` | drop | F3 FW deny in: invalid |
+| 11 | input | Entrada por `FW-WAN` | drop | F3 FW deny in: WAN no solicitado |
+| 12 | input | Resto | drop | F3 FW deny in: resto |
+| 13 | forward | `connection-state=invalid` | drop | F3 FW deny fwd: invalid |
+| 14 | forward | Entrada por `FW-WAN`, `connection-state=new` | drop | F3 FW deny fwd: nuevo desde WAN |
+
+- La gestión sigue entrando solo por la VRF `MGMT` desde `172.31.250.10/32`. Telnet, FTP, `www`, `www-ssl`, API, API-SSL y Winbox siguen deshabilitados (5.1 y 5.2).
+- **Alcance de la regla 9.** Permite conexiones nuevas desde USERS y SERVERS **hacia cualquier destino** que salga por las interfaces WAN, no solo hacia las loopbacks ISP (`10.255.255.1/32` y `10.255.255.2/32`). La decisión fue intencional: el alcance de F3 acordado con R1 pide no bloquear conexiones salientes legítimas, y en un escenario real detrás de cada ISP está Internet. R1 lo señaló en su revisión del 23/10 y queda registrado. Restringir los destinos o agregar una denegación general en `forward` solo se hará si R1 lo decide.
+- La regla 14 bloquea las conexiones nuevas que entran desde la WAN hacia la red interna. Las respuestas a lo que inician las LAN pasan por la regla 8.
+- **Reversión:**
+  - solo las denegaciones: `/ip firewall filter remove [find where comment~"^F3 FW deny"]`;
+  - todo el firewall de F3: `/ip firewall filter remove [find where comment~"^F3 FW"]` y quitar las listas `FW-*`;
+  - último recurso: el backup `EDGE_preFW_F3_20261023.backup`, cuyo restore no se probó.
+
+**TCP-MD5 en eBGP.** Las dos sesiones usan TCP-MD5 con claves por sesión, cargadas por R5 en la consola. En RouterOS 7.16, `/export` no incluye `tcp-md5-key` por defecto, por eso los exports de F3 no la muestran. `/routing bgp connection print` sí la muestra en claro: por eso las sesiones se consultan con `/routing bgp session print` (4.4).
 
 ---
 
@@ -886,6 +1103,27 @@ Estas operaciones las ejecutó R1 en GNS3 y en las consolas RouterOS; no tienen 
 | 2026-10-17 | R1 | Parada y arranque controlados del proyecto (nodos detenidos a las 00:06, hora de captura) y verificación de conectividad. EDGE volvió a arrancar cerca de las 01:41, con dos mensajes críticos de causa no determinada | Comprobar la recuperación de F2 tras un arranque (4.3) | No aplica |
 | 2026-10-19 | R1 | Revisión de interfaces, direcciones y conectividad de ISP-1 y nuevo `/export` (encabezado 15:59:52). No se informaron cambios de configuración | Reemplazar el export F2 de ISP-1 con referencias inválidas (6.2) | No modifica la configuración |
 
+#### Operaciones de F3 ejecutadas fuera de Git
+
+Estas operaciones las ejecutó R5 en su copia GNS3 y en las consolas RouterOS, con autorización de R1 en cada etapa; no tienen commit ni hash. La hora es la de la VM y la de RouterOS (UTC).
+
+| Fecha | Responsable | Operación | Motivo | Cómo se revierte |
+| --- | --- | --- | --- | --- |
+| 2026-10-19 | R5 | Snapshot GNS3 `PRE_F3_R5_2026-10-18` (16:13:12), con los nodos detenidos | Punto de retorno antes de F3 (6.2) | Eliminar el snapshot en GNS3; no modifica la configuración |
+| 2026-10-19 | R5 | Filtros de ruteo `edge-in-isp1`, `edge-in-isp2` y `edge-out-isp` en EDGE; filtros de entrada y salida y address-list de la loopback en ISP-1 e ISP-2; conexiones eBGP con TCP-MD5 en los tres routers (cambios 1 a 10, desde las 17:00) | F3: eBGP con filtros explícitos (3.11) | Quitar las conexiones `/routing bgp connection`, las reglas `/routing filter rule` con comentario `F3` y las address-lists `bgp-isp*-out`. Alternativa: snapshot `PRE_F3_R5_2026-10-18`, cuyo restore no se probó |
+| 2026-10-19 | R5 | Cambio de la clave TCP-MD5 coordinado con R1 (19:50 a 20:01) | Alinear la clave con la aprobada en 1.3 (4.4) | Volver a cargar la clave anterior en los dos extremos; el valor no se publica |
+| 2026-10-23 | R5 | Cambio 11 en EDGE: address-list `bgp-lan-out` y `output.network=bgp-lan-out` en las dos conexiones (00:12 a 00:23) | F3: anunciar las LAN a los ISP (3.11) | `/routing bgp connection unset [find name~"ebgp-isp"] output.network` y quitar la address-list `bgp-lan-out` |
+| 2026-10-23 | R5 | En EDGE: cadena `edge-ospf-out`, `originate-default=if-installed` y `out-filter-chain=edge-ospf-out` en `ospf-v2` (02:42 a 02:52) | F3: default y loopbacks ISP hacia OSPF (3.11) | `/routing ospf instance set ospf-v2 originate-default=never` y `unset … out-filter-chain`, y quitar las reglas de `edge-ospf-out` |
+| 2026-10-23 | R5 | Export y backup cifrado de EDGE previos al firewall (20:47 y 21:00) | Respaldo previo al firewall (6.2) | No modifica la configuración |
+| 2026-10-23 | R5 | Firewall de EDGE: listas `FW-*` (21:11), 7 aceptaciones (21:22) y 5 denegaciones en Safe Mode (21:29 a 21:31) | F3: firewall de EDGE (5.3) | Ver "Reversión" en 5.3 |
+| 2026-10-23 | R5 | Snapshot GNS3 `F3_FW_R5_2026-10-23` (22:35:15), con los nodos detenidos | Punto de retorno antes de las pruebas de caída (6.2) | Eliminar el snapshot en GNS3 |
+| 2026-10-23 | R5 | `disable` y `enable` de `ether1` en ISP-1 (23:05 y 23:14) y en ISP-2 (23:20 y 23:29) | Caída y recuperación controlada de cada ISP (4.4) | `/interface enable ether1`; ambas quedaron habilitadas |
+| 2026-10-25 | R5 | Snapshot GNS3 `F3_FINAL_R5_2026-10-25` (14:15:58), con los nodos detenidos | Cierre de F3 (6.2) | Eliminar el snapshot en GNS3 |
+| 2026-10-25 | R5 | `/export` de los siete routers (14:45 a 14:59) y saneamiento de las 14 claves OSPF | Exports del hito F3 (6.2) | No modifica la configuración |
+| 2026-10-25 | R5 | Reinicio de la VM después de que quedara congelada (hacia las 15:27) y nuevo arranque de los nodos | Recuperar el entorno; la configuración persistió (4.4) | No aplica |
+| 2026-10-25 | R5 | `/system backup save … encryption=aes-sha256` en los siete routers (16:18 a 16:23); traslado doble y verificación SHA-512 de los 16 archivos privados | Juego de respaldos de F3 (6.2) | No modifica la configuración; eliminar los archivos generados |
+| 2026-10-25 | R5 | Verificación funcional posterior a los respaldos (17:00 a 17:06) | Confirmar el estado después del reinicio (4.4) | No aplica |
+
 ### 6.2 Backups
 
 Política: ver 1.4.
@@ -979,7 +1217,7 @@ El restore de los snapshots de F2 no se probó.
 | Tipo | Contenido | Dónde está | ¿Se publica? |
 | --- | --- | --- | --- |
 | Export `.rsc` sanitizado | Configuración en texto, sin usuarios ni secretos | `backups/` del repositorio (tabla anterior) | Sí |
-| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1: un juego F1, uno SSH-MGMT y uno F2 (subsecciones siguientes) | No |
+| Backup binario `.backup` cifrado | Configuración completa del router, incluidas credenciales | Almacenamiento privado de R1: un juego F1, uno SSH-MGMT y uno F2. El juego F3 está en poder de R5 y su transferencia privada a R1 se coordina aparte (subsecciones siguientes) | No |
 | Respaldo portable del proyecto GNS3 (`.gns3project`, snapshots) | Discos QEMU de los siete routers y archivos del proyecto | En poder de R1, fuera del repositorio (2.3) | No |
 
 #### Backups binarios F1 (privados)
@@ -1147,6 +1385,83 @@ El export original de ISP-1 tiene el antecedente de las referencias inválidas `
 
 No se publican los archivos, las contraseñas ni contenido Base64.
 
+#### Exports F3 (`/export`, 25/10)
+
+R5 generó los exports en su copia GNS3 el 25/10, después del snapshot `F3_FINAL_R5_2026-10-25`, y los sacó de cada router por la consola serie en Base64. Para sanearlos reemplazó los 14 `auth-key` de OSPF por `REDACTED_F3_DO_NOT_USE`: 2 en EDGE, 4 en cada CORE y 2 en cada DIST. RouterOS 7.16 no exporta las claves TCP-MD5, las contraseñas VRRP ni los usuarios. Cada rol revisa y publica los suyos por PR en `backups/2026-10-25/`, sin reemplazar los juegos anteriores.
+
+| Router | Archivo | Encabezado del export | Bytes | Publica | SHA-256 |
+| --- | --- | --- | ---: | --- | --- |
+| EDGE | [`EDGE_2026-10-25_f3.rsc`](../backups/2026-10-25/EDGE_2026-10-25_f3.rsc) | 2026-10-25 14:50:37 | 7024 | R1 | `86608f29…f7bdeea1` |
+| ISP-1 | [`ISP-1_2026-10-25_f3.rsc`](../backups/2026-10-25/ISP-1_2026-10-25_f3.rsc) | 2026-10-25 14:45:21 | 2800 | R2 | `bde76970…0b62354b` |
+| ISP-2 | [`ISP-2_2026-10-25_f3.rsc`](../backups/2026-10-25/ISP-2_2026-10-25_f3.rsc) | 2026-10-25 14:48:46 | 2800 | R2 | `e6ed2d4d…71fcc7cd` |
+| CORE-1 | [`CORE-1_2026-10-25_f3.rsc`](../backups/2026-10-25/CORE-1_2026-10-25_f3.rsc) | 2026-10-25 14:52:36 | 3136 | R3 | `8b555c83…66a578e1` |
+| CORE-2 | [`CORE-2_2026-10-25_f3.rsc`](../backups/2026-10-25/CORE-2_2026-10-25_f3.rsc) | 2026-10-25 14:54:35 | 3137 | R3 | `83ec9c5d…72f93fe4` |
+| DIST-1 | [`DIST-1_2026-10-25_f3.rsc`](../backups/2026-10-25/DIST-1_2026-10-25_f3.rsc) | 2026-10-25 14:56:32 | 3602 | R4 | `ed7e9243…6c736ce5` |
+| DIST-2 | [`DIST-2_2026-10-25_f3.rsc`](../backups/2026-10-25/DIST-2_2026-10-25_f3.rsc) | 2026-10-25 14:58:38 | 3602 | R4 | `3071a2bd…b1699b01` |
+
+Todos son de RouterOS 7.16 y tienen fin de línea CRLF. El commit y la PR de cada uno se registran en 6.1 cuando se integran a `main`.
+
+**Revisión R5 de los siete exports F3** (auditoría del 26/10):
+- `/system identity` coincide con el nombre del archivo.
+- **Sin referencias inválidas:** no hay `=*N` ni `*N`, el defecto del primer export de F2 de ISP-1. Todas las interfaces, listas y VRF referenciadas existen.
+- **Claves:** las 14 claves OSPF están redactadas. No hay usuarios, contraseñas, claves TCP-MD5 ni VRRP, contenido Base64 ni salida `show-sensitive`.
+- **Frente a F2:** CORE-1, CORE-2, DIST-1 y DIST-2 no cambian. ISP-1 e ISP-2 agregan 16 líneas: la address-list de su loopback, la conexión eBGP y 4 reglas de filtro. EDGE agrega las listas `FW-*`, las address-lists, las 12 reglas `F3 FW`, las 2 conexiones eBGP, las 10 reglas de filtro de ruteo y los parámetros `originate-default` y `out-filter-chain` en la instancia OSPF. Ninguno quita configuración de F2.
+- **ISP-1 e ISP-2:** sus exports públicos son idénticos a los originales privados, porque no tenían nada que sanear.
+
+#### Snapshots GNS3 de F3
+
+R5 creó estos snapshots en su copia del proyecto, siempre con todos los nodos detenidos. Después volvió a levantar los nodos de a uno. La hora es la que muestra GNS3 en la VM (UTC).
+
+| Snapshot | Registro en GNS3 | Momento | Evidencia |
+| --- | --- | --- | --- |
+| `PRE_F3_R5_2026-10-18` | 2026-10-19 16:13:12 | Antes de configurar F3, con F2 verificada | F3-1 |
+| `F3_FW_R5_2026-10-23` | 2026-10-23 22:35:15 | Con el firewall aplicado, antes de las pruebas de caída de ISP | F3-20 |
+| `F3_FINAL_R5_2026-10-25` | 2026-10-25 14:15:58 | Cierre de F3 | F3-27 |
+
+- Los snapshots anteriores (`F1_BASE`, `F1_FINAL`, `SSH_MGMT_7_ROUTEROS_VALIDADO`, `PRE_F2` y `F2_FINAL_VRRP_OSPF`) siguen en la lista y no se restauró ninguno (F3-27).
+- En la copia de R5, GNS3 muestra `F2_FINAL_VRRP_OSPF_2026-10-16` a las 00:06:24 del 17/10, 3 horas después de la hora que muestra la Mac de R1 (Figura 15). Esto apoya que la diferencia de 3 horas señalada en "Snapshots GNS3 de F2" es de huso horario.
+- El restore de los snapshots de F3 no se probó.
+
+#### Respaldos privados de F3 (23 y 25/10)
+
+R5 generó dos tipos de respaldo privado de cada router: el export original sin sanear (14:45 a 14:59) y el backup binario (16:18 a 16:23). Los binarios se generaron con `/system backup save … encryption=aes-sha256` y una contraseña que R5 tipeó en la consola. Además se sacó del router la copia del export y del backup de EDGE previos al firewall (23/10), pendiente desde la revisión de R1.
+
+**Cómo se trasladaron y verificaron:**
+- Se trabajó de a un router por vez: cada router se generaba, se traía y se verificaba antes de pasar al siguiente.
+- Cada archivo se trasladó **dos veces por separado** por la consola serie, en Base64, y se decodificó en la PC de R5.
+- Los dos traslados dieron el mismo SHA-512 en los 16 archivos.
+- **Tamaño:** coincide con el del router; exacto en los `.rsc`, y en los `.backup` coincide además el campo de largo del encabezado.
+- **Cifrado:** los 8 `.backup` tienen la cabecera de backup RouterOS cifrado con AES (`EF A8 91 73`). Esto acredita el cifrado, no que el archivo se pueda restaurar.
+
+| Router | Archivo | Bytes | SHA-512 |
+| --- | --- | ---: | --- |
+| EDGE | `F3_EDGE_20261025.rsc` | 6996 | `a5cc2d587fa54cbdaf0645ee947acdf125c61812aae43091617eb37f84add5d1d1bb2dff6ee7973c08a5d7d3f858f667a93bed74126205b3607cd6eac1cc399c` |
+| EDGE | `F3_EDGE_20261025.backup` | 29651 | `2b94bf2dbb079ba45b6fa2e7457ff9cacf1803b606bd17b386856c1869e6397a01d01383e3a56d96b7be8401b34aee8c068c9f21a6dcff8cca36d53eb3e3a052` |
+| ISP-1 | `F3_ISP1_20261025.rsc` | 2800 | `b4c785edadd6d33281fcef6a888b86dbec73bc73402a22d0307308af043014d33f618ff8d87327542f78e3d23d2a222b09779726b26ace3852711acb3032cdd6` |
+| ISP-1 | `F3_ISP1_20261025.backup` | 24599 | `214b5709fac6fa47561c62be71ce4e592603bfda3516efb3703822e8077c1c7c5d883216fcd63c2429f846045efe0e623fbbe6cf4bf0e718c6cc462a6e73c879` |
+| ISP-2 | `F3_ISP2_20261025.rsc` | 2800 | `b222a3f37b0dfd722b034bcdd0fe74866cede191a5eedfc7cc48bf06e10a7571213d1f22b36fe819a71d3fada1747d581a4c0bd5651f3e84a48a8d48efd930bc` |
+| ISP-2 | `F3_ISP2_20261025.backup` | 24598 | `6af969419bf8b1bf081c4f093f52992796151ff0499b66557be1dfee820ef970bd9285814c92251941b8f22cb91ddfdda60471129818527d38fa7fbe8f86577d` |
+| CORE-1 | `F3_CORE1_20261025.rsc` | 3080 | `d8fd419019a6ec5a0b6e28ddb4fcb9d78c7f1f2cffa92177070909ce8737d343bf404bf8b5711d698459753ba125af102141cecd52dfff978325bbd5b2ed5484` |
+| CORE-1 | `F3_CORE1_20261025.backup` | 25124 | `9fea253ab3a05df5f4cb443a007050f76e29a6aa797bc082dba1add619c7983575599c148ba43d4ae7d56d67981620054e356b1d2b5846c363b092debd981326` |
+| CORE-2 | `F3_CORE2_20261025.rsc` | 3081 | `b6e4153aa0b22116d5251aa18991d4c2e958bee16826c03f0aa40bdbea3f12fc11b7f8b4087fc371cdec153cca0a51e44a76ff7f4dade4ce6c806bdb226a3e9a` |
+| CORE-2 | `F3_CORE2_20261025.backup` | 25122 | `79b88a342fee998e73b1a95e01fb88ddfa8885ca0926cea522cd56aaaad5c97736983aa4b067ad4f6f9600b3fc628abbf445079ba76a999d4f911d49108339ad` |
+| DIST-1 | `F3_DIST1_20261025.rsc` | 3574 | `bb1ac304733c6331a378eb9d1532c79ccbb1828fb6fe7d90a18cbace09a6cfdd3782397b7d38b35d164342513ac0f42e38a41877c1a95df96c4d6a6bd3c3b20f` |
+| DIST-1 | `F3_DIST1_20261025.backup` | 25768 | `a418a13e5788a95e5d59e55671437e226cb88c66afcc8e34e5941cd3761c94ec13a1fe0ffe3d62f44bc196285248a59c5e67dc722172e22af925c56587081180` |
+| DIST-2 | `F3_DIST2_20261025.rsc` | 3574 | `e11dcbd54608fb0e213326f784fec7a3c25f6ca7b807d037d575fb758dcd50fb3c30d7acac094ee46cd9a37bbdcc0c97d65f4c3af6ab1b70629a0cd152f9edf7` |
+| DIST-2 | `F3_DIST2_20261025.backup` | 25789 | `dbfddb75dac4db16e2ba621e36499c104962ffad6f2b945ec2f016916904f2e1e9f667c55ef796fd0ec3c024de206f81603308f7576b61ab9f3ee499deb0ea88` |
+| EDGE (antes del firewall) | `EDGE_preFW_F3_20261023.rsc` | 4757 | `1cc1e54fe239755ceac98044947534cc5ed2ffc7bfe382c5f11bdfe0d619a053cb68327b27422be84a1aeecb6d7a68a7ee1d19ca5b88456ffb18b37d2cc0b343` |
+| EDGE (antes del firewall) | `EDGE_preFW_F3_20261023.backup` | 26807 | `0f17f128c0443ecd15afbeeb89fa9f28b00e1540f47cc8b8c8e31a7a69c3fc16064c15b9b0e2e1edc48053835bf72ec6fc5ec3cd3ee97ec0e53367a29f7d9906` |
+
+| Dato | Valor |
+| --- | --- |
+| Hito | `F3`: exports del 25/10 de 14:45 a 14:59 y backups de 16:18 a 16:23 (hora de RouterOS, UTC). Pre-firewall de EDGE: 23/10, 20:47 y 21:00 |
+| RouterOS | 7.16 |
+| Cifrado | `aes-sha256`, acreditado por la cabecera de los 8 `.backup` |
+| Custodia | Dos juegos independientes en el almacenamiento local de R5, fuera del repositorio, verificados con `sha512sum -c` (16/16 en cada uno). Los originales siguen además en cada router. La transferencia privada a R1 se coordina aparte |
+| Restore probado | **No.** No se restauró ningún backup de F3 ni el snapshot `F3_FINAL_R5_2026-10-25` |
+
+Los exports originales de EDGE, CORE y DIST contienen las claves OSPF en claro y no se publican. Tampoco se publican los binarios, la contraseña de los backups ni contenido Base64.
+
 #### Política interna de backup: procedimientos adicionales
 
 Estado de los procedimientos de 1.4:
@@ -1156,9 +1471,9 @@ Estado de los procedimientos de 1.4:
 | Snapshot BASE | Registrado en GNS3 (2.3). No es un backup de RouterOS y no se probó su restore |
 | Snapshot `F1_FINAL_2026-10-09` y copia portable del proyecto GNS3 | Realizados por R1. Recuperación del proyecto validada en una copia aislada (2.3). El restore de snapshots individuales de GNS3 no se probó |
 | Export `base` de cada router antes de configurar | No se generó |
-| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** por R1 para los siete routers en tres hitos: F1 (10 y 13/10), SSH-MGMT (15/10) y F2 (16/10); archivos verificados por R1 |
+| Backup binario `.backup` cifrado, fuera del repositorio | **Realizado** para los siete routers en cuatro hitos: F1 (10 y 13/10), SSH-MGMT (15/10) y F2 (16/10) por R1, y F3 (25/10) por R5; archivos verificados por quien los generó |
 | Registro de localizador privado, checksum y resultado de cada binario | **Registrado** arriba para los tres juegos: tamaño, hash, RouterOS 7.16 y fecha. En F1 y SSH-MGMT también el localizador privado; en F2, R1 informó la custodia fuera del repositorio sin indicar un localizador |
-| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1** en los juegos F1 y SSH-MGMT, con capturas y comparación contra el export (arriba). F1: satisfactorio. SSH-MGMT: exitoso con ajuste manual de interfaces, direcciones y VRF. En cada uno de esos juegos, seis binarios sin restaurar. **F2: ningún backup restaurado** |
+| Restore probado en un router con la misma versión de RouterOS | **Realizado en ISP-1** en los juegos F1 y SSH-MGMT, con capturas y comparación contra el export (arriba). F1: satisfactorio. SSH-MGMT: exitoso con ajuste manual de interfaces, direcciones y VRF. En cada uno de esos juegos, seis binarios sin restaurar. **F2 y F3: ningún backup restaurado** |
 | Procedimiento privado para reinyectar claves y reprovisionar usuarios | **Pendiente**: los dos restores de ISP-1 recuperaron el acceso administrativo, pero el procedimiento escrito no existe. Debe incluir la revisión de interfaces tras un restore en otra VM |
 
 Los `.rsc` publicados están sanitizados: no incluyen usuarios ni contraseñas, de modo que por sí solos no permiten recuperar las credenciales de gestión. En ISP-1, el binario cifrado sí las recuperó (acceso administrativo funcional tras el restore, informado por R1). El procedimiento privado por escrito sigue pendiente. En el repositorio no se publican binarios, contraseñas ni localizadores secretos.
@@ -1172,7 +1487,7 @@ En la devolución de F1, la cátedra pidió sostener un juego de backups indepen
 | F1 | `2026-10-09/` (y EDGE `2026-10-08/`) | 7, del 10 y 13/10 | ISP-1, 13/10 | Realizado |
 | SSH-MGMT | `2026-10-14/` | 7, del 15/10 | ISP-1, 16/10, con ajuste manual | Realizado |
 | F2 (VRRP y OSPF) | `2026-10-16/` | 7, del 16/10 | No | Realizado, sin restore probado |
-| F3 (BGP y firewall) | — | — | — | Planificado: al cerrar F3 |
+| F3 (BGP y firewall) | `2026-10-25/` (pendiente de las PR de R1 a R4) | 7, del 25/10, más el pre-firewall de EDGE del 23/10 | No | Realizado, sin restore probado; exports auditados y pendientes de publicación |
 | F4 (5 drills) | — | — | — | Planificado: `pre-drillN` y `post-drillN` en cada drill |
 
 Los hitos planificados se marcarán como realizados solo cuando existan los archivos y su registro en 6.1 y en esta sección.
@@ -1255,6 +1570,51 @@ La hora es la del nombre del archivo original. En la Figura 17 coincide con el r
 | Figura 15 | `04_Respaldo/15_SNAPSHOT_FINAL.png` | 17/10 00:06 | GNS3: snapshots `PRE_F2_2026-10-16` y `F2_FINAL_VRRP_OSPF_2026-10-16`; nodos detenidos | 4.3, 6.2 | `42347d2012f3c0d70032e191595d19e05e966cbf809836b442b28d1ab3c01bd0` |
 | Figura 16 | `05_Recuperacion/16_PING_POST_ARRANQUE.png` | 17/10 01:44 | PC-USER → SRV después del arranque: 5/5 | 4.1, 4.3 | `4242c920927eb4bcdae999e49913a2dc25a726c78ee4bf891e4b2ed1f2d900d3` |
 | Figura 17 | `06_Estabilidad/17_ESTABILIDAD_EDGE.png` | 17/10 02:03 | EDGE: uptime de 22m16s, recursos y dos mensajes críticos del arranque | 4.3 | `7e2eef4562a0bd59efbcb3a2837232467c96c668afb6fd0248693ced127f6f71` |
+
+### 7.4 F3: BGP, firewall y caída de ISP (19 a 25/10)
+
+R5 generó estas evidencias en su copia GNS3. 26 son salidas de consola en texto y 3 son capturas de la lista de snapshots de GNS3. Están en [`capturas/F3/`](../capturas/F3/) con sus nombres originales y sin modificaciones: los SHA-256 de la tabla son los de las copias privadas de R5.
+
+Antes de publicarlas se revisaron una por una:
+- no muestran claves TCP-MD5, OSPF ni VRRP, contraseñas ni contenido Base64;
+- donde un comando mostraba una clave, el valor ya figuraba reemplazado por `<REDACTADO>` en la salida guardada;
+- en el resto de los casos, las sesiones BGP se consultaron con comandos que no muestran claves.
+
+Algunas salidas conservan rastros de la herramienta que trasladó el texto desde la VM: la verificación md5 de los scripts antes de ejecutarlos (checkpoint de F3, 4.4) y, en F3-22, errores de un script auxiliar que no llegó a ejecutarse en los routers. En F3-5 y F3-29 aparecen intentos de login fallidos: son consultas de solo lectura que llegaron a consolas sin sesión iniciada y no tuvieron efecto (4.4).
+
+La hora es la de la VM y la de RouterOS, ambas en UTC.
+
+| Evidencia | Archivo (`capturas/F3/…`) | Hora (VM, UTC) | Qué muestra | Sección | SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| F3-1 | `01_Checkpoint0/02_snapshot_PRE_F3_R5_creado.jpg` | 19/10 16:13 | GNS3: lista de snapshots con `PRE_F3_R5_2026-10-18` recién creado | 4.4, 6.2 | `bc7456f64a828700ef3e5e849906961b42bcb3b902834bae29f55cb77d0c4433` |
+| F3-2 | `01_Checkpoint0/04_ospf_vrrp_rutas_EDGE_CORE_DIST_1636.txt` | 19/10 16:36 | Checkpoint 0: vecinos OSPF, roles VRRP y rutas de EDGE, CORE y DIST antes de F3 | 4.4 | `8f19312aae9a5138f0fe366f0cb7a67ec49be195b872e8fb740db1d027e95edb` |
+| F3-3 | `02_eBGP/F3_06_eBGP_ISP1_established_y_F2_1716.txt` | 19/10 17:16 | Sesión eBGP EDGE–ISP-1 en `established`, rutas recibidas y F2 sin cambios | 4.4 | `dc9756e11d1a4b8e535a6865ac3345eb6fafa13c2c353b57e203ecad892fccde` |
+| F3-4 | `02_eBGP/F3_11_eBGP_ISP2_established_y_F2.txt` | 19/10 | Sesión eBGP EDGE–ISP-2 en `established`, rutas recibidas y F2 sin cambios | 4.4 | `1f63e79bcf78f4b903ddd54c2846d63a60e56057312fc48856dfc5bece02615b` |
+| F3-5 | `02_eBGP/F3_14_verificacion_cambio_clave_2002.txt` | 19/10 20:02 | Sesiones después del cambio de clave TCP-MD5 y log de cierre y restablecimiento | 4.4 | `db584cc59c6e4a907a3e40f5cb7afb3d1bd5ac9cc5c7895cf5c6b8246b34ed55` |
+| F3-6 | `03_Anuncio_LAN/F3_19_cambio11a_EDGE_anuncia_LAN_a_ISP1_0012.txt` | 23/10 00:12 | Cambio 11a: EDGE anuncia las LAN a ISP-1; ISP-1 recibe exactamente las dos | 3.11, 4.4 | `8c89bb0f1edbfeffda2d311ae086d96dbe46baa241c9fee0d917b951af58b5af` |
+| F3-7 | `03_Anuncio_LAN/F3_20_cambio11b_EDGE_anuncia_LAN_a_ISP2_0023.txt` | 23/10 00:23 | Cambio 11b: lo mismo hacia ISP-2; F2 sin cambios | 3.11, 4.4 | `5da398093514c391575c5477500849d9f92a2082519d0704262421dfb74965ad` |
+| F3-8 | `04_OSPF_default/F3_22_paso1_filtro_edge-ospf-out_0242.txt` | 23/10 02:42 | Cadena `edge-ospf-out` | 3.11 | `8bc2654ecdb2bc952d203d844056f0886836b65ab8e305732240c9f4562dcad5` |
+| F3-9 | `04_OSPF_default/F3_23_paso2_originate-default_if-installed_0244.txt` | 23/10 02:44 | `originate-default=if-installed` en la instancia OSPF de EDGE | 3.11 | `189946416788c46e6941bf3b0796c9f8d094d05f5aeef40375f237d07eba3ecd` |
+| F3-10 | `04_OSPF_default/F3_24_paso3_out-filter-chain_0252.txt` | 23/10 02:52 | `out-filter-chain` asociado; EDGE origina 3 LSA externos | 3.11, 4.4 | `6827171a503b59682bb06ee5e1674973b955705e6b3c7b13321d974ee9b7d76c` |
+| F3-11 | `04_OSPF_default/F3_24b_paso3_rutas_CORE_DIST_0255.txt` | 23/10 02:55 | CORE y DIST aprenden el default y las loopbacks ISP | 4.4 | `c245a06180cefeb45257b430462ff26dbd4f6f949834937651ffcaf9f81e6b91` |
+| F3-12 | `04_OSPF_default/F3_25_verificacion_final_OSPF_pings_traceroutes_0258.txt` | 23/10 02:58 | Verificación final de OSPF, pings y traceroutes de PC-USER y SRV a las loopbacks ISP | 4.1, 4.4 | `7e16a6e96ce460ba6fd6602094aa7147fb515601dbfed9ec57d2fa455f3533b0` |
+| F3-13 | `05_Firewall/F3_29_paso1_listas_FW_2110.txt` | 23/10 21:10 | Listas de interfaces y address-lists `FW-*` | 5.3 | `92fa759d1ff0942431c739f25242bea83cdb82735aaf41a596346b9ef455d49a` |
+| F3-14 | `05_Firewall/F3_30_paso2_aceptaciones_2122.txt` | 23/10 21:22 | Siete reglas de aceptación y sus contadores | 5.3 | `a8a2a915a1c39173781d1cf776e1b1afbf7c4d71f892e6120253c826237db7e8` |
+| F3-15 | `05_Firewall/F3_31_paso3_denegaciones_safe_mode_2129.txt` | 23/10 21:29 | Cinco denegaciones aplicadas en Safe Mode | 4.4, 5.3 | `272a5d48ba9c139fa82afd680fe736de22818fac886144683b6251acb1f3d09e` |
+| F3-16 | `05_Firewall/F3_32_paso3_verificacion_post_deny_2132.txt` | 23/10 21:32 | Pings, BGP, OSPF, VRRP y contadores con el firewall completo | 4.1, 4.4 | `21817933e8a9f16d25e91d5fa258bf53f2d2d7a40ccdd67dbc6611506ed4cdd0` |
+| F3-17 | `05_Firewall/F3_33_prueba1_SSH_autorizado_MGMT-CLIENT_2206.txt` | 23/10 22:06 | SSH autorizado desde MGMT-CLIENT: EDGE pide contraseña; se aborta sin ingresarla | 4.4 | `962441342675960c472b659284181d6d56bf32d11d704fb0fd6b97d8760c031d` |
+| F3-18 | `05_Firewall/F3_34_prueba2_SSH_no_autorizado_CORE-1_2207.txt` | 23/10 22:07 | SSH desde CORE-1 por la VRF `MGMT`: sin respuesta | 4.4 | `1de747b4284997d5ccc58a30eaccbbcf6288d24d88569ed3864144893f2bea98` |
+| F3-19 | `05_Firewall/F3_35_prueba3_SSH_desde_ISP1_bloqueado_2208.txt` | 23/10 22:08 | SSH desde ISP-1 al enlace WAN de EDGE: sin respuesta | 4.4 | `3ab9703330a1470b3701090ddad42f59e9f6b802cb15cf166979bc5632d59b08` |
+| F3-20 | `06_Failover_ISP/F3_36_snapshot_F3_FW_R5_2235.jpg` | 23/10 22:35 | GNS3: snapshot `F3_FW_R5_2026-10-23` | 4.4, 6.2 | `1e9cd06e63d24be4c4f52aeaa3abd02771d66139ffbcc6eecc262dc252ff4f28` |
+| F3-21 | `06_Failover_ISP/F3_37_base_post_snapshot_2257.txt` | 23/10 22:57 | Línea base antes de las pruebas de caída | 4.4 | `ad33587112bc8f9f7abe7414fb166c52c71516d5f54b3bf1de7a5460e3c779b5` |
+| F3-22 | `06_Failover_ISP/F3_38_ISP1_caido_2305.txt` | 23/10 23:05 | ISP-1 caído: EDGE, rutas y conectividad | 4.4 | `7515bb41bd7f4ae4ef057b5646fbc77fc4f7eaa0cdc176136eee49224168aa59` |
+| F3-23 | `06_Failover_ISP/F3_38b_ISP1_caido_CORE_DIST_2312.txt` | 23/10 23:12 | ISP-1 caído: CORE y DIST | 4.4 | `b1479ec329baee7a9a024ff1556eaa14e199f2bb3188201ab6ffadca3d46cf79` |
+| F3-24 | `06_Failover_ISP/F3_39_ISP1_recuperado_2314.txt` | 23/10 23:14 | ISP-1 recuperado | 4.4 | `f20932dfbf9e63014df1ce38fe5429d2c10460cc20316890b5957789a18db6e6` |
+| F3-25 | `06_Failover_ISP/F3_40_ISP2_caido_2320.txt` | 23/10 23:20 | ISP-2 caído | 4.4 | `2d569b7780a3ff8c5a436b0aa39065b87e8e5c1f547b91b0c9f54199c0aff0cb` |
+| F3-26 | `06_Failover_ISP/F3_41_ISP2_recuperado_y_estado_final_2329.txt` | 23/10 23:29 | ISP-2 recuperado y estado final | 4.4 | `773f05688e8e81df94efbacceddc158a7b19f7cf6b37045ff1de90c484d4ae50` |
+| F3-27 | `07_Cierre/F3_42_snapshot_F3_FINAL_R5_1415.jpg` | 25/10 14:15 | GNS3: los ocho snapshots, con `F3_FINAL_R5_2026-10-25` al final | 4.4, 6.2 | `8b53852347c56bf61924b79fb30e24b3987efb0226886ed7bf02c02070b287b2` |
+| F3-28 | `07_Cierre/F3_44_listado_exports_y_backups_routers_1633.txt` | 25/10 16:33 | Exports y backups de F3 en el almacenamiento de cada router | 6.2 | `f2cfbfa37f1d6a75d5e83b5ea7d8c1893e81af0929ea76990f828846e4cc1412` |
+| F3-29 | `07_Cierre/F3_45_verificacion_post_respaldos_1700.txt` | 25/10 17:00 | Verificación funcional posterior al reinicio de la VM y a los respaldos | 4.1, 4.4 | `dc3cf58f3acfbf9633c1be063153a1f4db074f0e745c009db25fbe4dc53e6f1c` |
 
 ---
 
@@ -1352,21 +1712,38 @@ F2 se ejecutó el 16/10 y en la madrugada del 17/10. R1 configuró y probó los 
 - [ ] Restore de algún backup de F2 o del snapshot `F2_FINAL_VRRP_OSPF_2026-10-16`: no se realizó
 - [ ] Causa de los mensajes críticos de EDGE tras el reinicio del 17/10: no determinada (4.3)
 
+### BGP y firewall (F3)
+
+R5 configuró y probó F3 en su copia GNS3 del 19 al 25/10, con autorización de R1 en cada etapa. R1 validó la implementación y las pruebas. Los exports los publican R1 a R4 por PR, y R5 documentó la evidencia. Pendiente de la devolución de la cátedra. Detalle en la matriz de aceptación de 4.4.
+
+- [x] eBGP EDGE ↔ ISP-1 (AS 65001) y EDGE ↔ ISP-2 (AS 65002) con TCP-MD5, las dos en `established` (3.11, 4.4)
+- [x] Cada ISP anuncia su loopback /32 y el default; EDGE acepta solo eso, con filtros explícitos (3.11, 4.4)
+- [x] EDGE anuncia solo USERS y SERVERS a los ISP, que tienen ruta de retorno; sin anuncio de la red de gestión (3.11, 4.4)
+- [x] Default activo y loopbacks ISP propagados por OSPF, con filtro y sin redistribución indiscriminada (3.11, 4.4)
+- [x] PC-USER y SRV alcanzan las dos loopbacks ISP con ping y traceroute (4.1)
+- [x] Firewall de EDGE con `input` y `forward` separados; la gestión no responde desde los enlaces ISP (4.4, 5.3)
+- [x] Caída y recuperación controlada de ISP-1 y de ISP-2; sin medición de tiempos (4.4)
+- [x] Snapshots `PRE_F3_R5_2026-10-18`, `F3_FW_R5_2026-10-23` y `F3_FINAL_R5_2026-10-25` (6.2)
+- [x] Respaldos privados post-F3 de los siete routers (export original y backup cifrado) y pre-firewall de EDGE, con SHA-512 y dos copias verificadas (6.2)
+- [ ] Exports F3 de los siete routers en `backups/2026-10-25/`: auditados por R5, pendientes de las PR de R1 a R4 (6.2)
+- [ ] Restore de algún backup de F3 o del snapshot `F3_FINAL_R5_2026-10-25`: no se realizó
+- [ ] Revisión con R1 del alcance de la regla 9 de `forward` (5.3)
+
 ### Redes
 
 - [x] 7 CHR + 2 switches + 2 hosts levantados y cableados (F1, 2.1)
 - [x] VRRP operativo (2 grupos, load-sharing) (F2, 4.3)
 - [x] OSPF área 0 con adyacencias (incluido core-core) (F2, 4.3)
-- [ ] BGP eBGP ×2 establecido (multi-homing)
+- [x] BGP eBGP ×2 establecido (multi-homing) (F3, 4.4)
 - [ ] Los 5 drills ejecutados y documentados
 
 ### Seguridad
 
 - [x] Hardening aplicado (F1, 5.1; al 09/10 SSH quedó deshabilitado y desde el 14/10 está restringido a la red de gestión, 5.2)
 - [x] OSPF MD5 funcionando (F2: siete adyacencias en `Full` con MD5, 3.10 y 4.3; la prueba con clave incorrecta es de F4)
-- [ ] BGP TCP-MD5 funcionando
+- [x] BGP TCP-MD5 funcionando (F3: dos sesiones `established` con TCP-MD5, 4.4 y 5.3; la prueba con clave incorrecta es de F4)
 - [x] VRRP auth funcionando (F2: `simple` en los dos grupos, confirmada por R1; el export saneado no muestra las contraseñas, 3.10)
-- [ ] Firewall edge aplicado
+- [x] Firewall edge aplicado (F3, 5.3)
 - [ ] Prueba con clave incorrecta documentada
 
 ### Operación
@@ -1381,5 +1758,5 @@ F2 se ejecutó el 16/10 y en la madrugada del 17/10. R1 configuró y probó los 
 - [ ] Memoria completa
 - [ ] Repo git con estructura correcta y commits por rol
 - [ ] `backlog.md` con todas las tareas en done
-- [ ] Capturas organizadas (F1 en 7.1, SSH-MGMT en 7.2 y F2 en 7.3; faltan las de F3 y F4)
+- [ ] Capturas organizadas (F1 en 7.1, SSH-MGMT en 7.2, F2 en 7.3 y F3 en 7.4; faltan las de F4)
 - [ ] Cada integrante puede defender su parte y una parte ajena
