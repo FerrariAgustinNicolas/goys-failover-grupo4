@@ -1,0 +1,169 @@
+Mon Oct 19 05:40:20 PM UTC 2026
+
+[admin@ISP-2] > /routing bgp connection enable [find name=ebgp-edge][admin@ISP-2] > /routing bgp connection enable [find name=ebgp-edge]
+[admin@ISP-2] > 
+
+[admin@EDGE] > /routing bgp connection enable [find name=ebgp-isp2][admin@EDGE] > /routing bgp connection enable [find name=ebgp-isp2]
+[admin@EDGE] > 
+Mon Oct 19 05:41:39 PM UTC 2026
+##EDGE
+
+[admin@EDGE] > /routing bgp session print without-paging[admin@EDGE] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-isp1-1" 
+     remote.address=10.255.0.1 .as=65001 .id=10.255.255.1 
+     .capabilities=mp,rr,gr,as4 .afi=ip .messages=28 .bytes=563 .eor="" 
+     local.address=10.255.0.2 .as=65000 .id=10.255.255.3 
+     .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=27 
+     .bytes=513 .eor="" 
+     output.procid=20 .filter-chain=edge-out-isp 
+     input.procid=20 .filter=edge-in-isp1 ebgp 
+     hold-time=3m keepalive-time=1m uptime=26m26s120ms 
+     last-started=2026-10-19 17:15:18 prefix-count=2 
+
+ 1 E name="ebgp-isp2-1" 
+     remote.address=10.255.0.5 .as=65002 .id=10.255.255.2 
+     .capabilities=mp,rr,gr,as4 .afi=ip .messages=3 .bytes=88 .eor="" 
+     local.address=10.255.0.6 .as=65000 .id=10.255.255.3 
+     .cluster-id=10.255.255.3 .capabilities=mp,rr,gr,as4 .afi=ip .messages=2 
+     .bytes=38 .eor="" 
+     output.procid=21 .filter-chain=edge-out-isp 
+     input.procid=21 .filter=edge-in-isp2 ebgp 
+     hold-time=3m keepalive-time=1m uptime=1m9s50ms 
+     last-started=2026-10-19 17:40:35 prefix-count=0 
+
+[admin@EDGE] > /ip route print without-paging where bgp[admin@EDGE] > /ip route print without-paging where bgp
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY     DISTANCE
+DAb 0.0.0.0/0        10.255.0.1        20
+D b 0.0.0.0/0        10.255.0.5        20
+DAb 10.255.255.1/32  10.255.0.1        20
+DAb 10.255.255.2/32  10.255.0.5        20
+
+[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY     DISTANCE
+DAb 0.0.0.0/0    10.255.0.1        20
+D b 0.0.0.0/0    10.255.0.5        20
+
+[admin@EDGE] > /routing ospf neighbor print count-only[admin@EDGE] > /routing ospf neighbor print count-only
+2
+[admin@EDGE] > 
+##ISP2
+
+[admin@ISP-2] > /routing bgp session print without-paging[admin@ISP-2] > /routing bgp session print without-paging
+Flags: E - established 
+ 0 E name="ebgp-edge-1" 
+     remote.address=10.255.0.6 .as=65000 .id=10.255.255.3 
+     .capabilities=mp,rr,gr,as4 .afi=ip .messages=2 .bytes=38 .eor="" 
+     local.address=10.255.0.5 .as=65002 .id=10.255.255.2 
+     .cluster-id=10.255.255.2 .capabilities=mp,rr,gr,as4 .afi=ip .messages=3 
+     .bytes=88 .eor="" 
+     output.procid=20 .filter-chain=isp2-out-edge .network=bgp-isp2-out 
+     .default-originate=always 
+     input.procid=20 .filter=isp2-in-edge ebgp 
+     hold-time=3m keepalive-time=1m uptime=1m30s600ms 
+     last-started=2026-10-19 17:40:34 prefix-count=0 
+
+[admin@ISP-2] > /ip route print without-paging[admin@ISP-2] > /ip route print without-paging
+Flags: D - DYNAMIC; A - ACTIVE; c - CONNECT
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS      GATEWAY      DISTANCE
+DAc 10.255.0.4/30    ether1              0
+DAc 10.255.255.2/32  lo                  0
+DAc 172.31.250.0/28  ether2@MGMT         0
+
+[admin@ISP-2] > 
+##ISP1
+
+[admin@ISP-1] > /routing bgp session print count-only[admin@ISP-1] > /routing bgp session print count-only
+1
+[admin@ISP-1] > 
+
+[admin@CORE-1] > /routing ospf neighbor print count-only[admin@CORE-1] > /routing ospf neighbor print count-only
+4
+[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+
+[admin@CORE-1] > 
+
+[admin@CORE-2] > /routing ospf neighbor print count-only[admin@CORE-2] > /routing ospf neighbor print count-only
+4
+[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+
+[admin@CORE-2] > 
+
+[admin@DIST-1] > /interface vrrp print without-paging[admin@DIST-1] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRI  IN  V  V3-P  SY
+;;; F2 - SERVERS - DIST-1 backup preferido
+0  B vrrp-servers-20  ether4     00:00:5E:00:01:14    20  100  1s  2  ipv4  no
+;;; F2 - USERS - DIST-1 master preferido
+1 RM vrrp-users-10    ether3     00:00:5E:00:01:0A    10  150  1s  2  ipv4  no
+
+[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+
+[admin@DIST-1] > 
+
+[admin@DIST-2] > /interface vrrp print without-paging[admin@DIST-2] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRI  IN  V  V3-P  SY
+;;; F2 - SERVERS - DIST-2 master preferido
+0 RM vrrp-servers-20  ether4     00:00:5E:00:01:14    20  150  1s  2  ipv4  no
+;;; F2 - USERS - DIST-2 backup preferido
+1  B vrrp-users-10    ether3     00:00:5E:00:01:0A    10  100  1s  2  ipv4  no
+
+[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+
+[admin@DIST-2] > 
+==================== 5025
+ping 192.168.20.100 -c 5
+
+84 bytes from 192.168.20.100 icmp_seq=1 ttl=63 time=170.203 ms
+84 bytes from 192.168.20.100 icmp_seq=2 ttl=63 time=139.943 ms
+84 bytes from 192.168.20.100 icmp_seq=3 ttl=63 time=127.577 ms
+
+84 bytes from 192.168.20.100 icmp_seq=4 ttl=63 time=97.101 ms
+84 bytes from 192.168.20.100 icmp_seq=5 ttl=63 time=120.801 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> ping 10.255.255.3 -c 5
+
+84 bytes from 10.255.255.3 icmp_seq=1 ttl=62 time=201.758 ms
+84 bytes from 10.255.255.3 icmp_seq=2 ttl=62 time=275.725 ms
+84 bytes from 10.255.255.3 icmp_seq=3 ttl=62 time=187.620 ms
+
+84 bytes from 10.255.255.3 icmp_seq=4 ttl=62 time=137.150 ms
+84 bytes from 10.255.255.3 icmp_seq=5 ttl=62 time=175.437 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+==================== 5027
+ping 192.168.10.100 -c 5
+
+84 bytes from 192.168.10.100 icmp_seq=1 ttl=63 time=125.626 ms
+84 bytes from 192.168.10.100 icmp_seq=2 ttl=63 time=82.511 ms
+84 bytes from 192.168.10.100 icmp_seq=3 ttl=63 time=123.710 ms
+
+84 bytes from 192.168.10.100 icmp_seq=4 ttl=63 time=166.599 ms
+84 bytes from 192.168.10.100 icmp_seq=5 ttl=63 time=102.539 ms
+
+SRV> 
+SRV> 
+SRV> ping 10.255.255.3 -c 5
+
+84 bytes from 10.255.255.3 icmp_seq=1 ttl=62 time=262.414 ms
+84 bytes from 10.255.255.3 icmp_seq=2 ttl=62 time=326.975 ms
+84 bytes from 10.255.255.3 icmp_seq=3 ttl=62 time=178.560 ms
+
+84 bytes from 10.255.255.3 icmp_seq=4 ttl=62 time=141.162 ms
+84 bytes from 10.255.255.3 icmp_seq=5 ttl=62 time=177.917 ms
+
+SRV> 
+SRV> 
+SRV> 

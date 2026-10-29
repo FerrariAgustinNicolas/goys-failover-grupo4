@@ -1,0 +1,332 @@
+######## Verificacion funcional posterior a los backups
+Sun Oct 25 05:00:15 PM UTC 2026
+ 17:00:15 up  1:18,  1 user,  load average: 13.83, 12.30, 12.94
+
+[admin@ISP-1] > /system identity print[admin@ISP-1] > /system identity print
+  name: ISP-1
+[admin@ISP-1] > /system clock print[admin@ISP-1] > /system clock print
+                  time: 17:00:22
+                  date: 2026-10-25
+  time-zone-autodetect: yes
+        time-zone-name: manual
+            gmt-offset: +00:00
+            dst-active: no
+[admin@ISP-1] > /routing bgp session print count-only where established[admin@ISP-1] > /routing bgp session print count-only where established
+1
+[admin@ISP-1] > /routing ospf neighbor print count-only where state=Full[admin@ISP-1] > /routing ospf neighbor print count-only where state=Full
+0
+[admin@ISP-1] > /routing ospf lsa print count-only where type=external[admin@ISP-1] > /routing ospf lsa print count-only where type=external
+0
+[admin@ISP-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@ISP-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+
+[admin@ISP-1] > /interface vrrp print without-paging[admin@ISP-1] > /interface vrrp print without-paging
+
+[admin@ISP-1] > /ip firewall filter print count-only[admin@ISP-1] > /ip firewall filter print count-only
+3
+[admin@ISP-1] > /file print without-paging[admin@ISP-1] > /file print without-paging
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 ISP-1_2026-10-14_SSH_MGMT.rsc                                                                                                                                                           script           1870 2026-10-15 02:04:04 
+ 1 skins                                                                                                                                                                                   directory             2026-10-08 20:29:10 
+ 2 ISP-1_F1_2026-10-08.rsc                                                                                                                                                                 script           1160 2026-10-08 23:26:46 
+ 3 ISP-1_F1_2026-10-09.rsc                                                                                                                                                                 script           1200 2026-10-09 17:24:46 
+ 4 autosupout.rif                                                                                                                                                                          .rif file    326.2KiB 2026-10-25 15:57:03 
+ 5 autosupout.old.rif                                                                                                                                                                      .rif file    326.4KiB 2026-10-18 23:16:06 
+ 6 ISP-1_2026-10-10_f1.backup                                                                                                                                                              backup        22.2KiB 2026-10-10 17:56:58 
+ 7 ISP-1_2026-10-15_SSH_MGMT.backup                                                                                                                                                        backup        23.1KiB 2026-10-15 23:18:12 
+ 8 F2_ISP1_20261016.rsc                                                                                                                                                                    script           1601 2026-10-17 02:43:25 
+ 9 F2_ISP1_20261016.backup                                                                                                                                                                 backup        23.1KiB 2026-10-17 02:44:38 
+10 F3_ISP1_20261025.rsc                                                                                                                                                                    script           2800 2026-10-25 14:45:43 
+11 F3_ISP1_20261025.backup                                                                                                                                                                 backup        24.0KiB 2026-10-25 16:18:36 
+
+[admin@ISP-1] > 
+
+[admin@ISP-2] > /system identity print[admin@ISP-2] > /system identity print
+  name: ISP-2
+[admin@ISP-2] > /system clock print[admin@ISP-2] > /system clock print
+                  time: 17:01:05
+                  date: 2026-10-25
+  time-zone-autodetect: yes
+        time-zone-name: manual
+            gmt-offset: +00:00
+            dst-active: no
+[admin@ISP-2] > /routing bgp session print count-only where established[admin@ISP-2] > /routing bgp session print count-only where established
+1
+[admin@ISP-2] > /routing ospf neighbor print count-only where state=Full[admin@ISP-2] > /routing ospf neighbor print count-only where state=Full
+0
+[admin@ISP-2] > /routing ospf lsa print count-only where type=external[admin@ISP-2] > /routing ospf lsa print count-only where type=external
+0
+[admin@ISP-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@ISP-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+
+[admin@ISP-2] > /interface vrrp print without-paging[admin@ISP-2] > /interface vrrp print without-paging
+
+[admin@ISP-2] > /ip firewall filter print count-only[admin@ISP-2] > /ip firewall filter print count-only
+3
+[admin@ISP-2] > /file print without-paging[admin@ISP-2] > /file print without-paging
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 ISP-2_2026-10-14_SSH_MGMT.rsc                                                                                                                                                           script           1870 2026-10-15 02:08:55 
+ 1 F3_ISP2_20261025.rsc                                                                                                                                                                    script           2800 2026-10-25 14:49:06 
+ 2 skins                                                                                                                                                                                   directory             2026-10-08 20:41:37 
+ 3 ISP-2_F1_2026-10-08.rsc                                                                                                                                                                 script           1160 2026-10-08 23:29:13 
+ 4 ISP-2_F1_2026-10-09.rsc                                                                                                                                                                 script           1200 2026-10-09 17:25:22 
+ 5 ISP-2_2026-10-13_f1.backup                                                                                                                                                              backup        19.7KiB 2026-10-13 17:41:36 
+ 6 ISP-2_2026-10-15_SSH_MGMT.backup                                                                                                                                                        backup        21.9KiB 2026-10-15 23:19:38 
+ 7 autosupout.old.rif                                                                                                                                                                      .rif file    308.6KiB 2026-10-22 22:36:33 
+ 8 autosupout.rif                                                                                                                                                                          .rif file    313.6KiB 2026-10-25 15:57:30 
+ 9 F2_ISP2_20261016.backup                                                                                                                                                                 backup        23.1KiB 2026-10-17 02:50:07 
+10 F2_ISP2_20261016.rsc                                                                                                                                                                    script           1870 2026-10-17 02:49:17 
+11 F3_ISP2_20261025.backup                                                                                                                                                                 backup        24.0KiB 2026-10-25 16:19:32 
+
+[admin@ISP-2] > 
+
+[admin@EDGE] > /system identity print[admin@EDGE] > /system identity print
+  name: EDGE
+[admin@EDGE] > /system clock print[admin@EDGE] > /system clock print
+                  time: 17:01:50
+                  date: 2026-10-25
+  time-zone-autodetect: yes
+        time-zone-name: manual
+            gmt-offset: +00:00
+            dst-active: no
+[admin@EDGE] > /routing bgp session print count-only where established[admin@EDGE] > /routing bgp session print count-only where established
+2
+[admin@EDGE] > /routing ospf neighbor print count-only where state=Full[admin@EDGE] > /routing ospf neighbor print count-only where state=Full
+2
+[admin@EDGE] > /routing ospf lsa print count-only where type=external[admin@EDGE] > /routing ospf lsa print count-only where type=external
+3
+[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@EDGE] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; b - BGP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY     DISTANCE
+DAb 0.0.0.0/0    10.255.0.1        20
+D b 0.0.0.0/0    10.255.0.5        20
+
+[admin@EDGE] > /interface vrrp print without-paging[admin@EDGE] > /interface vrrp print without-paging
+
+[admin@EDGE] > /ip firewall filter print count-only[admin@EDGE] > /ip firewall filter print count-only
+15
+[admin@EDGE] > /file print without-paging[admin@EDGE] > /file print without-paging
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 EDGE_2026-10-14_SSH_MGMT.rsc                                                                                                                                                            script           2170 2026-10-15 01:53:11 
+ 1 autosupout.rif                                                                                                                                                                          .rif file    340.8KiB 2026-10-17 01:41:41 
+ 2 skins                                                                                                                                                                                   directory             2026-10-08 20:16:49 
+ 3 EDGE_F1_2026-10-08.rsc                                                                                                                                                                  script           1440 2026-10-08 21:54:34 
+ 4 EDGE_F1_2026-10-08_corregido.rsc                                                                                                                                                        script           1401 2026-10-08 22:52:24 
+ 5 EDGE_F1_2026-10-09.rsc                                                                                                                                                                  script           1441 2026-10-09 17:23:58 
+ 6 EDGE_2026-10-13_f1.backup                                                                                                                                                               backup        19.9KiB 2026-10-13 17:56:50 
+ 7 EDGE_2026-10-15_SSH_MGMT.backup                                                                                                                                                         backup        22.4KiB 2026-10-15 23:14:38 
+ 8 EDGE_preFW_F3_20261023.rsc                                                                                                                                                              script           4757 2026-10-23 20:47:16 
+ 9 autosupout.old.rif                                                                                                                                                                      .rif file    334.1KiB 2026-10-17 01:14:30 
+10 F2_EDGE_20261016.rsc                                                                                                                                                                    script           2771 2026-10-16 23:01:32 
+11 F2_EDGE_20261016.backup                                                                                                                                                                 backup        24.2KiB 2026-10-16 23:04:08 
+12 EDGE_preFW_F3_20261023.backup                                                                                                                                                           backup        26.2KiB 2026-10-23 21:00:09 
+13 F3_EDGE_20261025.rsc                                                                                                                                                                    script         6.8KiB 2026-10-25 14:50:40 
+14 F3_EDGE_20261025.backup                                                                                                                                                                 backup        29.0KiB 2026-10-25 16:20:20 
+
+[admin@EDGE] > 
+
+[admin@CORE-1] > /system identity print[admin@CORE-1] > /system identity print
+  name: CORE-1
+[admin@CORE-1] > /system clock print[admin@CORE-1] > /system clock print
+                  time: 17:02:33
+                  date: 2026-10-25
+  time-zone-autodetect: yes
+        time-zone-name: manual
+            gmt-offset: +00:00
+            dst-active: no
+[admin@CORE-1] > /routing bgp session print count-only where established[admin@CORE-1] > /routing bgp session print count-only where established
+0
+[admin@CORE-1] > /routing ospf neighbor print count-only where state=Full[admin@CORE-1] > /routing ospf neighbor print count-only where state=Full
+4
+[admin@CORE-1] > /routing ospf lsa print count-only where type=external[admin@CORE-1] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-1] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY            DISTANCE
+DAo 0.0.0.0/0    10.255.0.9%ether1       110
+
+[admin@CORE-1] > /interface vrrp print without-paging[admin@CORE-1] > /interface vrrp print without-paging
+
+[admin@CORE-1] > /ip firewall filter print count-only[admin@CORE-1] > /ip firewall filter print count-only
+3
+[admin@CORE-1] > /file print without-paging[admin@CORE-1] > /file print without-paging
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 CORE-1_2026-10-14_SSH_MGMT.rsc                                                                                                                                                          script           2193 2026-10-15 02:11:38 
+ 1 autosupout.rif                                                                                                                                                                          .rif file    333.1KiB 2026-10-22 22:36:02 
+ 2 skins                                                                                                                                                                                   directory             2026-10-08 20:45:21 
+ 3 CORE-1_F1_2026-10-08.rsc                                                                                                                                                                script           1464 2026-10-09 17:03:17 
+ 4 CORE-1_2026-10-13_f1.backup                                                                                                                                                             backup        20.0KiB 2026-10-13 18:07:59 
+ 5 CORE-1_2026-10-15_SSH_MGMT.backup                                                                                                                                                       backup        22.4KiB 2026-10-15 23:20:27 
+ 6 autosupout.old.rif                                                                                                                                                                      .rif file    332.4KiB 2026-10-17 01:41:42 
+ 7 F2_CORE1_20261016.rsc                                                                                                                                                                   script           3080 2026-10-16 23:36:02 
+ 8 F2_CORE1_20261016.backup                                                                                                                                                                backup        24.6KiB 2026-10-16 23:37:15 
+ 9 F3_CORE1_20261025.rsc                                                                                                                                                                   script           3080 2026-10-25 14:52:55 
+10 F3_CORE1_20261025.backup                                                                                                                                                                backup        24.5KiB 2026-10-25 16:23:09 
+
+[admin@CORE-1] > 
+
+[admin@CORE-2] > /system identity print[admin@CORE-2] > /system identity print
+  name: CORE-2
+[admin@CORE-2] > /system clock print[admin@CORE-2] > /system clock print
+                  time: 17:03:16
+                  date: 2026-10-25
+  time-zone-autodetect: yes
+        time-zone-name: manual
+            gmt-offset: +00:00
+            dst-active: no
+[admin@CORE-2] > /routing bgp session print count-only where established[admin@CORE-2] > /routing bgp session print count-only where established
+0
+[admin@CORE-2] > /routing ospf neighbor print count-only where state=Full[admin@CORE-2] > /routing ospf neighbor print count-only where state=Full
+4
+[admin@CORE-2] > /routing ospf lsa print count-only where type=external[admin@CORE-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@CORE-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+    DST-ADDRESS  GATEWAY             DISTANCE
+DAo 0.0.0.0/0    10.255.0.13%ether1       110
+
+[admin@CORE-2] > /interface vrrp print without-paging[admin@CORE-2] > /interface vrrp print without-paging
+
+[admin@CORE-2] > /ip firewall filter print count-only[admin@CORE-2] > /ip firewall filter print count-only
+3
+[admin@CORE-2] > /file print without-paging[admin@CORE-2] > /file print without-paging
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 CORE-2_2026-10-14_SSH_MGMT.rsc                                                                                                                                                          script           2194 2026-10-15 02:14:29 
+ 1 skins                                                                                                                                                                                   directory             2026-10-08 20:53:25 
+ 2 CORE-2_F1_2026-10-08.rsc                                                                                                                                                                script           1465 2026-10-09 17:04:38 
+ 3 CORE-2_2026-10-13_f1.backup                                                                                                                                                             backup        20.0KiB 2026-10-13 18:34:23 
+ 4 CORE-2_2026-10-15_SSH_MGMT.backup                                                                                                                                                       backup        22.4KiB 2026-10-15 23:21:12 
+ 5 autosupout.old.rif                                                                                                                                                                      .rif file    337.7KiB 2026-10-17 01:14:30 
+ 6 autosupout.rif                                                                                                                                                                          .rif file    332.8KiB 2026-10-17 01:41:41 
+ 7 F3_CORE2_20261025.rsc                                                                                                                                                                   script           3081 2026-10-25 14:54:47 
+ 8 F2_CORE2_20261016.rsc                                                                                                                                                                   script           3081 2026-10-16 23:41:41 
+ 9 F2_CORE2_20261016.backup                                                                                                                                                                backup        24.6KiB 2026-10-16 23:42:31 
+10 F3_CORE2_20261025.backup                                                                                                                                                                backup        24.5KiB 2026-10-25 16:21:46 
+
+[admin@CORE-2] > 
+cMikroTik 7.16 (stable)
+DIST-1 Login: 
+cMikroTik 7.16 (stable)
+DIST-1 Login: /system identity print
+Password: 
+Login failed, incorrect username or password
+cMikroTik 7.16 (stable)
+DIST-1 Login: /routing bgp session print count-only where established
+Password: 
+Login failed, incorrect username or password
+cMikroTik 7.16 (stable)
+DIST-1 Login: /routing ospf lsa print count-only where type=external
+Password: 
+Login failed, incorrect username or password
+cMikroTik 7.16 (stable)
+DIST-1 Login: /interface vrrp print without-paging
+Password: 
+Login failed, incorrect username or password
+cMikroTik 7.16 (stable)
+DIST-1 Login: /file print without-paging
+Password: 
+
+[admin@DIST-2] > /system identity print[admin@DIST-2] > /system identity print
+  name: DIST-2
+[admin@DIST-2] > /system clock print[admin@DIST-2] > /system clock print
+                  time: 17:04:43
+                  date: 2026-10-25
+  time-zone-autodetect: yes
+        time-zone-name: manual
+            gmt-offset: +00:00
+            dst-active: no
+[admin@DIST-2] > /routing bgp session print count-only where established[admin@DIST-2] > /routing bgp session print count-only where established
+0
+[admin@DIST-2] > /routing ospf neighbor print count-only where state=Full[admin@DIST-2] > /routing ospf neighbor print count-only where state=Full
+2
+[admin@DIST-2] > /routing ospf lsa print count-only where type=external[admin@DIST-2] > /routing ospf lsa print count-only where type=external
+3
+[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0[admin@DIST-2] > /ip route print without-paging where dst-address=0.0.0.0/0
+Flags: D - DYNAMIC; A - ACTIVE; o - OSPF; + - ECMP
+Columns: DST-ADDRESS, GATEWAY, DISTANCE
+     DST-ADDRESS  GATEWAY             DISTANCE
+DAo+ 0.0.0.0/0    10.255.0.25%ether1       110
+DAo+ 0.0.0.0/0    10.255.0.33%ether2       110
+
+[admin@DIST-2] > /interface vrrp print without-paging[admin@DIST-2] > /interface vrrp print without-paging
+Flags: R - RUNNING; M - MASTER, B - BACKUP
+Columns: NAME, INTERFACE, MAC-ADDRESS, VRID, PRIORITY, INTERVAL, VERSION, V3-PROTOCOL, SYNC-CONNECTION-TRACKING
+#    NAME             INTERFACE  MAC-ADDRESS        VRID  PRIORITY  INTERVAL  VERSION  V3-PROTOCOL  SYNC-CONNECTION-TRACKING
+;;; F2 - SERVERS - DIST-2 master preferido
+0 RM vrrp-servers-20  ether4     00:00:5E:00:01:14    20       150  1s              2  ipv4         no                      
+;;; F2 - USERS - DIST-2 backup preferido
+1  B vrrp-users-10    ether3     00:00:5E:00:01:0A    10       100  1s              2  ipv4         no                      
+
+[admin@DIST-2] > /ip firewall filter print count-only[admin@DIST-2] > /ip firewall filter print count-only
+3
+[admin@DIST-2] > /file print without-paging[admin@DIST-2] > /file print without-paging
+ # NAME                                                                                                                                                                                    TYPE             SIZE LAST-MODIFIED       
+ 0 DIST-2_2026-10-14_SSH_MGMT.rsc                                                                                                                                                          script           2219 2026-10-15 02:20:40 
+ 1 autosupout.rif                                                                                                                                                                          .rif file    351.4KiB 2026-10-25 15:58:27 
+ 2 skins                                                                                                                                                                                   directory             2026-10-08 20:58:59 
+ 3 DIST-2_F1_2026-10-08.rsc                                                                                                                                                                script           1450 2026-10-08 23:31:37 
+ 4 DIST-2_F1_2026-10-09.rsc                                                                                                                                                                script           1490 2026-10-09 17:26:34 
+ 5 DIST-2_2026-10-13_f1.backup                                                                                                                                                             backup        20.0KiB 2026-10-13 19:07:45 
+ 6 autosupout.old.rif                                                                                                                                                                      .rif file    350.0KiB 2026-10-17 01:41:41 
+ 7 F2_DIST2_20261016.rsc                                                                                                                                                                   script           3574 2026-10-16 23:53:13 
+ 8 DIST-2_2026-10-15_SSH_MGMT.backup                                                                                                                                                       backup        23.6KiB 2026-10-15 23:23:28 
+ 9 F2_DIST2_20261016.backup                                                                                                                                                                backup        25.2KiB 2026-10-16 23:53:49 
+10 F3_DIST2_20261025.rsc                                                                                                                                                                   script           3574 2026-10-25 14:59:19 
+11 F3_DIST2_20261025.backup                                                                                                                                                                backup        25.2KiB 2026-10-25 16:21:05 
+
+[admin@DIST-2] > 
+######## PC-USER
+Sun Oct 25 05:05:48 PM UTC 2026
+==================== 5039
+ping 10.255.255.1 -c 3
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=660.527 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=362.679 ms
+
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=363.246 ms
+
+PC-USER> 
+PC-USER> 
+PC-USER> ping 10.255.255.2 -c 3
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=337.956 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=420.749 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=232.221 ms
+
+
+PC-USER> 
+PC-USER> 
+PC-USER> ping 192.168.20.100 -c 3
+
+84 bytes from 192.168.20.100 icmp_seq=1 ttl=63 time=315.447 ms
+84 bytes from 192.168.20.100 icmp_seq=2 ttl=63 time=167.793 ms
+84 bytes from 192.168.20.100 icmp_seq=3 ttl=63 time=119.032 ms
+
+
+PC-USER> 
+PC-USER> 
+PC-USER> 
+######## SRV
+Sun Oct 25 05:06:22 PM UTC 2026
+==================== 5041
+ping 10.255.255.1 -c 3
+
+84 bytes from 10.255.255.1 icmp_seq=1 ttl=61 time=324.083 ms
+84 bytes from 10.255.255.1 icmp_seq=2 ttl=61 time=476.155 ms
+84 bytes from 10.255.255.1 icmp_seq=3 ttl=61 time=309.236 ms
+
+
+SRV> 
+SRV> 
+SRV> ping 10.255.255.2 -c 3
+
+84 bytes from 10.255.255.2 icmp_seq=1 ttl=61 time=284.101 ms
+84 bytes from 10.255.255.2 icmp_seq=2 ttl=61 time=364.661 ms
+84 bytes from 10.255.255.2 icmp_seq=3 ttl=61 time=289.234 ms
+
+
+SRV> 
+SRV> 
+SRV> 
+ 17:06:41 up  1:24,  1 user,  load average: 12.70, 12.00, 12.53
