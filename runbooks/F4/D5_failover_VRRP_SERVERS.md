@@ -16,7 +16,7 @@ Es el espejo de D4 para el gateway `192.168.20.1` (VRID 20).
 
 - Autorización individual de R1, con conocimiento de R4.
 - D4 cerrado y revertido; sus respaldos, trasladados y verificados.
-- **Consola de SRV resuelta**, y SRV capaz de originar los pings de la línea base (pendiente al 29/10).
+- **Consola de SRV:** resuelta el 29/10. Se abre con `telnet 127.0.0.1 5041` en la terminal de la VM, porque `console SRV` de GNS3 falla. SRV originó 3/3 de línea base. Antes de D5 se confirma que el puerto no cambió (`ss -ltn | grep 5041`).
 - Respaldos `pre-drill5` de DIST-1 y DIST-2.
 - Carga de la VM dentro del umbral.
 - Consolas de DIST-1, DIST-2, CORE-2, SRV y PC-USER con sesión iniciada.
