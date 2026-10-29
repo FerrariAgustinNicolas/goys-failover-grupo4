@@ -27,7 +27,7 @@ capaz de mantener conectividad frente a fallas de enlaces y dispositivos.
 | F0 | Diseño y gestión de cambio | 02/10/2026 | Aprobado por la cátedra: **100/100**. |
 | F1 | Topología, hardening y backup | 09/10/2026 | Aprobado por la cátedra: **100/100**, sin correcciones bloqueantes. |
 | F2 | VRRP y OSPF | 16/10/2026 | Ejecutada el 16 y 17/10; evidencias y exports en el repositorio. Pendiente de la devolución de la cátedra. |
-| F3 | BGP y firewall | 16/10/2026 | Ejecutada del 19 al 25/10 y validada por R1; evidencias en el repositorio y exports en revisión. Pendiente de la devolución de la cátedra. |
+| F3 | BGP y firewall | 16/10/2026 | Implementada y documentada por el grupo (19 a 25/10); evidencias y exports en el repositorio. Pendiente de la devolución de la cátedra. |
 | F4 | Drills y monitoreo | 20/10/2026 | Pendiente de ejecución. |
 | F5 | Memoria y defensa | 23/10/2026 | Pendiente de finalización. |
 
@@ -55,17 +55,17 @@ Las pruebas de failover de F2 no son los drills cronometrados de F4. Al cierre d
 
 ## Estado al cierre de F3 (19 a 25/10/2026)
 
-R5 configuró y probó F3 en su copia del proyecto GNS3 (`failover_F2`, VM Linux), sin cambiar la topología. R1 autorizó cada etapa y validó la implementación y las pruebas. CORE y DIST no tuvieron cambios de configuración.
+R5 configuró y probó F3 en su copia del proyecto GNS3 (`failover_F2`, VM Linux), sin cambiar la topología. R1 autorizó cada etapa y validó la implementación y las pruebas. R1 a R4 revisaron y publicaron los exports de sus routers. CORE y DIST no tuvieron cambios de configuración. F3 queda implementada y documentada por el grupo, pendiente de la devolución de la cátedra.
 
-- **eBGP:** EDGE (AS 65000) tiene una sesión con ISP-1 (AS 65001) y otra con ISP-2 (AS 65002). Las dos son directas sobre los /30, con TCP-MD5 y filtros explícitos. Cada ISP anuncia el default y su loopback; EDGE anuncia solo USERS y SERVERS. La red de gestión no se anuncia.
-- **Red interna:** EDGE propaga por OSPF el default activo y las dos loopbacks ISP, con un filtro y sin redistribución general. Los cinco routers OSPF tienen exactamente esos tres prefijos externos.
-- **Firewall de EDGE:** 12 reglas nuevas que separan `input` de `forward`. BGP solo se acepta de los dos ISP, OSPF solo de los dos CORE, y la gestión sigue restringida a la VRF `MGMT`. Se descarta lo no solicitado desde la WAN. La regla de salida permite a las LAN cualquier destino por la WAN, no solo las loopbacks ISP; queda para revisar con R1.
+- **eBGP:** EDGE (AS 65000) tiene una sesión con ISP-1 (AS 65001) y otra con ISP-2 (AS 65002). Las dos son directas sobre los /30, con TCP-MD5 y filtros explícitos. El ajuste de las claves del 19/10 se coordinó con R1; sus valores no figuran en los exports públicos. Cada ISP anuncia el default y su loopback; EDGE anuncia solo USERS y SERVERS. La red de gestión no se anuncia.
+- **Red interna:** EDGE origina en OSPF el default condicional (`originate-default=if-installed`) y solo las dos loopbacks ISP, con el filtro `edge-ospf-out` y sin `redistribute=bgp`. Los cinco routers OSPF tienen exactamente esos tres prefijos externos. Siguen las siete adyacencias `Full` y VRRP con USERS en DIST-1 y SERVERS en DIST-2.
+- **Firewall de EDGE:** 15 reglas: las 3 de gestión SSH-MGMT y 12 nuevas que separan `input` de `forward`. BGP solo se acepta de los dos ISP, OSPF solo de los dos CORE, y la gestión sigue restringida a la VRF `MGMT`. Se descarta lo no solicitado desde la WAN. La regla 9 permite a las LAN conexiones nuevas hacia cualquier destino por la WAN, no solo las loopbacks ISP, y no hay una denegación general final en `forward`; queda para revisar con R1.
 - **Conectividad:** PC-USER y SRV alcanzan las dos loopbacks ISP con ping 5/5 y traceroute por DIST, CORE y EDGE. SSH a EDGE responde desde el cliente de gestión autorizado y no responde desde CORE-1 ni desde un ISP.
-- **Caída de un ISP:** se probó de a uno. Con un ISP caído, el default pasó al otro y su loopback siguió alcanzable; al recuperarlo, todo volvió a la línea base. No se midieron tiempos y hubo dos series de ping 4/5 por la saturación de la VM. El default prefiere ISP-1 por desempate de BGP, no por una política explícita.
-- **Respaldos:** los siete exports saneados, con las 14 claves OSPF redactadas, están auditados y los publican R1 a R4 en [`backups/2026-10-25/`](backups/2026-10-25/). R5 guarda fuera del repositorio los siete exports originales, los siete backups cifrados con `aes-sha256` y el respaldo de EDGE previo al firewall, en dos copias verificadas por SHA-512. También están los snapshots `PRE_F3_R5_2026-10-18`, `F3_FW_R5_2026-10-23` y `F3_FINAL_R5_2026-10-25`. **No se restauró ningún backup de F3 ni el snapshot final.**
-- **Incidencia:** el 25/10 la VM se congeló por saturación y se reinició. La configuración persistió y la verificación posterior fue satisfactoria.
+- **Caída de un ISP:** se probó de a uno. Con un ISP caído, el default pasó al otro y su loopback siguió alcanzable; al recuperarlo, todo volvió a la línea base. No se midieron tiempos precisos de reconvergencia: no son los drills cronometrados de F4. Hubo dos series de ping 4/5 que coincidieron con carga alta de la VM; la saturación es una explicación posible, no una causa demostrada. EDGE terminó prefiriendo ISP-1 sin una política explícita de prioridad.
+- **Respaldos:** los siete exports saneados, con las 14 claves OSPF redactadas, están en [`backups/2026-10-25/`](backups/2026-10-25/): [EDGE](backups/2026-10-25/EDGE_2026-10-25_f3.rsc) (PR #30), [ISP-1](backups/2026-10-25/ISP-1_2026-10-25_f3.rsc) e [ISP-2](backups/2026-10-25/ISP-2_2026-10-25_f3.rsc) (PR #31), [CORE-1](backups/2026-10-25/CORE-1_2026-10-25_f3.rsc) y [CORE-2](backups/2026-10-25/CORE-2_2026-10-25_f3.rsc) (PR #29), [DIST-1](backups/2026-10-25/DIST-1_2026-10-25_f3.rsc) y [DIST-2](backups/2026-10-25/DIST-2_2026-10-25_f3.rsc) (PR #28). R5 guarda fuera del repositorio 16 respaldos privados: los siete exports originales, los siete backups cifrados con `aes-sha256` y el export y el backup de EDGE previos al firewall, en dos copias verificadas por SHA-512. Su transferencia cifrada a R1 todavía no está confirmada. También están los snapshots `PRE_F3_R5_2026-10-18`, `F3_FW_R5_2026-10-23` y `F3_FINAL_R5_2026-10-25`. **No se restauró ningún backup de F3 ni el snapshot final.**
+- **Incidencia:** el 25/10 la VM dejó de responder y se reinició; los routers registraron mensajes de arranque crítico. La causa no se determinó. La configuración persistió y la verificación posterior fue satisfactoria.
 
-Siguen pendientes F4 (cinco drills cronometrados, prueba con clave incorrecta y monitoreo) y F5.
+Siguen pendientes F4 (cinco drills cronometrados, medición de tiempos, prueba con claves incorrectas y monitoreo) y F5.
 
 ## Índice de documentación
 
