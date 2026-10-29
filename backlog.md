@@ -141,11 +141,11 @@ Pendientes que deja F2:
 
 ## Epic F3 — BGP + firewall · *vence vie 16/10*
 
-Nota: F3 se ejecutó del 19 al 25/10. R5 configuró y probó los routers en su copia GNS3 (`failover_F2`, VM Linux), con autorización de R1 en cada etapa; R1 validó la implementación y las pruebas. Cada `[x]` conserva su dueño original. Los exports de F3 los publican R1 a R4 por PR en `backups/2026-10-25/`. R5 documentó la evidencia (memoria 3.11, 4.1, 4.4, 5.3, 6.1, 6.2 y 7.4). Las pruebas de caída de ISP no reemplazan los drills cronometrados de F4.
+Nota: F3 se ejecutó del 19 al 25/10. R5 configuró y probó los routers en su copia GNS3 (`failover_F2`, VM Linux), con autorización de R1 en cada etapa; R1 validó la implementación y las pruebas. Cada `[x]` conserva su dueño original entre corchetes y dice quién ejecutó en GNS3. Los exports de F3 los revisaron y publicaron por PR en `backups/2026-10-25/`: R1 el de EDGE (PR #30), R2 los de ISP (PR #31), R3 los de CORE (PR #29) y R4 los de DIST (PR #28). R5 documentó la evidencia (memoria 3.11, 4.1, 4.4, 5.3, 6.1, 6.2 y 7.4). Las pruebas de caída de ISP no reemplazan los drills cronometrados de F4.
 
 ### eBGP multi-homing (2 sesiones, TCP-MD5)
-- [x] [R1] sesiones eBGP de EDGE (AS 65000) hacia ISP-1 e ISP-2 con TCP-MD5. Ejecutó R5 el 19/10: conexiones directas sobre los /30 y filtros de entrada y salida explícitos; clave TCP-MD5 alineada con la aprobada el mismo día, coordinada con R1 (memoria 3.11 y 4.4; F3-3 a F3-5)
-- [x] [R2] sesiones eBGP de ISP-1 (AS 65001) e ISP-2 (AS 65002) hacia EDGE con TCP-MD5. Ejecutó R5 el 19/10 (memoria 3.11; exports de ISP, PR de R2 pendiente)
+- [x] [R1] sesiones eBGP de EDGE (AS 65000) hacia ISP-1 e ISP-2 con TCP-MD5. Ejecutó R5 el 19/10: conexiones directas sobre los /30 y filtros de entrada y salida explícitos; clave TCP-MD5 alineada con la aprobada el mismo día; el ajuste se coordinó con R1, que lo confirmó (memoria 3.11 y 4.4; F3-3 a F3-5). Export de EDGE revisado y publicado por R1 (PR #30)
+- [x] [R2] sesiones eBGP de ISP-1 (AS 65001) e ISP-2 (AS 65002) hacia EDGE con TCP-MD5. Ejecutó R5 el 19/10 (memoria 3.11). Exports de ISP-1 e ISP-2 revisados y publicados por R2 (PR #31)
 - [x] [R2] anunciar por eBGP desde cada ISP su propia loopback `/32` (`10.255.255.1/32` o `10.255.255.2/32`) junto con el default hacia EDGE. Ejecutó R5: address-list de la loopback y `default-originate=always`; EDGE acepta solo esas rutas (memoria 3.11 y 4.4; F3-3 y F3-4)
 - [x] [R1] verificar las dos sesiones en `established` con `/routing bgp session print`. Ejecutó R5 el 19/10 y en cada etapa posterior, hasta la verificación final del 25/10 (memoria 4.4; F3-3 a F3-5 y F3-29)
 
@@ -154,21 +154,27 @@ Nota: F3 se ejecutó del 19 al 25/10. R5 configuró y probó los routers en su c
 - [x] [R2] verificar en ISP-1 e ISP-2 que se reciben las LAN USERS y SERVERS. Ejecutó R5: cada ISP recibe exactamente `192.168.10.0/24` y `192.168.20.0/24` (memoria 4.4; F3-6 y F3-7)
 
 ### Salida a "Internet" (host → loopback ISP)
-- [x] [R1] propagar por OSPF hacia CORE y DIST el default activo de los ISP; redistribuir con control/filtro las loopbacks ISP `/32` para que cada destino use su proveedor conectado. Ejecutó R5 el 23/10: `originate-default=if-installed` y `out-filter-chain=edge-ospf-out`; los cinco routers OSPF tienen exactamente 3 LSA externos (memoria 3.11 y 4.4; F3-8 a F3-11)
+- [x] [R1] propagar por OSPF hacia CORE y DIST el default activo de los ISP; redistribuir con control/filtro las loopbacks ISP `/32` para que cada destino use su proveedor conectado. Ejecutó R5 el 23/10: `originate-default=if-installed` y `out-filter-chain=edge-ospf-out`, sin `redistribute=bgp`; los cinco routers OSPF tienen exactamente 3 LSA externos. CORE y DIST sin cambios de configuración; sus exports los revisaron y publicaron R3 (PR #29) y R4 (PR #28) (memoria 3.11 y 4.4; F3-8 a F3-11)
 - [x] [R5] ping y traceroute desde PC-USER y SRV a las loopbacks de ISP-1 e ISP-2 con cada proveedor disponible: 5/5 y TTL 61, con traceroute por DIST, CORE y EDGE. También con un ISP caído, y 3/3 en la verificación del 25/10 (memoria 4.1 y 4.4; F3-12, F3-22 a F3-26 y F3-29)
-- [x] [R5] coordinar el backup post-F3 de los 7 routers (export sanitizado y binario cifrado, juego independiente) y registrarlo en 6.1 y 6.2. Ejecutó R5 el 25/10: 7 exports originales y 7 backups `aes-sha256`, más el pre-firewall de EDGE, con dos copias verificadas por SHA-512. Los 7 exports saneados están auditados y pendientes de las PR de R1 a R4. No se restauró ningún backup de F3 (memoria 6.2)
+- [x] [R5] coordinar el backup post-F3 de los 7 routers (export sanitizado y binario cifrado, juego independiente) y registrarlo en 6.1 y 6.2. Ejecutó R5 el 25/10: 7 exports originales y 7 backups `aes-sha256`, más el pre-firewall de EDGE, con dos copias verificadas por SHA-512. Los 7 exports saneados, auditados por R5, los revisaron y publicaron R1 a R4 (PR #28 a #31). Los 16 respaldos privados siguen bajo custodia de R5. No se restauró ningún backup de F3 (memoria 6.2)
 
 ### Firewall edge (filtro + plano de gestión)
-- [x] [R1] reglas de filtro en EDGE según 1.3: separar input/forward; BGP TCP/179 solo ISP peers, OSPF IP/89 solo CORE neighbors, SSH solo gestión; established/related y rechazo de entrada no solicitado; permitir USERS/SERVERS a loopbacks ISP y retorno. Ejecutó R5 el 23/10: 12 reglas `F3 FW`, con las denegaciones aplicadas en Safe Mode. La regla 9 permite las salidas de las LAN hacia cualquier destino por la WAN, no solo a las loopbacks ISP: queda para revisar con R1 (memoria 5.3; F3-13 a F3-16)
+- [x] [R1] reglas de filtro en EDGE según 1.3: separar input/forward; BGP TCP/179 solo ISP peers, OSPF IP/89 solo CORE neighbors, SSH solo gestión; established/related y rechazo de entrada no solicitado; permitir USERS/SERVERS a loopbacks ISP y retorno. Ejecutó R5 el 23/10: 12 reglas `F3 FW`, con las denegaciones aplicadas en Safe Mode. La regla 9 permite las salidas de las LAN hacia cualquier destino por la WAN, no solo a las loopbacks ISP, y no hay una denegación general final en `forward`: queda para revisar con R1 (memoria 5.3; F3-13 a F3-16)
 - [x] [R1] restringir SSH de EDGE al allowlist de gestión relevado en F1; Winbox permanece deshabilitado. SSH solo acepta `172.31.250.10/32` en la VRF `MGMT` desde el 14/10 (memoria 3.9). Desde el 23/10 convive con las reglas de entrada de F3: SSH autorizado responde y los intentos desde CORE-1 y desde la WAN se descartan (memoria 4.4 y 5.3; F3-17 a F3-19)
 - [x] [R5] verificar que la salida a Internet sigue funcionando y que la gestión de EDGE no responde desde los ISP. Pings 5/5 con el firewall aplicado y SSH desde ISP-1 sin respuesta; la regla 11 contó los paquetes (memoria 4.4; F3-16 y F3-19)
 
+Limitaciones registradas de F3 (no se trasladan a F4):
+
+- Las pruebas de caída y recuperación de cada ISP no midieron tiempos precisos de reconvergencia; no son los drills cronometrados de F4 (memoria 4.2 y 4.4)
+- Dos series de ping 4/5 coincidieron con carga alta de la VM; la saturación es una explicación posible, no una causa demostrada (memoria 4.4)
+- EDGE terminó prefiriendo ISP-1 sin una política explícita de prioridad; no se comprobó el criterio de desempate (memoria 4.4)
+- La VM dejó de responder el 25/10, de causa no determinada; la verificación posterior fue satisfactoria (memoria 4.4)
+
 Pendientes que deja F3:
 
-- [ ] [R1–R4] publicar por PR los exports F3 auditados en `backups/2026-10-25/` (memoria 6.2)
 - [ ] [R5] probar el restore de al menos un backup de F3 o del snapshot `F3_FINAL_R5_2026-10-25`; no se realizó
-- [ ] [R1] revisar el alcance de la regla 9 de `forward` en EDGE (memoria 5.3)
-- [ ] [R1] coordinar la transferencia privada de los 16 respaldos de F3 desde R5 (memoria 6.2)
+- [ ] [R1] revisar el alcance de la regla 9 de `forward` en EDGE y la falta de una denegación general final (memoria 5.3)
+- [ ] [R1] coordinar la transferencia cifrada de los 16 respaldos privados de F3 desde R5 y confirmar su integridad (memoria 6.2)
 
 ---
 
