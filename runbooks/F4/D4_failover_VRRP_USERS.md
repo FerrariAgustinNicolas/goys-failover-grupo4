@@ -16,9 +16,13 @@ Parámetros de diseño (memoria 1.2): VRRPv2, anuncios de 1 s, preempt habilitad
 
 ## 2. Condiciones previas
 
-- Autorización de R1, con conocimiento de R4.
-- Drills anteriores cerrados.
+D4 es el **primer drill**. Antes de ejecutarlo tiene que cumplirse todo esto:
+- Autorización individual de R1, con conocimiento de R4.
+- Transferencia de los 16 respaldos privados de F3 a R1 completada, con 16/16 SHA-512 confirmados por R1.
+- Si se hace la prueba de restore aislado de ISP-1 (plan, sección 7), terminada antes de D4.
+- Juego inicial `pre-f4` de los siete routers generado, trasladado fuera de los routers y verificado con SHA-512.
 - Respaldos `pre-drill4` de DIST-1 y DIST-2.
+- Recursos dentro de los márgenes del plan (sección 4); sin congelamientos recientes de la VM.
 - Carga de la VM dentro del umbral.
 - Consolas de DIST-1, DIST-2, CORE-1, PC-USER y SRV con sesión iniciada.
 
@@ -28,29 +32,50 @@ Parámetros de diseño (memoria 1.2): VRRPv2, anuncios de 1 s, preempt habilitad
 - DIST-2: lo inverso.
 - PC-USER 5/5 a `192.168.10.1`, a SRV y a las loopbacks ISP.
 
-## 4. Acción propuesta (decisión de R1)
+## 4. Acción (método aprobado por R1, 29/10)
 
-| Opción | Acción | Qué mide |
-| --- | --- | --- |
-| **B (recomendada)** | En DIST-1, `/interface disable ether3` | Falla abrupta del enlace LAN: DIST-1 deja de anunciar y además retira de OSPF su ruta conectada a USERS, como pasaría con un enlace real caído. Cambia la configuración hasta la reversión (`enable`) |
-| A | *Suspend* en GNS3 del enlace DIST-1 ↔ SW-USERS | No cambia la configuración, pero GNS3 no baja la portadora: DIST-1 sigue anunciando `192.168.10.0/24` por OSPF y el tráfico de retorno que el ECMP de los CORE le mande se perdería. Mide un escenario distinto (falla "silenciosa" del switch) |
-| C | En DIST-1, `/interface vrrp disable vrrp-users-10` (lo usado en F2) | Salida "ordenada": puede anunciar prioridad 0 y producir un failover casi inmediato. No representa una falla |
+Deshabilitar solo `ether3` (USERS) de DIST-1, sin tocar las demás interfaces. Es una falla abrupta del enlace LAN: DIST-1 deja de anunciar VRRP y además retira de OSPF su ruta conectada a USERS, como pasaría con un enlace real caído.
 
-Con la opción A, DIST-1 queda aislado de USERS y se sigue viendo MASTER a sí mismo; hacia los hosts no hay doble master, porque ya no los alcanza. Si R1 prefiere A para no tocar la configuración, la pérdida de retorno pasa a ser un resultado esperado y hay que registrarla.
+**4.1 Verificación previa (solo lectura, en DIST-1):**
+
+```routeros
+/system identity print
+/interface vrrp print
+:put [/interface get ether3 disabled]
+```
+
+Esperado:
+- identidad `DIST-1`;
+- `vrrp-users-10` en `ether3` y MASTER;
+- `ether3` habilitada (`false`).
+
+**4.2 Ejecución (una línea):**
+
+```routeros
+:log info "F4-D4 T0"; /interface disable ether3
+```
+
+**4.3 Reversión:**
+
+```routeros
+:log info "F4-D4 T4"; /interface enable ether3
+```
+
+> Se descartaron, por decisión de R1, el *Suspend* del enlace en GNS3 (DIST-1 seguiría anunciando USERS y se perdería tráfico de retorno) y `/interface vrrp disable`, que es una salida ordenada y no una falla.
 
 ## 5. Puntos de observación
 
 - **PC-USER:** `ping 192.168.10.1 -t` y, en una segunda corrida, `ping 192.168.20.100 -t` (tráfico que atraviesa el gateway).
 - **DIST-2:** `/interface vrrp print` y `/log print follow where topics~"vrrp"` (transición BACKUP → MASTER).
 - **DIST-1:** log VRRP y estado, consultados por consola.
-- **CORE-1:** rutas hacia `192.168.10.0/24`. Con la opción B, el nexthop DIST-1 debe desaparecer (después de la convergencia OSPF) y quedar solo DIST-2. Con la opción A no desaparece; ver la sección 4.
+- **CORE-1:** rutas hacia `192.168.10.0/24`. Después de la convergencia OSPF, el nexthop DIST-1 debe desaparecer y quedar solo DIST-2.
 
 ## 6. Medición de tiempos
 
 | Marca | Fuente |
 | --- | --- |
-| T0 | `:log info "F4-D4 T0"` en DIST-1 inmediatamente antes del `disable` (mismo comando encadenado), o hora del *Suspend* |
-| T1 | DIST-2 pasa a MASTER (log de DIST-2) |
+| T0 | `F4-D4 T0` en el log de DIST-1 (mismo comando que el `disable`) |
+| T1 | DIST-2 pasa a MASTER (log de DIST-2; su reloj se corrige con el desfase medido antes del drill) |
 | T2 | Fin de la racha de pérdidas en PC-USER |
 | T4 / T5 | Failback: *Resume* → DIST-1 vuelve a MASTER por preempt; pérdidas durante la vuelta |
 
@@ -76,13 +101,13 @@ SERVERS sin cambios: SRV → `192.168.20.1` sin pérdida. OSPF y BGP intactos. D
 
 ## 9. Reversión
 
-1. *Resume* del enlace (o `/interface enable ether3`, o `/interface vrrp enable vrrp-users-10`).
+1. Ejecutar la reversión de la sección 4.3.
 2. Verificar DIST-1 MASTER y DIST-2 BACKUP en VRID 10, y VRID 20 sin cambios.
 3. PC-USER 5/5.
 
 ## 10. Respaldos
 
-`pre-drill4` y `post-drill4` de DIST-1 y DIST-2.
+`pre-drill4` y `post-drill4` de DIST-1 y DIST-2, trasladados fuera de los routers y verificados con SHA-512 antes de D5.
 
 ## 11. Evidencias
 

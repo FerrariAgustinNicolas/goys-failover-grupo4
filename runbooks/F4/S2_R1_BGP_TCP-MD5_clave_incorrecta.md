@@ -1,6 +1,6 @@
 # S2 (R1) — Clave TCP-MD5 incorrecta en una sesión BGP de EDGE
 
-**Estado:** borrador. No ejecutar sin autorización individual de R1.
+**Estado:** objetivo aprobado por R1 el 29/10; la ejecución sigue sin autorizar. **Reservada a una autorización explícita de R1 sobre EDGE.**
 **Reglas de claves:** la clave aprobada no se cambia de forma permanente ni se muestra a Claude, capturas, logs públicos o GitHub. La restaura R5 o R1 tipeándola localmente, con el uso de computadora de Claude pausado.
 
 ## 1. Objetivo

@@ -1,10 +1,15 @@
 # F4_00 — Plan y preflight de F4 (R5)
 
 **Fecha:** 29/10/2026 · **Preparó:** R5 (Lorenzo Bellomo), con asistencia de Claude · **Revisa:** R1.
-**Alcance autorizado por R1:** inspección, análisis y preparación del checkpoint. No se ejecutaron drills, no se modificaron routers ni claves, no se habilitaron servicios, no se restauraron snapshots y no se creó ninguna PR.
-**Ubicación:** rama local `docs/f4-r5-preflight` (desde `main` = `a423e04`, merge de la PR #32), carpeta `runbooks/F4/`. **Sin commit ni push.**
+**Ubicación:** rama `docs/f4-r5-preflight`, publicada en GitHub (base `main` = `a423e04`, merge de la PR #32), carpeta `runbooks/F4/`. El primer commit es `c00d31b` (checkpoint inicial). Las correcciones pedidas por R1 van en commits posteriores de la misma rama. No hay PR y `main` no se tocó.
+**Alcance autorizado:** planificación aprobada por R1 el 29/10, con correcciones (sección 9). No se ejecutó ningún drill (D1 a D5) ni ninguna prueba de seguridad (S1 a S3); cada uno requiere una nueva autorización individual de R1.
 
-> **Estado de este informe:** la línea base en vivo (sección 1.3) se completó el 29/10 entre las 15:07 y las 16:44 UTC, en modo solo lectura. Solo quedan pendientes los pings originados en SRV. El bloqueante B1, el PID huérfano de GNS3, se resolvió con autorización de R5. Hubo un incidente menor en PC-USER, revertido; está registrado en 1.3.
+> **Estado:**
+> - La línea base en vivo (sección 1.3) se completó el 29/10 entre las 15:07 y las 16:44 UTC, en modo solo lectura.
+> - Siguen pendientes los pings originados en SRV.
+> - El bloqueante B1 (PID huérfano de GNS3) se resolvió.
+> - Hubo una modificación accidental en PC-USER, revertida (1.3).
+> - **La VM volvió a congelarse el 29/10 hacia las 16:57 UTC** (riesgo 15, sección 8).
 
 ---
 
@@ -62,7 +67,7 @@ Se hace en modo solo lectura: R5 inicia sesión en cada consola y Claude ejecuta
 
 **Resultado:** la línea base de F3 se conserva: BGP, OSPF, LSA externos, VRRP, firewall y SSH-MGMT coinciden con el cierre del 25/10. Solo quedan pendientes los pings originados en SRV.
 
-**Incidente durante la línea base (29/10, ~16:43 UTC):** Claude envió por error `clear ip` a la consola VPCS de PC-USER, lo que borró la IP de la memoria de ese host. Se restauró de inmediato, con los valores que mostró el host al arrancar (`ip 192.168.10.100 255.255.255.0 192.168.10.1`), y se verificó con `show ip` y `ping 10.255.255.1 -c 3` (3/3). No se ejecutó `save`, así que su archivo de arranque no cambió. No afectó a ningún router.
+**Modificación accidental revertida durante la línea base (29/10, ~16:43 UTC):** Claude envió por error `clear ip` a la consola VPCS de PC-USER, lo que borró la IP de la memoria de ese host. Se restauró de inmediato, con los valores que mostró el host al arrancar (`ip 192.168.10.100 255.255.255.0 192.168.10.1`), y se verificó con `show ip` y `ping 10.255.255.1 -c 3` (3/3). No se ejecutó `save`, así que su archivo de arranque no cambió. No afectó a ningún router.
 
 No se repiten las pruebas de F3: solo esta línea base.
 
@@ -77,36 +82,37 @@ No se repiten las pruebas de F3: solo esta línea base.
 - **Integridad:** `sha512sum -c SHA512SUMS_F3_20261025.txt` dio **16/16 OK en cada juego**. Los hashes coinciden con el inventario y con la memoria 6.2. No se abrió ni se mostró el contenido de ningún archivo.
 - **Restore:** no se probó ninguno.
 
-### 2.2 Dependencia pendiente: transferencia a R1
+### 2.2 Transferencia a R1 (aprobada; condición previa de D4)
 
 Los 16 archivos siguen bajo custodia exclusiva de R5. Los `.rsc` originales tienen las claves OSPF en claro.
 
-Método propuesto:
-1. **Empaquetar:** un único archivo `7z` con AES-256 y nombres de archivo cifrados (`7z a -t7z -mhe=on -p F3_respaldos_privados.7z respaldos_F3_privado/juego_principal SHA512SUMS_F3_20261025.txt`), o `age -p`. La passphrase la genera R5 y **se pasa por un canal distinto** del archivo (en persona o por llamada), nunca por el mismo chat ni por correo.
-2. **Transferir:** el archivo cifrado, por un enlace privado con acceso restringido a la cuenta de R1, o en mano.
-3. **Verificar:** R1 descomprime, corre `sha512sum -c` (16/16) y confirma por escrito, indicando el SHA-256 del `.7z` recibido.
-4. **Custodia:** R5 conserva sus copias hasta esa confirmación y después acuerda con R1 si las mantiene.
+Método aprobado por R1:
+1. **Empaquetar:** un único archivo `7z` con AES-256 y nombres de archivo cifrados (`-mhe=on`). R5 crea el archivo e ingresa la contraseña de forma local; Claude no la ve. La contraseña se pasa a R1 **por un canal independiente** del archivo, nunca por el mismo chat ni por correo.
+2. **Transferir:** el `.7z`, por un enlace privado restringido a la cuenta de R1, o en mano.
+3. **Verificar:** R1 descomprime, corre `sha512sum -c SHA512SUMS_F3_20261025.txt` (16/16) y confirma por escrito.
+4. **Custodia:** R5 conserva sus dos copias hasta esa confirmación.
 
-> **Bloqueante administrativo**, no técnico: hasta que R1 confirme la recepción, F3 sigue con una sola custodia.
+> **Debe completarse, con 16/16 SHA-512 confirmados por R1, antes de ejecutar D4.**
 
-### 2.3 Snapshot `PRE_F4` (propuesto)
+### 2.3 Snapshot `PRE_F4`
 
 - **Nombre:** `PRE_F4_R5_<AAAA-MM-DD>`, creado en GNS3 **con los nodos detenidos**, como en F3.
-- **Antes de crearlo:** la línea base en vivo debe estar aprobada, y hay que comprobar el espacio libre dentro de la VM y en el host.
-- **Riesgo:** el host tiene 11 GB libres y el disco diferencial de la VM crece con cada snapshot GNS3. Hay que medir el tamaño de los snapshots de F3 antes de sumar el de F4.
+- **Condición de R1:** tener **al menos 20 GB libres en el disco del host** antes de generar snapshots nuevos. El 29/10 había 11 GB. Cada snapshot de F3 ocupa 342 MB dentro de la VM, pero el disco diferencial de la VM crece en el host.
+- No se eliminan snapshots históricos.
 
-### 2.4 Estrategia `pre-drillN` / `post-drillN`
+### 2.4 Respaldos de F4 (aprobados por R1)
 
-| Juego | Routers | Contenido | Dónde queda |
+| Juego | Routers | Contenido | Traslado y verificación |
 | --- | --- | --- | --- |
-| `pre-f4` (inicial) | Los 7 | Export y backup `aes-sha256` | En el router; se trasladan al cierre de F4 |
-| `pre-drillN` / `post-drillN` | Solo los afectados: D1 EDGE e ISP-1 · D2 EDGE e ISP-2 · D3 CORE-1 · D4 y D5 DIST-1 y DIST-2 | Export y backup | En el router |
-| `pre-secN` / `post-secN` | S1 DIST-2 · S2 EDGE · S3 DIST-2 | Export y backup | En el router |
-| `post-f4` (cierre) | Los 7 | Export y backup | Se trasladan con los anteriores |
+| `pre-f4` (inicial) | Los 7 | Export original y backup `aes-sha256` | Fuera de los routers y verificado antes de D4 |
+| `pre-drillN` / `post-drillN` | Los afectados: D4 y D5 DIST-1 y DIST-2 · D3 CORE-1 · D1 EDGE e ISP-1 · D2 EDGE e ISP-2 | Ídem | **Fuera de los routers y verificado antes de empezar el drill siguiente** |
+| `pre-secN` / `post-secN` | S1 CORE-2 · S2 EDGE · S3 DIST-2 | Ídem | Ídem, antes de la prueba siguiente |
+| `post-f4` (final) | Los 7 | Ídem | Al cierre de **todos** los drills y pruebas de seguridad |
 
 - **Nombres:** `<router>_<AAAA-MM-DD>_<hito>`, según la política 1.4.
-- **Traslado:** una sola vez al final, por Base64 en la consola, dos veces por separado, con SHA-512 de cada copia (el mismo método que F3). Así no se hacen decenas de traslados lentos en medio de los drills.
-- **Publicación:** exports saneados de los routers afectados por cada drill, por PR de su dueño. Lo decide R1 (sección 9).
+- **Traslado:** por Base64 en la consola, dos veces por separado, con SHA-512 de cada copia (el método de F3). No se depende de un traslado único al final de F4.
+- **Custodia:** originales y binarios son privados, con SHA-512, fuera del repositorio.
+- **Publicación:** después de la auditoría de R1, los exports saneados de los routers afectados se publican **agrupados por responsable**, junto con la documentación de F4. No hay una PR por drill.
 
 ---
 
@@ -116,27 +122,38 @@ Contraste con el repositorio:
 - `backlog.md` (Epic F4) pide runbook, backups pre y post, tiempo de reconvergencia y post-mortem por drill, pero **no fija los escenarios**. La memoria 4.2 tampoco. La propuesta de R1 cubre los tres mecanismos redundantes del diseño: multi-homing BGP, ECMP/OSPF en el core y VRRP.
 - **Fuera de alcance:** EDGE es un punto único de falla por diseño (no tiene par). Su caída no tiene continuidad que demostrar y no se propone como drill.
 
-| Drill | Falla | Acción recomendada | Detección prevista | Qué se mide | Debe mantenerse | Runbook |
+Escenarios, orden y métodos **aprobados por R1 el 29/10**. Orden de ejecución: **D4 → D5 → D3 → D1 → D2**.
+
+| Orden | Drill | Falla | Método aprobado | Detección prevista | Qué se mide | Runbook |
 | --- | --- | --- | --- | --- | --- | --- |
-| D1 | Enlace ISP-1 ↔ EDGE | *Suspend* del enlace en GNS3 | Hold-time BGP (~180 s) | Pérdida hacia el default hasta que pasa a ISP-2 | OSPF, VRRP, LAN ↔ LAN | `D1_caida_ISP-1.md` |
-| D2 | Enlace ISP-2 ↔ EDGE | *Suspend* del enlace | Hold-time BGP (~180 s) | 0 pérdidas hacia ISP-1; retiro de `.2/32` | El default vía ISP-1 | `D2_caida_ISP-2.md` |
-| D3 | CORE-1 | *Suspend* de sus 4 enlaces de producción (alternativas: detener el nodo o `disable`) | Dead-interval OSPF (40 s) | Pérdida parcial de los flujos ECMP vía CORE-1 | BGP, VRRP, gestión | `D3_caida_CORE-1.md` |
-| D4 | Master VRRP de USERS (DIST-1) | `disable ether3` en DIST-1 | Intervalo de caída VRRP (~3,6 s teórico) | Failover y failback del gateway `.10.1` | SERVERS, OSPF y BGP | `D4_failover_VRRP_USERS.md` |
-| D5 | Master VRRP de SERVERS (DIST-2) | `disable ether4` en DIST-2 | Ídem | Failover y failback del gateway `.20.1` | USERS, OSPF y BGP | `D5_failover_VRRP_SERVERS.md` |
+| 1 | D4 | Master VRRP de USERS (DIST-1) | `disable ether3` en DIST-1; el resto de las interfaces, sin cambios | Intervalo de caída VRRP (~3,6 s teórico) | Failover y failback del gateway `.10.1` | `D4_failover_VRRP_USERS.md` |
+| 2 | D5 | Master VRRP de SERVERS (DIST-2) | `disable ether4` en DIST-2; ídem | Ídem | Failover y failback del gateway `.20.1` | `D5_failover_VRRP_SERVERS.md` |
+| 3 | D3 | CORE-1 | `disable ether1,ether2,ether3,ether4` en una única ejecución validada; `ether5` (MGMT) sin tocar | Dead-interval OSPF (40 s) | Pérdida parcial de los flujos ECMP vía CORE-1 | `D3_caida_CORE-1.md` |
+| 4 | D1 | Enlace ISP-1 ↔ EDGE | *Suspend* en GNS3, sin cambios de configuración | Hold-time BGP (180 s) | Detección y **cambio de la ruta default activa en EDGE** | `D1_caida_ISP-1.md` |
+| 5 | D2 | Enlace ISP-2 ↔ EDGE | *Suspend* en GNS3, sin cambios de configuración | Hold-time BGP (180 s) | 0 pérdidas hacia ISP-1; retiro de `.2/32` | `D2_caida_ISP-2.md` |
 
 **Observaciones de diseño:**
-- **GNS3 no baja la portadora** del lado vecino cuando se suspende un enlace o se apaga un nodo. Por eso D1 a D3 se detectan por timers de protocolo, no por un cambio de estado de la interfaz.
-- En D4 y D5 se recomienda `disable` en el DIST y no *Suspend*. Con *Suspend*, el DIST seguiría anunciando su LAN por OSPF y se perdería tráfico de retorno.
-- **D2 no tiene impacto sobre el default.** Su valor es comprobar que la caída del proveedor de respaldo no afecta el servicio. Si R1 quiere más exigencia, una variante es repetir D2 con el default ya en ISP-2 (D1 en curso). No se recomienda: son dos fallas a la vez.
-- No se cambian timers (hold-time, dead-interval) ni se agrega BFD. Los tiempos medidos reflejan la configuración aprobada.
+- **GNS3 puede mantener activa la interfaz virtual** aunque se suspenda el enlace o se deshabilite la interfaz del otro extremo. Por eso, en D1 a D3, los vecinos detectan la falla por el protocolo (BGP u OSPF) y no por un cambio de estado de la interfaz.
+- **D1 no mide la "recuperación de Internet":** no hay un servicio externo común detrás de los dos ISP. La evidencia es el cambio de la ruta activa en EDGE.
+- **D2 no tiene impacto sobre el default.** Su valor es comprobar que la caída del proveedor de respaldo no afecta la salida activa.
+- No se cambian timers (hold-time, dead-interval) ni se agrega BFD.
 
 ---
 
 ## 4. Ejecución: orden, condiciones y umbral de aborto
 
-- **Orden propuesto:** D4 → D5 → D3 → D1 → D2. Primero los de menor impacto y duración, para validar el método de medición. Cada drill necesita autorización individual de R1.
-- **Entre drills:** la línea base completa tiene que volver antes de seguir.
-- **Umbral de aborto de la VM:** se aborta y se revierte si la carga de 1 minuto supera en más de 4 la carga medida en reposo durante 5 minutos, si `free -m` muestra swap en crecimiento sostenido, o si una consola deja de responder más de 60 s. El umbral exacto se fija con la línea base en vivo.
+- **Orden aprobado:** D4 → D5 → D3 → D1 → D2. Cada drill necesita autorización individual de R1.
+- **Entre drills:** la línea base completa tiene que volver, y los respaldos del drill tienen que estar trasladados y verificados, antes de seguir.
+- **Recursos (condición de R1):**
+  - no se reducen las 12 vCPU;
+  - primero se cierran procesos innecesarios en Windows, se libera disco (meta: **≥ 20 GB libres antes de snapshots nuevos**) y se vuelve a medir con la topología funcionando;
+  - si el host sigue con muy poca RAM libre o la VM se congela, **se detiene la preparación de pruebas cronometradas**.
+- **Umbral de aborto durante un drill:**
+  - la carga de 1 minuto de la VM supera en más de 4 la medida en reposo con la topología encendida;
+  - `free -m` muestra swap en crecimiento sostenido;
+  - una consola deja de responder más de 60 s;
+  - el reloj de la VM se detiene.
+- Las pérdidas de paquetes **no se atribuyen** a la saturación sin evidencia.
 
 ---
 
@@ -145,11 +162,14 @@ Contraste con el repositorio:
 **Problema:** los 7 routers, MGMT-CLIENT, la VM y Windows tienen relojes independientes, sin NTP (los exports no tienen `/system ntp`). Bajo TCG, los relojes de los CHR pueden derivar.
 
 **Estrategia:**
-1. **Métrica principal, independiente de los relojes:** la interrupción de servicio. Se mide con `ping <destino> -t` desde los VPCS (PC-USER y SRV), una sonda por segundo. Interrupción = `icmp_seq` faltantes × intervalo. VPCS 0.8.5 admite `-t` (verificado el 29/10).
+1. **Pérdida de sondas (independiente de los relojes):** `ping <destino> -t` desde los VPCS (PC-USER y SRV); VPCS 0.8.5 admite `-t`, verificado el 29/10. **No se presupone que salga exactamente una sonda por segundo.** Antes de cada drill se calibra:
+   - se corre `ping -t` durante un período medido con el reloj de la VM (`date -u` al inicio y al final);
+   - se calcula el intervalo efectivo como el tiempo transcurrido dividido por las sondas enviadas.
+   La interrupción se informa como sondas faltantes × intervalo efectivo, con ese intervalo explícito.
 2. **Tiempos de protocolo dentro de un mismo router:** se calculan diferencias entre eventos del log de un mismo equipo (por ejemplo, en EDGE, `HoldTimer expired` → cambio de default activo). No se mezclan relojes.
-3. **Marcador T0 en el router donde se actúa:** `:log info "F4-Dn T0"` en el mismo comando que la acción, cuando la acción es por consola. Con *Suspend* en GNS3, T0 es la hora de la VM.
-4. **Desfase entre relojes:** inmediatamente antes de cada drill se corre `/system clock print` en los routers involucrados y `date -u` en la VM, y se registran las diferencias. Bajo TCG, la incertidumbre esperable es de ±2 s; se informa junto con cada tiempo entre equipos distintos.
-5. **Con monitoreo opción A (sección 6):** el recolector (MGMT-CLIENT) registra todo con **un único reloj**, lo que reemplaza a los puntos 3 y 4.
+3. **Marcador T0 en el router donde se actúa:** `:log info "F4-Dn T0"` en el mismo comando que la acción (D3, D4 y D5). Con *Suspend* en GNS3 (D1 y D2), T0 es la hora de la VM.
+4. **Desfase entre relojes (se mide, no se presupone):** inmediatamente antes de cada drill se corre `/system clock print` en los routers involucrados y `date -u` en la VM, y se registran las diferencias observadas. **No se asume ningún valor de incertidumbre**: se informa el medido. Si no se puede medir con confianza, los tiempos entre equipos distintos se informan como no comparables.
+5. **El monitoreo por SSH no reemplaza los pings continuos ni los logs** para medir conmutaciones rápidas como VRRP (indicación de R1). Su resolución está limitada por el período de sondeo.
 
 **Definiciones por drill:**
 - T0, falla;
@@ -178,7 +198,39 @@ Al final de los cinco drills: **post-mortem global** con la tabla comparativa y 
 
 ---
 
-## 6. Propuesta de monitoreo
+## 6. Monitoreo
+
+> **Decisión de R1 (29/10): se aprueba la opción A.** Por ahora solo se autoriza un **piloto controlado contra CORE-2**, previa verificación de acceso y de recursos. Sin schedulers periódicos y sin distribuir claves públicas a los otros seis routers hasta revisar el resultado. El análisis comparativo original sigue abajo.
+
+### 6.1 Piloto SSH contra CORE-2 (preparado, no ejecutado)
+
+**Condiciones previas:**
+- VM estable, sin congelamientos;
+- RAM del host por encima del margen acordado;
+- R5 con sesión en MGMT-CLIENT y en CORE-2;
+- carga de la VM medida durante 10 minutos en reposo, con la topología encendida.
+
+**Qué debe confirmar:**
+1. que `/system ssh-exec` funciona en RouterOS 7.16;
+2. que el tráfico pasa por MGMT (VRF `MGMT`, origen `172.31.250.10`, destino `172.31.250.5`);
+3. que la autenticación es por clave pública;
+4. que el usuario es `monitor`, con sus permisos actuales (`ssh,read`, `!sensitive`);
+5. que las salidas de los comandos no muestran datos sensibles;
+6. el impacto real sobre la carga de la VM.
+
+**Pasos propuestos:**
+
+1. En MGMT-CLIENT, generar un par de claves exclusivo del piloto. El método exacto disponible en 7.16 se confirma en el momento; la clave privada no sale de MGMT-CLIENT.
+2. Copiar a CORE-2 **solo la clave pública** e importarla para `monitor` con `/user ssh-keys import public-key-file=… user=monitor`.
+3. En MGMT-CLIENT, ejecutar una sola vez y a mano, sin scheduler:
+   - `/system ssh-exec address=172.31.250.5 user=monitor command=":put [/routing ospf neighbor print count-only where state=Full]"`;
+   - lo mismo con `/interface print count-only where running` y `:put [/system resource get cpu-load]`.
+4. Medir la carga de la VM (`uptime`) antes, durante (10 ejecuciones seguidas) y después.
+5. **Reversión:** en CORE-2, `/user ssh-keys remove [find user=monitor]`; en MGMT-CLIENT, borrar el par de claves del piloto.
+
+`/routing bgp connection print` queda excluido siempre.
+
+### 6.2 Análisis de alternativas (checkpoint inicial)
 
 Datos del entorno que condicionan las opciones:
 - **MGMT-CLIENT es un CHR RouterOS**, no un Linux (prompt `[admin@MGMT-CLIENT]` en la evidencia F3-17).
@@ -220,7 +272,16 @@ Orden de escalamiento ante un problema durante F4:
 3. **Último recurso, el snapshot GNS3 `PRE_F4`:** revierte los 8 CHR a la vez. Nunca se probó un restore de snapshot de GNS3. Requiere autorización de R1.
 4. **Nunca** restaurar el snapshot de VirtualBox `Pre-Lab`.
 
-> **Propuesta:** antes de D1, probar un restore de backup en un entorno aislado (por ejemplo, el `F3_ISP1_20261025.backup` en una copia del proyecto). Así se cubre también el pendiente de restore de F3. Hace falta decidir si alcanzan la RAM y el disco.
+### 7.1 Restore aislado de ISP-1 (aprobado para planificar)
+
+- **Qué:** `F3_ISP1_20261025.backup` en un proyecto GNS3 **completamente aislado**, con un CHR RouterOS 7.16 nuevo y sin enlaces hacia el proyecto operativo.
+- **Cuándo:** **antes de D4**, solo si el espacio y la memoria lo permiten sin riesgo para la instancia principal.
+- **Prohibido:** restaurar snapshots o backups sobre el proyecto operativo `failover_F2.gns3`; abrir la copia anidada `failover_F3/`; restaurar el snapshot de VirtualBox `Pre-Lab`.
+- **Viabilidad al 29/10: no se cumple.**
+  - La instancia principal ya deja al host con 360–650 MB libres y la VM se congeló.
+  - Un CHR adicional pide 256–512 MB más dentro de la VM.
+  - El host tiene 11 GB libres, por debajo de los 20 GB pedidos por R1.
+- **Opción para evaluar con R1:** hacer el restore con la topología principal **detenida** (nodos apagados y snapshot `PRE_F4` ya tomado), en un proyecto separado con un solo CHR, y volver a arrancar la principal después.
 
 ---
 
@@ -228,40 +289,81 @@ Orden de escalamiento ante un problema durante F4:
 
 | # | Riesgo o bloqueante | Impacto | Mitigación propuesta |
 | --- | --- | --- | --- |
-| 1 | **Recursos del host:** ~1 GB de RAM libre con la VM apagada; 12 vCPU asignadas sobre 12 hilos; TCG | Cuelgues (como el del 25/10), pérdida de caracteres al tipear, tiempos inflados | Cerrar otras aplicaciones en Windows; umbral de aborto; comandos cortos. Que R1 decida si se bajan las vCPU de la VM (cambio de hipervisor, requiere autorización) |
-| 2 | **Disco del host al 96 %** (11 GB libres) | Un snapshot GNS3 o el crecimiento del disco diferencial pueden llenar `C:` y corromper la VM | Medir antes de `PRE_F4`; liberar espacio en Windows antes de empezar |
+| 1 | **Recursos del host:** ~1 GB de RAM libre con la VM apagada; 12 vCPU asignadas sobre 12 hilos; TCG | Cuelgues, pérdida de caracteres al tipear, tiempos inflados | Condición de R1: no reducir las vCPU todavía; cerrar procesos de Windows y volver a medir (sección 4) |
+| 2 | **Disco del host al 96 %** (11 GB libres) | Un snapshot GNS3 o el crecimiento del disco diferencial pueden llenar `C:` y corromper la VM | **≥ 20 GB libres antes de snapshots nuevos** (condición de R1) |
 | 3 | El snapshot de VirtualBox `Pre-Lab` es anterior al laboratorio | Restaurarlo por error borra F3 | Prohibición explícita (sección 7) |
-| 4 | **Restore nunca probado** en F2 ni F3 | La recuperación del paso 2 o 3 podría fallar | Prueba aislada antes de D1 (sección 7) |
-| 5 | **Claves aprobadas visibles en `docs/memoria.md`** (secciones 1.2 y 1.3, desde F0) | Contradice la regla de no exponerlas en GitHub; ya son públicas | Decisión de R1 (sección 9). No se cambian claves en F4 |
+| 4 | **Restore nunca probado** en F2 ni F3 | La recuperación del paso 2 o 3 podría fallar | Restore aislado de ISP-1 antes de D4, si los recursos lo permiten (7.1) |
+| 5 | Claves aprobadas documentadas en `docs/memoria.md` (1.2 y 1.3) desde F0 | Ya son públicas | Decisión de R1: se mantienen, son exclusivas del laboratorio, no se rotan en F4, no se reutilizan fuera y no se muestran en evidencias nuevas |
 | 6 | Las pruebas S1 a S3 exigen tipear la clave aprobada para restaurar | Que quede expuesta a Claude si el uso de computadora está activo | Pausar el uso de computadora durante la restauración y limpiar la pantalla después |
 | 7 | 16 respaldos de F3 con una sola custodia; `.rsc` con claves OSPF en claro en una carpeta local sin permisos restringidos | Pérdida o filtración | Transferencia cifrada a R1 (sección 2.2) |
 | 8 | Las consolas de GNS3 aceptan un solo cliente y cambian de puerto al reiniciar | Interrumpe la observación en paralelo | Abrir y comprobar las consolas antes de T0 |
 | 9 | Monitoreo A sin probar (`ssh-exec`, tipo de clave) | Podría no funcionar como se espera | Prueba en un solo router antes de desplegarlo |
 | **B1** (resuelto) | El servidor local de GNS3 no arrancaba por un `gns3_server.pid` huérfano del reinicio en frío del 25/10 | Bloqueaba la línea base y cualquier drill | Resuelto el 29/10 con autorización de R5: se renombró a `gns3_server.pid.stale-20261025` y se reabrió GNS3. Si la VM se vuelve a apagar con los nodos encendidos, el problema puede repetirse: detener los nodos y cerrar GNS3 antes de apagarla |
-| 12 | La ventana de GNS3 toma el foco y el texto tipeado puede caer en su consola de gestión o en la consola equivocada; ya pasó una vez (`clear ip` en PC-USER, revertido) | Durante un drill, un comando en la consola equivocada invalida la medición o cambia la configuración | Antes de cada comando de modificación, verificar en pantalla la pestaña activa y el prompt; comandos de una línea; no usar comandos genéricos (`clear`) en VPCS |
-| 13 | SRV no abre consola desde GNS3, aunque responde a ping | Sin consola de SRV no se pueden originar sondas desde SERVERS (D5) | Revisar el puerto de consola de SRV en GNS3 antes de D5 |
+| 15 | **La VM se congeló otra vez el 29/10, hacia las 16:57 UTC**, unos 13 min después de la línea base, con la topología encendida. Su reloj quedó detenido y no procesaba el teclado. Del lado de Windows, el proceso de la VM tenía 5,7 GB reservados y solo 37 MB residentes: su memoria estaba paginada a disco. Al momento del diagnóstico (17:39 UTC) el host tenía entre 562 MB y 2,1 GB libres. La relación entre la paginación y el congelamiento es una hipótesis, no una causa demostrada | Cualquier prueba cronometrada queda invalidada; reiniciar en frío puede volver a dejar archivos de PID huérfanos y mensajes de arranque crítico | **Se detiene la preparación de pruebas cronometradas** (condición de R1). No se reinició la VM: queda a decisión de R5 y R1. Antes de seguir, liberar RAM en Windows (por ejemplo, cerrar Chrome, que ocupa ~1,9 GB) y repetir la medición |
+| 12 | La ventana de GNS3 toma el foco y el texto tipeado puede caer en su consola de gestión o en la consola equivocada. Ya pasó una vez: `clear ip` en PC-USER, una **modificación accidental revertida** | Durante un drill, un comando en la consola equivocada invalida la medición o cambia la configuración | Antes de cada comando de modificación, verificar en pantalla la pestaña activa y el prompt; comandos de una línea; no usar comandos genéricos (`clear`) en VPCS |
+| 13 | SRV no abre consola desde GNS3, aunque responde a ping | Sin consola de SRV no se pueden originar sondas desde SERVERS (D5) | **Condición de R1:** resolverlo y confirmar los pings de línea base desde SRV antes de D5. El diagnóstico (ver la configuración de consola de SRV en el proyecto) quedó pendiente por el congelamiento de la VM |
 | 14 | Con todo encendido, el host Windows queda con 360–650 MB libres y la VM con ~1,1 GB disponibles y carga ~11 | Riesgo de cuelgue como el del 25/10 | Cerrar otras aplicaciones en Windows; umbral de aborto (sección 4) |
 | 10 | Copia anidada `failover_F3/` con discos del 19/10 | Abrirla por error mostraría un estado anterior a F3, y operar sobre ella daría resultados falsos | Abrir siempre `failover_F2.gns3` de la raíz del proyecto; que R1 decida si se archiva o se elimina la copia después de F4 |
 | 11 | El pegado por portapapeles no llega a la VM y el teclado de la VM es latinoamericano | Comandos mal escritos | Se escribe con scancodes de VirtualBox mapeados al teclado latinoamericano; cada comando se verifica en pantalla antes de dar Enter cuando no es de solo lectura |
 
 ---
 
-## 9. Decisiones pendientes de R1
+## 9. Decisiones de R1 (29/10)
 
-1. Aprobar o ajustar los cinco escenarios y el orden D4 → D5 → D3 → D1 → D2.
-2. Acción de D3: *Suspend* de 4 enlaces (con o sin la API de GNS3), detener el nodo o `disable`.
-3. Acción de D4/D5: `disable` de la interfaz LAN (recomendada) o *Suspend*.
-4. Monitoreo: aprobar la opción A y su prueba en un router.
-5. Alcance de los backups por drill (solo los routers afectados) y si se publican exports saneados por drill.
-6. Si se hace una prueba de restore aislada antes de D1, y con qué backup.
-7. Ajuste de recursos de la VM (vCPU) o no.
-8. Qué hacer con las claves de laboratorio publicadas en la memoria 1.2/1.3.
-9. Fecha y método de la transferencia de los 16 respaldos de F3.
-10. Autorización individual de S1, S2 y S3, con el alcance propuesto (CORE-2–DIST-2, `ebgp-isp2` y VRID 10 en DIST-2).
+| # | Tema | Decisión |
+| --- | --- | --- |
+| 1 | Drills y orden | Aprobados los cinco, en orden D4 → D5 → D3 → D1 → D2. Cada ejecución requiere autorización individual |
+| 2 | Métodos | D4: `disable ether3` en DIST-1. D5: `disable ether4` en DIST-2. D3: `disable ether1`–`ether4` en CORE-1 en una ejecución validada, sin tocar `ether5`. D1 y D2: *Suspend* en GNS3 |
+| 3 | Correcciones | D1 mide el cambio de ruta activa en EDGE. D3 queda después de D4 y D5. El juego final de F4 va al cierre de todo. El restore es antes de D4. Método temporal sin supuestos (sección 5) |
+| 4 | Monitoreo | Opción A. Solo un piloto contra CORE-2, sin schedulers ni otras claves |
+| 5 | Backups | `pre-f4` y `post-f4` de los 7; pre y post de los afectados por drill y por prueba; cada juego trasladado y verificado antes del paso siguiente. Publicación agrupada por responsable, sin PR por drill |
+| 6 | Restore | ISP-1 de F3 en un proyecto aislado, antes de D4, si los recursos lo permiten |
+| 7 | Recursos | No reducir vCPU; liberar RAM y disco (≥ 20 GB) y volver a medir; detener la preparación si hay congelamientos |
+| 8 | Claves | Se mantienen las de F0, sin rotar ni mostrar en evidencias nuevas |
+| 9 | Respaldos F3 | Transferencia por `7z` AES-256 con nombres cifrados y la contraseña por un canal independiente; 16/16 confirmado antes de D4 |
+| 10 | S1 a S3 | Objetivos aprobados, sin ejecución. S1 pasa a CORE-2 `ether4`. S2 queda reservada a R1. S3 sin sostener el doble master |
+| 11 | Incidencias | Consola de SRV antes de D5. No tocar `failover_F3/` ni `Pre-Lab` ni los snapshots históricos. `clear ip` registrado como modificación accidental revertida |
 
 ---
 
-## 10. Archivos preparados (sin publicar)
+## 10. Plan preciso para D4 (primer drill, sin ejecutar)
+
+**Condiciones previas, todas obligatorias:**
+1. VM estable, sin congelamientos; RAM del host y carga de la VM dentro de los márgenes (sección 4).
+2. Transferencia de los respaldos F3 a R1 con 16/16 confirmado (2.2).
+3. Restore aislado de ISP-1 hecho, si R1 lo mantiene como condición y los recursos lo permiten (7.1).
+4. ≥ 20 GB libres en el host y snapshot `PRE_F4` creado con los nodos detenidos (2.3).
+5. Juego `pre-f4` de los 7 routers y `pre-drill4` de DIST-1 y DIST-2, trasladados y verificados con SHA-512 (2.4).
+6. Línea base completa repetida ese día: BGP 2/2, 7 `Full`, 3 LSA externos, roles VRRP, 15 reglas y pings.
+7. Autorización individual de R1 para D4.
+
+**Secuencia el día del drill:**
+
+| Paso | Dónde | Acción |
+| --- | --- | --- |
+| 1 | VM | `date -u`, `uptime`, `free -m` |
+| 2 | DIST-1, DIST-2, CORE-1 | `/system clock print`, uno detrás de otro; registrar el desfase medido |
+| 3 | PC-USER | Calibrar `ping 192.168.10.1 -t` durante un período medido con el reloj de la VM y calcular el intervalo efectivo |
+| 4 | DIST-1 | Verificación previa de D4 (4.1): identidad, `vrrp-users-10` MASTER y `ether3` habilitada |
+| 5 | DIST-2 | `/log print follow where topics~"vrrp"` |
+| 6 | PC-USER | `ping 192.168.10.1 -t` en marcha |
+| 7 | DIST-1 | **T0:** `:log info "F4-D4 T0"; /interface disable ether3`, verificando antes la pestaña y el prompt |
+| 8 | DIST-2 / PC-USER | Observar el paso a MASTER (T1) y el fin de la racha de pérdidas (T2); luego CORE-1, sin nexthop DIST-1 hacia USERS (T3) |
+| 9 | PC-USER | Segunda corrida: `ping 192.168.20.100 -t` |
+| 10 | DIST-1 | **T4:** `:log info "F4-D4 T4"; /interface enable ether3` |
+| 11 | Todos | Failback: DIST-1 vuelve a MASTER (T5); línea base completa |
+| 12 | DIST-1 y DIST-2 | `post-drill4` (export y backup), traslado doble y SHA-512 |
+| 13 | — | Post-mortem con la plantilla de la sección 5 |
+
+**Aborto:** se revierte de inmediato (paso 10) si se cumple cualquiera de estas condiciones:
+- se alcanza el umbral de la sección 4;
+- cambia SERVERS (VRID 20);
+- cae una adyacencia OSPF o una sesión BGP;
+- el comando se ejecutó en una consola que no era la de DIST-1.
+
+---
+
+## 11. Archivos del checkpoint
 
 | Archivo | Contenido |
 | --- | --- |
@@ -277,4 +379,4 @@ Orden de escalamiento ante un problema durante F4:
 
 Ninguno contiene claves, contraseñas, contenido de respaldos ni localizadores privados sensibles.
 
-**Siguiente paso:** completar la sección 1.3 en vivo, en modo solo lectura, y entregar a R1 para su revisión. No se avanza sin su aprobación.
+**Siguiente paso:** R1 revisa este checkpoint. No se ejecuta ningún drill ni prueba de seguridad sin su autorización individual.

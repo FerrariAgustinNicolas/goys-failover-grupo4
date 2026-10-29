@@ -15,9 +15,9 @@ Medir cuánto tarda OSPF en sacar a CORE-1 del camino y cuánto se interrumpe el
 ## 2. Condiciones previas
 
 - Autorización de R1, con conocimiento de R3.
-- D1 y D2 cerrados, con la línea base verificada.
+- D4 y D5 cerrados y revertidos, con la línea base verificada (orden aprobado: D4 → D5 → D3 → D1 → D2).
 - Respaldos `pre-drill3` de CORE-1.
-- Carga de la VM dentro del umbral, con margen: la opción de detener el nodo genera un pico de CPU al rearrancarlo.
+- Carga de la VM dentro del umbral.
 - Consolas de EDGE, CORE-2, DIST-1, DIST-2, PC-USER y SRV con sesión iniciada.
 
 ## 3. Estado esperado antes de la falla
@@ -27,19 +27,55 @@ Medir cuánto tarda OSPF en sacar a CORE-1 del camino y cuánto se interrumpe el
 - DIST-1 y DIST-2 con ECMP hacia el default y las loopbacks ISP vía los dos CORE.
 - Hosts 5/5 hacia las dos loopbacks y entre sí.
 
-## 4. Acción propuesta (decisión de R1)
+## 4. Acción (método elegido por R1, 29/10)
 
-| Opción | Acción | Ventaja | Riesgo |
-| --- | --- | --- | --- |
-| **A (recomendada)** | Suspender en GNS3, en un mismo paso, los cuatro enlaces de producción de CORE-1, sin tocar el de MGMT | No cambia la configuración; CORE-1 sigue encendido y consultable por MGMT | Cuatro *Suspend* manuales tienen segundos de diferencia; se pueden lanzar juntos con la API de GNS3 desde la terminal de la VM, si R1 lo autoriza |
-| B | Detener el nodo CORE-1 en GNS3 | Una sola acción, falla realista de equipo | Rearranque lento con TCG, pico de carga y posibles mensajes de arranque crítico como los del 17/10 y el 25/10 |
-| C | En CORE-1, `/interface disable ether1,ether2,ether3,ether4` | Un solo comando, instante preciso | Cambia la configuración hasta la reversión |
+Deshabilitar `ether1` a `ether4` de CORE-1 **en una única ejecución validada**, sin tocar `ether5` (la red MGMT). La ejecución necesita una autorización separada de R1, después de revisar los comandos de esta sección.
 
-Con cualquier opción, los vecinos detectan la falla por el dead-interval de OSPF (40 s en enlaces `ptp` con valores por defecto), porque GNS3 no baja la portadora del lado vecino.
+**4.1 Verificación previa (solo lectura, en la consola de CORE-1):**
+
+```routeros
+/system identity print
+/interface print where (name=ether1 or name=ether2 or name=ether3 or name=ether4 or name=ether5)
+/ip address print where interface=ether5
+:put [/interface print count-only where (name=ether1 or name=ether2 or name=ether3 or name=ether4) and disabled=no]
+```
+
+Esperado:
+- identidad `CORE-1`;
+- `ether5` con `172.31.250.4/28`, en la VRF `MGMT`;
+- `ether1` a `ether4` habilitadas: el `count-only` devuelve `4`.
+
+Si algo difiere, no se ejecuta.
+
+**4.2 Ejecución (una sola línea):**
+
+```routeros
+:log info "F4-D3 T0"; /interface disable ether1,ether2,ether3,ether4
+```
+
+**4.3 Verificación inmediata:**
+
+```routeros
+:put [/interface print count-only where (name=ether1 or name=ether2 or name=ether3 or name=ether4) and disabled=yes]
+:put [/interface get ether5 disabled]
+```
+
+Esperado: `4` y `false`. Si no se cumple, se revierte de inmediato.
+
+**4.4 Reversión:**
+
+```routeros
+:log info "F4-D3 T4"; /interface enable ether1,ether2,ether3,ether4
+:put [/interface print count-only where (name=ether1 or name=ether2 or name=ether3 or name=ether4) and disabled=no]
+```
+
+Esperado: `4`.
+
+Aunque las interfaces de CORE-1 se deshabilitan, GNS3 puede mantener activa la interfaz virtual del **lado vecino**. Por eso EDGE, CORE-2, DIST-1 y DIST-2 detectan la falla por el protocolo: el dead-interval de OSPF es de 40 s en enlaces `ptp` con valores por defecto.
 
 ## 5. Puntos de observación
 
-- **PC-USER y SRV:** `ping 10.255.255.1 -t` y `ping 192.168.20.100 -t` / `ping 192.168.10.100 -t`, una sonda por segundo.
+- **PC-USER y SRV:** `ping 10.255.255.1 -t` y `ping 192.168.20.100 -t` / `ping 192.168.10.100 -t`, con el intervalo efectivo calibrado antes del drill (plan, sección 5).
 - **EDGE, CORE-2, DIST-1 y DIST-2:** `/routing ospf neighbor print` y `/log print follow where topics~"ospf"`.
 - **EDGE:** `/ip route print where dst-address~"192.168."` (ECMP → un solo nexthop, `10.255.0.14`).
 - **DIST-1:** `/ip route print where dst-address=0.0.0.0/0` (ECMP → un solo nexthop por CORE-2).
@@ -49,7 +85,7 @@ Con cualquier opción, los vecinos detectan la falla por el dead-interval de OSP
 
 | Marca | Fuente |
 | --- | --- |
-| T0 | *Suspend* / *Stop* (hora de la VM) o marcador de log en CORE-1 (opción C) |
+| T0 | Marcador `F4-D3 T0` en el log de CORE-1 |
 | T1 | Primer `neighbor down` en EDGE, CORE-2, DIST-1 y DIST-2 (uno por router, con su reloj) |
 | T2 | Fin de la racha de pérdidas en cada `ping -t` |
 | T3 | Las rutas de EDGE y de los DIST sin nexthop por CORE-1 |
@@ -76,13 +112,13 @@ Después de T3: hosts → las dos loopbacks ISP, PC-USER ↔ SRV, BGP intacto (E
 
 ## 9. Reversión
 
-1. *Resume* de los cuatro enlaces (A), *Start* del nodo (B) o `/interface enable ether1,ether2,ether3,ether4` (C).
+1. Ejecutar la reversión de la sección 4.4 y comprobar el resultado `4`.
 2. Esperar las 7 adyacencias `Full` y el ECMP restablecido en EDGE y en los DIST.
-3. Con la opción B: revisar el `/log` de CORE-1 por mensajes de arranque y confirmar que la configuración es igual a `pre-drill3`.
+3. Comparar el export `post-drill3` de CORE-1 con `pre-drill3`: solo debe cambiar la línea del encabezado.
 
 ## 10. Respaldos
 
-`pre-drill3` y `post-drill3` de CORE-1. El resto de los routers no cambia la configuración; su estado se acredita con la línea base.
+`pre-drill3` y `post-drill3` de CORE-1, trasladados y verificados con SHA-512 antes de D1. El resto de los routers no cambia la configuración; su estado se acredita con la línea base.
 
 ## 11. Evidencias
 

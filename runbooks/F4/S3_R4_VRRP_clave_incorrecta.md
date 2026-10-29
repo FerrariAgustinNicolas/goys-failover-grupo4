@@ -1,6 +1,6 @@
 # S3 (R4) — Clave VRRP incorrecta en uno de los grupos
 
-**Estado:** borrador. No ejecutar sin autorización individual de R1 y conocimiento de R4.
+**Estado:** objetivo aprobado por R1 el 29/10; la ejecución sigue sin autorizar. Requiere autorización individual de R1 y conocimiento de R4.
 **Reglas de claves:** la clave aprobada no se cambia de forma permanente ni se muestra a Claude, capturas, logs públicos o GitHub. La restaura R5 o R4 tipeándola localmente, con el uso de computadora de Claude pausado.
 
 ## 1. Objetivo
@@ -37,7 +37,7 @@ Si el doble master no ocurre, también es un resultado válido y se registra tal
 
 ## 6. Riesgos
 
-- Inestabilidad de USERS durante la prueba. Se limita la duración a un máximo de 2 minutos después de confirmar el estado.
+- **El doble master es un riesgo relevante** (decisión de R1, 29/10). No se mantiene intencionalmente: apenas se captura el estado de los dos DIST, se restaura la clave de inmediato.
 - Modificar el grupo o el router equivocado: verificar `name=vrrp-users-10` en DIST-2.
 - La restauración exige tipear la clave aprobada. Si se tipea mal, el doble master sigue; se reintenta.
 

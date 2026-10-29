@@ -14,8 +14,9 @@ Es el espejo de D4 para el gateway `192.168.20.1` (VRID 20).
 
 ## 2. Condiciones previas
 
-- Autorización de R1, con conocimiento de R4.
-- D4 cerrado y revertido.
+- Autorización individual de R1, con conocimiento de R4.
+- D4 cerrado y revertido; sus respaldos, trasladados y verificados.
+- **Consola de SRV resuelta**, y SRV capaz de originar los pings de la línea base (pendiente al 29/10).
 - Respaldos `pre-drill5` de DIST-1 y DIST-2.
 - Carga de la VM dentro del umbral.
 - Consolas de DIST-1, DIST-2, CORE-2, SRV y PC-USER con sesión iniciada.
@@ -28,12 +29,13 @@ Es el espejo de D4 para el gateway `192.168.20.1` (VRID 20).
 
 ## 4. Acción propuesta
 
-Las mismas tres opciones que en D4, aplicadas a DIST-2 y SERVERS:
-- **B (recomendada):** en DIST-2, `/interface disable ether4`. Además del VRRP, retira de OSPF la ruta conectada de SERVERS.
-- **A:** *Suspend* del enlace DIST-2 ↔ SW-SERVERS. No cambia la configuración, pero DIST-2 sigue anunciando SERVERS y el retorno por ECMP podría perderse.
-- **C:** en DIST-2, `/interface vrrp disable vrrp-servers-20`. Es una salida ordenada, no una falla.
+**Método aprobado por R1 (29/10):** deshabilitar solo `ether4` (SERVERS) de DIST-2, sin tocar las demás interfaces. Es el mismo método que en D4, así que los resultados son comparables.
 
-Conviene usar la misma opción que en D4 para que los resultados sean comparables.
+**Verificación previa (en DIST-2):** `/system identity print`, `/interface vrrp print` (`vrrp-servers-20` en `ether4`, MASTER) y `:put [/interface get ether4 disabled]`, que debe dar `false`.
+
+**Ejecución:** `:log info "F4-D5 T0"; /interface disable ether4`
+
+**Reversión:** `:log info "F4-D5 T4"; /interface enable ether4`
 
 ## 5. Puntos de observación
 
@@ -58,14 +60,16 @@ Los mismos criterios que en D4, aplicados a VRID 20.
 
 ## 9. Reversión
 
-1. *Resume* del enlace (o la reversión de la opción usada).
+1. Ejecutar la reversión (`enable ether4`).
 2. Verificar DIST-2 MASTER y DIST-1 BACKUP en VRID 20, y VRID 10 sin cambios.
 3. SRV 5/5.
 4. Línea base completa de cierre de drills.
 
 ## 10. Respaldos
 
-`pre-drill5` y `post-drill5` de DIST-1 y DIST-2. El `post-drill5` de los siete routers sirve además como **juego de cierre de F4** (plan, sección 7).
+`pre-drill5` y `post-drill5` de DIST-1 y DIST-2, trasladados y verificados con SHA-512 antes de D3.
+
+El juego final `post-f4` de los siete routers **no** corresponde a D5. Se genera al cierre de todos los drills y de las pruebas de seguridad (plan, sección 2.4).
 
 ## 11. Evidencias
 
@@ -75,4 +79,5 @@ Las mismas que en D4, para SERVERS.
 
 - Plantilla común del plan (sección 6).
 - Comparación D4 contra D5.
-- Post-mortem global de los cinco drills.
+
+El post-mortem global se hace después de D2, el último drill del orden aprobado.

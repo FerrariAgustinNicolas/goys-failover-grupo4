@@ -28,10 +28,9 @@ La misma línea base de D1, sección 3: dos sesiones `established`, default vía
 
 ## 4. Acción propuesta
 
-**Recomendada:** *Suspend* del enlace ISP-2 ↔ EDGE en GNS3.
-**Alternativa (F3):** en ISP-2, `/interface disable ether1`.
+**Método aprobado por R1 (29/10):** *Suspend* del enlace ISP-2 ↔ EDGE en GNS3, sin modificar la configuración de ningún router.
 
-La detección depende del hold-time de BGP (180 s); en F3 fue `HoldTimer expired` unos 3 min después del `disable`.
+GNS3 puede mantener la interfaz virtual activa aunque el enlace esté suspendido, así que la detección depende del protocolo: el hold-time de BGP es de 180 s. En F3 fue `HoldTimer expired` unos 3 min después.
 
 ## 5. Puntos de observación
 
@@ -71,7 +70,7 @@ La detección depende del hold-time de BGP (180 s); en F3 fue `HoldTimer expired
 
 ## 9. Reversión
 
-1. *Resume* del enlace (o `/interface enable ether1` en ISP-2).
+1. *Resume* del enlace en GNS3.
 2. Esperar `established` de `ebgp-isp2`.
 3. Verificar la línea base completa.
 
@@ -79,7 +78,7 @@ Si la configuración cambió, seguir la sección 7 del plan.
 
 ## 10. Respaldos
 
-`pre-drill2` y `post-drill2` de EDGE e ISP-2, con el mismo formato que D1.
+`pre-drill2` y `post-drill2` de EDGE e ISP-2, con el mismo formato que D1. Se trasladan y verifican con SHA-512 antes de seguir. Después de D2 vienen las pruebas de seguridad, si R1 las autoriza, y el juego final `post-f4` de los siete routers (plan, sección 2.4).
 
 ## 11. Evidencias
 
